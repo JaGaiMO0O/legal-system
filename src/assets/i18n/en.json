@@ -22,6 +22,18 @@
     "title": "Search results",
     "placeholder": "Search documents and cases...",
     "empty": "No results"
+  },
+  "courts": {
+    "title": "Courts",
+    "new": { "placeholder": "New court type name", "add": "Add type" },
+    "levels": "Levels",
+    "levels.hint": "Select the levels used by this court type in escalation order.",
+    "level": {
+      "primary": "Primary Court",
+      "appeal": "Appeal Court",
+      "cassation": "Cassation Court",
+      "execution": "Execution Court"
+    }
   }
 }
 

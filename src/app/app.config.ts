@@ -4,6 +4,7 @@ import { provideHttpClient } from '@angular/common/http';
 
 import { routes } from './app.routes';
 import { LanguageService } from './core/i18n/language.service';
+import { SeedService } from './core/seed/seed.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -15,6 +16,12 @@ export const appConfig: ApplicationConfig = {
       multi: true,
       deps: [LanguageService],
       useFactory: (lang: LanguageService) => () => lang.init(),
+    },
+    {
+      provide: APP_INITIALIZER,
+      multi: true,
+      deps: [SeedService],
+      useFactory: (seed: SeedService) => () => seed.run(),
     },
   ],
 };
