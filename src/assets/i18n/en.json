@@ -1,7 +1,28 @@
 {
 	"app": { "title": "Legal System", "welcome": "Welcome to the Legal System portal" },
 	"nav": { "cases": "Cases", "lawyers": "Lawyers", "arbitrations": "Arbitrations", "settings": "Settings" },
-	"actions": { "view": "View", "edit": "Edit", "print": "Print" }
+	"actions": { "view": "View", "edit": "Edit", "print": "Print", "save": "Save", "delete": "Delete", "download": "Download", "actions": "Actions" },
+  "documents": {
+    "title": "Documents",
+    "new": { "placeholder": "New document title", "create": "Create" },
+    "filter": { "tags": "Filter by tag" },
+    "versions": "Versions",
+    "upload": "Upload new version",
+    "file": "File",
+    "size": "Size",
+    "added": "Added",
+    "empty": "No documents yet",
+    "notFound": "Document not found"
+  },
+  "activity": {
+    "title": "Recent activity",
+    "empty": "No recent activity"
+  },
+  "search": {
+    "title": "Search results",
+    "placeholder": "Search documents and cases...",
+    "empty": "No results"
+  }
 }
 
 

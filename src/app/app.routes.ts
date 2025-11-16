@@ -13,6 +13,28 @@ export const routes: Routes = [
       import('./features/cases/case-detail.component').then((m) => m.CaseDetailComponent),
   },
   {
+    path: 'documents',
+    loadComponent: () =>
+      import('./features/documents/documents-page.component').then((m) => m.DocumentsPageComponent),
+  },
+  {
+    path: 'documents/:id',
+    loadComponent: () =>
+      import('./features/documents/document-detail.component').then(
+        (m) => m.DocumentDetailComponent,
+      ),
+  },
+  {
+    path: 'search',
+    loadComponent: () =>
+      import('./features/search/search-page.component').then((m) => m.SearchPageComponent),
+  },
+  {
+    path: 'activity',
+    loadComponent: () =>
+      import('./features/activity/activity-page.component').then((m) => m.ActivityPageComponent),
+  },
+  {
     path: 'lawyers',
     loadComponent: () =>
       import('./features/lawyers/lawyers-list.component').then((m) => m.LawyersListComponent),

@@ -3,6 +3,15 @@
 >
   <h1 class="text-xl font-semibold">{{ 'app.title' | translate }}</h1>
   <div class="flex items-center space-x-2 rtl:space-x-reverse">
+    <input
+      #q
+      type="search"
+      class="border rounded px-2 py-1 text-sm"
+      [placeholder]="'search.placeholder' | translate"
+    />
+    <a class="px-2 py-1 border rounded text-sm" [attr.href]="'/search?q=' + (q.value || '')">{{
+      'actions.view' | translate
+    }}</a>
     <app-theme-toggle></app-theme-toggle>
     <app-language-switcher></app-language-switcher>
   </div>
@@ -11,24 +20,34 @@
   <p class="text-[rgb(var(--text-muted))]">{{ 'app.welcome' | translate }}</p>
   <nav class="mt-4 space-x-4 rtl:space-x-reverse">
     <a
-      routerLink="/cases"
+      href="/cases"
       class="underline decoration-[rgb(var(--primary))] text-[rgb(var(--text))] hover:text-[rgb(var(--primary))]"
       >{{ 'nav.cases' | translate }}</a
     >
     <a
-      routerLink="/lawyers"
+      href="/documents"
+      class="underline decoration-[rgb(var(--primary))] text-[rgb(var(--text))] hover:text-[rgb(var(--primary))]"
+      >{{ 'documents.title' | translate }}</a
+    >
+    <a
+      href="/lawyers"
       class="underline decoration-[rgb(var(--primary))] text-[rgb(var(--text))] hover:text-[rgb(var(--primary))]"
       >{{ 'nav.lawyers' | translate }}</a
     >
     <a
-      routerLink="/arbitrations"
+      href="/arbitrations"
       class="underline decoration-[rgb(var(--primary))] text-[rgb(var(--text))] hover:text-[rgb(var(--primary))]"
       >{{ 'nav.arbitrations' | translate }}</a
     >
     <a
-      routerLink="/settings"
+      href="/settings"
       class="underline decoration-[rgb(var(--primary))] text-[rgb(var(--text))] hover:text-[rgb(var(--primary))]"
       >{{ 'nav.settings' | translate }}</a
+    >
+    <a
+      href="/activity"
+      class="underline decoration-[rgb(var(--primary))] text-[rgb(var(--text))] hover:text-[rgb(var(--primary))]"
+      >{{ 'activity.title' | translate }}</a
     >
   </nav>
   <section class="mt-6">
