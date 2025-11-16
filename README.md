@@ -1,6 +1,6 @@
-# LegalSystem
+# Legal System
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 18.2.17.
+Angular app (standalone) with SCSS + Tailwind and bilingual EN/AR (RTL) support.
 
 ## Development server
 
@@ -25,3 +25,11 @@ Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To u
 ## Further help
 
 To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+
+## Tech
+
+- Angular standalone APIs
+- TailwindCSS via PostCSS (with RTL and typography plugins)
+- SCSS global styles
+- i18n via ngx-translate (EN/AR) with runtime language switching
+- ESLint + Prettier (lint-staged pre-commit)

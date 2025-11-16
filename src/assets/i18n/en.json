@@ -1,0 +1,7 @@
+{
+	"app": { "title": "Legal System", "welcome": "Welcome to the Legal System portal" },
+	"nav": { "cases": "Cases", "lawyers": "Lawyers", "arbitrations": "Arbitrations", "settings": "Settings" },
+	"actions": { "view": "View", "edit": "Edit", "print": "Print" }
+}
+
+
