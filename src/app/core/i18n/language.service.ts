@@ -18,6 +18,7 @@ export class LanguageService {
     this.translate.use(lang);
     localStorage.setItem('lang', lang);
     document.documentElement.setAttribute('lang', lang);
-    document.documentElement.setAttribute('dir', this.rtlLangs.has(lang) ? 'rtl' : 'ltr');
+    // Keep layout LTR regardless of language
+    document.documentElement.setAttribute('dir', 'ltr');
   }
 }
