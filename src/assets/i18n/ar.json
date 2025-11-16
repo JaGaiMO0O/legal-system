@@ -1,34 +1,70 @@
 {
   "app": { "title": "النظام القانوني", "welcome": "مرحبًا بك في بوابة النظام القانوني" },
-  "nav": { "cases": "القضايا", "lawyers": "المحامون", "arbitrations": "التحكيم", "settings": "الإعدادات" },
-  "actions": { "view": "عرض", "edit": "تعديل", "print": "طباعة", "save": "حفظ", "delete": "حذف", "download": "تنزيل", "actions": "إجراءات" },
+  "nav": {
+    "cases": "القضايا",
+    "lawyers": "المحامون",
+    "arbitrations": "التحكيم",
+    "settings": "الإعدادات"
+  },
+  "actions": {
+    "view": "عرض",
+    "edit": "تعديل",
+    "print": "طباعة",
+    "save": "حفظ",
+    "delete": "حذف",
+    "download": "تنزيل",
+    "actions": "إجراءات",
+    "add": "إضافة",
+    "remove": "إزالة",
+    "cancel": "إلغاء"
+  },
   "documents": {
-    "title": "الوثائق",
-    "new": { "placeholder": "عنوان وثيقة جديدة", "create": "إنشاء" },
-    "filter": { "tags": "تصفية حسب الوسم" },
+    "title": "المستندات",
+    "new": {
+      "placeholder": "عنوان المستند الجديد",
+      "create": "إنشاء"
+    },
+    "filter": { "tags": "تصفية حسب الوسوم" },
     "versions": "الإصدارات",
     "upload": "رفع إصدار جديد",
     "file": "الملف",
     "size": "الحجم",
-    "added": "أضيفت",
-    "empty": "لا توجد وثائق بعد",
-    "notFound": "الوثيقة غير موجودة"
+    "added": "تاريخ الإضافة",
+    "empty": "لا توجد مستندات حتى الآن",
+    "notFound": "المستند غير موجود"
   },
   "activity": {
-    "title": "النشاط الأخير",
+    "title": "النشاطات الأخيرة",
     "empty": "لا يوجد نشاط حديث"
   },
   "search": {
     "title": "نتائج البحث",
     "placeholder": "ابحث في الوثائق والقضايا...",
     "empty": "لا توجد نتائج"
+  },
+  "cases": {
+    "title": "القضايا",
+    "id": "المعرّف",
+    "client": "العميل",
+    "status": "الحالة",
+    "titleField": "العنوان",
+    "nextHearing": "الجلسة القادمة",
+    "reference": "المرجع",
+    "statuses": {
+      "open": "مفتوحة",
+      "pending": "قيد المعالجة",
+      "closed": "مغلقة",
+      "onHold": "معلّقة",
+      "hearing": "جلسة"
+    },
+    "tasks": {
+      "title": "المهام",
+      "newPlaceholder": "مهمة جديدة"
+    },
+    "deadlines": {
+      "title": "المواعيد النهائية",
+      "date": "التاريخ",
+      "titlePlaceholder": "عنوان الموعد"
+    }
   }
 }
-
-{
-	"app": { "title": "النظام القانوني", "welcome": "مرحبًا بك في بوابة النظام القانوني" },
-	"nav": { "cases": "القضايا", "lawyers": "المحامون", "arbitrations": "التحكيم", "settings": "الإعدادات" },
-	"actions": { "view": "عرض", "edit": "تعديل", "print": "طباعة" }
-}
-
-
