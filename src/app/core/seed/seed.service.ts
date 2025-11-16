@@ -18,6 +18,36 @@ export class SeedService {
     const already = localStorage.getItem(markKey);
     if (already) return;
 
+    // Seed claims (write directly to storage to avoid circular deps)
+    const claimsKey = 'claims';
+    const existingClaims = this.storage.get<any[]>(claimsKey, []);
+    if ((existingClaims ?? []).length === 0) {
+      const today = new Date();
+      const mkDate = (d: number) =>
+        new Date(today.getTime() - d * 86400000).toISOString().slice(0, 10);
+      const claims = [
+        {
+          id: crypto.randomUUID?.() ?? String(Math.random()),
+          kind: 'motor',
+          reference: 'MTR-2025-001',
+          claimant: 'Adam Green',
+          date: mkDate(2),
+          legalFlag: 0,
+          details: 'Minor collision on highway 1',
+        },
+        {
+          id: crypto.randomUUID?.() ?? String(Math.random()),
+          kind: 'motor',
+          reference: 'MTR-2025-014',
+          claimant: 'Blue Logistics LLC',
+          date: mkDate(10),
+          legalFlag: 0,
+          details: 'Truck rear-end incident',
+        },
+      ];
+      this.storage.set(claimsKey, claims);
+    }
+
     // Seed court types
     if (this.courts.list().length === 0) {
       this.courts.create('Civil');

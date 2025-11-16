@@ -34,6 +34,18 @@
       "cassation": "Cassation Court",
       "execution": "Execution Court"
     }
+  },
+  "claims": {
+    "title": "Claims",
+    "reference": "Reference",
+    "claimant": "Claimant",
+    "date": "Date",
+    "status": "Status",
+    "normal": "Normal",
+    "toLegal": "To Legal Dept.",
+    "convert": "Convert to legal",
+    "viewCase": "View case",
+    "empty": "No claims yet"
   }
 }
 
