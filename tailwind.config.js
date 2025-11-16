@@ -6,16 +6,17 @@ module.exports = {
 		extend: {
 			colors: {
 				brand: {
-					50: "#f0f8f7",
-					100: "#d9efec",
-					200: "#b3dfd8",
-					300: "#8bcfc4",
-					400: "#6eb4aa", // base
-					500: "#5aa299",
-					600: "#4a897f",
-					700: "#3b6d66",
-					800: "#2d524d",
-					900: "#213b38"
+					/* Align with Salama tones: deep teal primary and light teal accent */
+					50: "#edf7f7",
+					100: "#d6efee",
+					200: "#aee0de",
+					300: "#86d1ce",
+					400: "#6eb4aa",    /* accent */
+					500: "#4fa29a",
+					600: "#2b8d88",
+					700: "#1f7a76",
+					800: "#156665",
+					900: "#0b6d6b"     /* primary */
 				},
 				surface: {
 					DEFAULT: "rgb(var(--surface) / <alpha-value>)",
