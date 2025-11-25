@@ -52,7 +52,8 @@ body {
 
 /* Cards */
 .card {
-  @apply bg-[rgb(var(--surface))] text-[rgb(var(--text))] shadow-card rounded-lg border border-[rgb(var(--border))];
+  @apply bg-[rgb(var(--surface))] text-[rgb(var(--text))] shadow-md rounded-lg border border-[rgb(var(--border))];
+  transition: box-shadow 0.2s ease-in-out;
 }
 
 /* Headings */

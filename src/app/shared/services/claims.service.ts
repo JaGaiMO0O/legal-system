@@ -31,7 +31,57 @@ export class ClaimsService {
   }
 
   list(): Claim[] {
-    return this.storage.get<Claim[]>(STORAGE_KEY, []);
+    const claims = this.storage.get<Claim[]>(STORAGE_KEY, []);
+    if (claims.length === 0) {
+      this.seedData();
+      return this.storage.get<Claim[]>(STORAGE_KEY, []);
+    }
+    return claims;
+  }
+
+  private seedData(): void {
+    const now = new Date();
+    const claims: Claim[] = [
+      {
+        id: 'claim-1',
+        kind: 'motor',
+        reference: 'MOT-2025-001',
+        claimant: 'Ahmed Al-Mansouri',
+        date: new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000).toISOString(),
+        legalFlag: 1,
+        linkedCaseId: 'case-1',
+        details: 'Traffic accident on King Fahd Road',
+      },
+      {
+        id: 'claim-2',
+        kind: 'motor',
+        reference: 'MOT-2025-002',
+        claimant: 'Sara Al-Otaibi',
+        date: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        legalFlag: 0,
+        details: 'Vehicle collision at intersection',
+      },
+      {
+        id: 'claim-3',
+        kind: 'motor',
+        reference: 'MOT-2025-003',
+        claimant: 'Khalid Al-Ghamdi',
+        date: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+        legalFlag: 0,
+        details: 'Rear-end collision',
+      },
+      {
+        id: 'claim-4',
+        kind: 'motor',
+        reference: 'MOT-2024-156',
+        claimant: 'Fatima Al-Zahra',
+        date: new Date(now.getTime() - 120 * 24 * 60 * 60 * 1000).toISOString(),
+        legalFlag: 1,
+        linkedCaseId: 'case-4',
+        details: 'Highway accident case',
+      },
+    ];
+    this.storage.set(STORAGE_KEY, claims);
   }
 
   create(

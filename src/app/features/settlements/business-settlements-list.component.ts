@@ -4,22 +4,39 @@ import { RouterModule } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { UIButtonComponent } from '../../shared/components/ui/button.component';
 import { UICardComponent } from '../../shared/components/ui/card.component';
-import { BusinessSettlementService } from '../../shared/services/business-settlement.service';
+import {
+  BusinessSettlementService,
+  BusinessSettlement,
+} from '../../shared/services/business-settlement.service';
 
 @Component({
   standalone: true,
   selector: 'app-business-settlements-list',
   imports: [CommonModule, RouterModule, TranslateModule, UIButtonComponent, UICardComponent],
   template: `
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-lg font-semibold">{{ 'settlement.title' | translate }}</h2>
-      <ui-button variant="primary" routerLink="/settlements/new"
-        >{{ 'actions.add' | translate }} {{ 'settlement.title' | translate }}</ui-button
-      >
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-2xl font-bold text-[rgb(var(--text))]">Business Settlements</h2>
+        <p class="text-sm text-[rgb(var(--text-muted))] mt-1">
+          {{ settlements.length }}
+          {{ settlements.length === 1 ? 'settlement' : 'settlements' }} total
+        </p>
+      </div>
+      <ui-button variant="primary" routerLink="/settlements/new">
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 4v16m8-8H4"
+          />
+        </svg>
+        Add Settlement
+      </ui-button>
     </div>
 
-    <div *ngIf="settlements.length === 0" class="text-center py-8 text-[rgb(var(--text-muted))]">
-      {{ 'settlement.empty' | translate }}
+    <div *ngIf="settlements.length === 0" class="card p-12 text-center">
+      <p class="text-[rgb(var(--text-muted))]">{{ 'settlement.empty' | translate }}</p>
     </div>
 
     <div
@@ -31,31 +48,33 @@ import { BusinessSettlementService } from '../../shared/services/business-settle
         class="cursor-pointer hover:shadow-lg transition-shadow"
         [routerLink]="['/settlements', settlement.id]"
       >
-        <div class="mb-2">
-          <h3 class="font-semibold">
-            {{ 'settlement.settlement' | translate }} #{{ settlement.id.slice(0, 8) }}
-          </h3>
+        <div class="mb-4">
+          <h3 class="font-semibold text-lg mb-4">Settlement #{{ settlement.id.slice(0, 8) }}</h3>
         </div>
-        <div class="text-sm text-[rgb(var(--text-muted))] space-y-1">
-          <div>
-            {{ 'settlement.fields.departmentAmount' | translate }}:
-            {{ settlement.departmentAmount | number }}
+        <div class="text-sm space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[rgb(var(--text-muted))]">Department Amount:</span>
+            <span class="font-medium">{{ settlement.departmentAmount | number }} SAR</span>
           </div>
-          <div>
-            {{ 'settlement.fields.legalDepartmentAmount' | translate }}:
-            {{ settlement.legalDepartmentAmount | number }}
+          <div class="flex items-center justify-between">
+            <span class="text-[rgb(var(--text-muted))]">Legal Department Amount:</span>
+            <span class="font-medium">{{ settlement.legalDepartmentAmount | number }} SAR</span>
           </div>
-          <div>
-            {{ 'settlement.fields.managementAmount' | translate }}:
-            {{ settlement.managementAmount | number }}
+          <div class="flex items-center justify-between">
+            <span class="text-[rgb(var(--text-muted))]">Management Amount:</span>
+            <span class="font-medium">{{ settlement.managementAmount | number }} SAR</span>
           </div>
-          <div>
-            {{ 'settlement.fields.adversaryAmount' | translate }}:
-            {{ settlement.adversaryAmount | number }}
+          <div class="flex items-center justify-between">
+            <span class="text-[rgb(var(--text-muted))]">Adversary Amount:</span>
+            <span class="font-medium">{{ settlement.adversaryAmount | number }} SAR</span>
           </div>
-          <div class="font-semibold mt-2">
-            {{ 'settlement.fields.amountOfAmicableAgreement' | translate }}:
-            {{ settlement.amountOfAmicableAgreement | number }}
+          <div class="border-t border-[rgb(var(--border))] pt-2 mt-3">
+            <div class="flex items-center justify-between font-bold text-lg">
+              <span>Amount of Amicable Agreement:</span>
+              <span class="text-[rgb(var(--primary))]"
+                >{{ settlement.amountOfAmicableAgreement | number }} SAR</span
+              >
+            </div>
           </div>
         </div>
       </ui-card>

@@ -4,22 +4,36 @@ import { RouterModule } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { UIButtonComponent } from '../../shared/components/ui/button.component';
 import { UICardComponent } from '../../shared/components/ui/card.component';
-import { ArbitrationsService } from '../../shared/services/arbitrations.service';
+import { ArbitrationsService, Arbitration } from '../../shared/services/arbitrations.service';
 
 @Component({
   standalone: true,
   selector: 'app-arbitrations-list',
   imports: [CommonModule, RouterModule, TranslateModule, UIButtonComponent, UICardComponent],
   template: `
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-lg font-semibold">{{ 'nav.arbitrations' | translate }}</h2>
-      <ui-button variant="primary" routerLink="/arbitrations/new"
-        >{{ 'actions.add' | translate }} {{ 'nav.arbitrations' | translate }}</ui-button
-      >
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-2xl font-bold text-[rgb(var(--text))]">Arbitrations</h2>
+        <p class="text-sm text-[rgb(var(--text-muted))] mt-1">
+          {{ arbitrations.length }}
+          {{ arbitrations.length === 1 ? 'arbitration' : 'arbitrations' }} total
+        </p>
+      </div>
+      <ui-button variant="primary" routerLink="/arbitrations/new">
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 4v16m8-8H4"
+          />
+        </svg>
+        Add Arbitration
+      </ui-button>
     </div>
 
-    <div *ngIf="arbitrations.length === 0" class="text-center py-8 text-[rgb(var(--text-muted))]">
-      {{ 'arbitrations.empty' | translate }}
+    <div *ngIf="arbitrations.length === 0" class="card p-12 text-center">
+      <p class="text-[rgb(var(--text-muted))]">{{ 'arbitrations.empty' | translate }}</p>
     </div>
 
     <div
@@ -31,26 +45,52 @@ import { ArbitrationsService } from '../../shared/services/arbitrations.service'
         class="cursor-pointer hover:shadow-lg transition-shadow"
         [routerLink]="['/arbitrations', arbitration.id]"
       >
-        <div class="mb-2">
-          <h3 class="font-semibold">
-            {{ arbitration.caseDescription || ('arbitrations.noDescription' | translate) }}
+        <div class="mb-3">
+          <h3 class="font-semibold text-lg mb-2 line-clamp-2">
+            {{ arbitration.caseDescription || 'No description' }}
           </h3>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+              {{ arbitration.arbitrationRoom }}
+            </span>
+            <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs">
+              {{ arbitration.appealability }}
+            </span>
+          </div>
         </div>
-        <div class="text-sm text-[rgb(var(--text-muted))] space-y-1">
-          <div>
-            {{ 'arbitrations.fields.fillingDate' | translate }}:
-            {{ arbitration.fillingDate | date: 'short' }}
+        <div class="text-sm text-[rgb(var(--text-muted))] space-y-2">
+          <div class="flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+            {{ arbitration.fillingDate | date: 'mediumDate' }}
           </div>
-          <div>
-            {{ 'arbitrations.fields.arbitrationRoom' | translate }}:
-            {{ arbitration.arbitrationRoom || '-' }}
+          <div class="flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            {{ arbitration.arbitrationFees | number }} SAR
           </div>
-          <div>
-            {{ 'arbitrations.fields.arbitrationFees' | translate }}:
-            {{ arbitration.arbitrationFees | number }}
-          </div>
-          <div>
-            {{ 'arbitrations.hearingsCount' | translate }}: {{ arbitration.hearings.length }}
+          <div class="flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+            Hearings: {{ arbitration.hearings.length }}
           </div>
         </div>
       </ui-card>

@@ -1,6 +1,6 @@
 {
 	"app": { "title": "Legal System", "welcome": "Welcome to the Legal System portal" },
-	"nav": { "cases": "Cases", "lawyers": "Lawyers", "arbitrations": "Arbitrations", "settings": "Settings" },
+	"nav": { "cases": "Cases", "lawyers": "Lawyers", "arbitrations": "Arbitrations", "execution": "Execution Cases", "settlements": "Business Settlements", "settings": "Settings" },
 	"actions": { "view": "View", "edit": "Edit", "print": "Print", "save": "Save", "delete": "Delete", "download": "Download", "actions": "Actions", "add": "Add", "remove": "Remove", "cancel": "Cancel" },
   "documents": {
     "title": "Documents",
@@ -49,6 +49,7 @@
   },
   "cases": {
     "title": "Cases",
+    "empty": "No cases yet",
     "nextCourt": "Next Court",
     "execute": "Execute Case",
     "rulings": {

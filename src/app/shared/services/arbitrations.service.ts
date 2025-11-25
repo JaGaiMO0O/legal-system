@@ -53,7 +53,80 @@ export class ArbitrationsService {
   }
 
   list(): Arbitration[] {
-    return this.storage.get<Arbitration[]>(STORAGE_KEY, []);
+    const arbitrations = this.storage.get<Arbitration[]>(STORAGE_KEY, []);
+    if (arbitrations.length === 0) {
+      this.seedData();
+      return this.storage.get<Arbitration[]>(STORAGE_KEY, []);
+    }
+    return arbitrations;
+  }
+
+  private seedData(): void {
+    const now = new Date();
+    const arbitrations: Arbitration[] = [
+      {
+        id: 'arb-1',
+        appealability: 'Appealable',
+        fillingDate: new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString(),
+        caseDescription: 'Commercial dispute regarding contract terms',
+        arbitrationRoom: 'Room A-101',
+        arbitrationFees: 25000,
+        maximumPeriod: '6 months',
+        companyRepresentative: {
+          lawyerName: 'Dr. Mohammed Al-Sheikh',
+          position: 'Senior Legal Counsel',
+          address: 'Riyadh, King Fahd Road, Building 123',
+        },
+        oppositionRepresentative: {
+          lawyerName: 'Ahmed Al-Rashid',
+          position: 'Legal Advisor',
+          address: 'Jeddah, Corniche Road, Office 456',
+        },
+        hearings: [
+          {
+            id: 'hear-1',
+            date: new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000).toISOString(),
+            remarks: 'Initial hearing - case presentation',
+          },
+          {
+            id: 'hear-2',
+            date: new Date(now.getTime() + 45 * 24 * 60 * 60 * 1000).toISOString(),
+            remarks: 'Evidence review session',
+          },
+        ],
+        createdAt: new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'arb-2',
+        appealability: 'Non-appealable',
+        fillingDate: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        caseDescription: 'Insurance claim arbitration',
+        arbitrationRoom: 'Room B-205',
+        arbitrationFees: 18000,
+        maximumPeriod: '4 months',
+        companyRepresentative: {
+          lawyerName: 'Fatima Al-Otaibi',
+          position: 'Legal Director',
+          address: 'Riyadh, Olaya Street, Tower 789',
+        },
+        oppositionRepresentative: {
+          lawyerName: 'Khalid Al-Ghamdi',
+          position: 'Attorney',
+          address: 'Dammam, King Saud Street, Suite 321',
+        },
+        hearings: [
+          {
+            id: 'hear-3',
+            date: new Date(now.getTime() + 20 * 24 * 60 * 60 * 1000).toISOString(),
+            remarks: 'Preliminary hearing',
+          },
+        ],
+        createdAt: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+    ];
+    this.storage.set(STORAGE_KEY, arbitrations);
   }
 
   getById(id: string): Arbitration | undefined {

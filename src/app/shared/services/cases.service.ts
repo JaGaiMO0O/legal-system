@@ -88,7 +88,140 @@ export class CasesService {
   }
 
   list(): CaseItem[] {
-    return this.storage.get<CaseItem[]>(STORAGE_KEY, []);
+    const cases = this.storage.get<CaseItem[]>(STORAGE_KEY, []);
+    if (cases.length === 0) {
+      this.seedData();
+      return this.storage.get<CaseItem[]>(STORAGE_KEY, []);
+    }
+    return cases;
+  }
+
+  private seedData(): void {
+    const now = new Date();
+    const cases: CaseItem[] = [
+      {
+        id: 'case-1',
+        title: 'Traffic Accident Claim - Case #2025-001',
+        client: 'Ahmed Al-Mansouri',
+        status: 'open',
+        stage: 'primary',
+        tags: ['motor', 'accident'],
+        deadlines: [
+          { id: 'dl-1', title: 'Submit evidence', date: '2025-01-15' },
+          { id: 'dl-2', title: 'Court hearing', date: '2025-02-10' },
+        ],
+        tasks: [
+          { id: 'task-1', title: 'Review medical reports', done: false },
+          { id: 'task-2', title: 'Prepare witness statements', done: true },
+        ],
+        developments: [
+          {
+            id: 'dev-1',
+            date: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+            note: 'Case filed at Primary Court',
+          },
+          {
+            id: 'dev-2',
+            date: new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+            note: 'Initial hearing scheduled',
+          },
+        ],
+        rulings: [
+          {
+            id: 'ruling-1',
+            stage: 'primary',
+            caseNo: '2025-001',
+            caseType: 'Plaintiff',
+            courtType: 'Civil Court',
+            courtLevel: 'Primary',
+            courtCity: 'Riyadh',
+            caseDetails: 'Motor vehicle accident claim',
+            filingDate: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+              .toISOString()
+              .split('T')[0],
+            filingNo: 'FIL-2025-001',
+            stageNo: 1,
+            rulingInFavorOf: 'Company',
+            rulingDate: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000)
+              .toISOString()
+              .split('T')[0],
+            courtFees: 5000,
+            legalExpenses: 15000,
+            translationCourtFees: 2000,
+            courtFeesInCash: 3000,
+            expertFees: 8000,
+            advocacyFees: 12000,
+            otherExpenses: 2000,
+            adversaryName: 'Mohammed Al-Rashid',
+            indemnityByCourtAmount: 50000,
+            date: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+          },
+        ],
+        createdAt: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'case-2',
+        title: 'Appeal of Ruling #1234',
+        client: 'Salama Insurance Co.',
+        status: 'pending',
+        stage: 'appeal',
+        tags: ['appeal', 'insurance'],
+        deadlines: [{ id: 'dl-3', title: 'Appeal submission deadline', date: '2025-01-20' }],
+        tasks: [{ id: 'task-3', title: 'Prepare appeal documents', done: false }],
+        developments: [
+          {
+            id: 'dev-3',
+            date: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+            note: 'Appeal filed',
+          },
+        ],
+        rulings: [],
+        createdAt: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'case-3',
+        title: 'Execution Order Issuance',
+        client: 'Abdullah Al-Saud',
+        status: 'open',
+        stage: 'execution',
+        tags: ['execution'],
+        deadlines: [],
+        tasks: [],
+        developments: [
+          {
+            id: 'dev-4',
+            date: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+            note: 'Moved to Execution Court',
+          },
+        ],
+        rulings: [],
+        createdAt: new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'case-4',
+        title: 'Cassation Review',
+        client: 'Fatima Al-Zahra',
+        status: 'closed',
+        stage: 'settled',
+        tags: ['cassation', 'settled'],
+        deadlines: [],
+        tasks: [],
+        developments: [
+          {
+            id: 'dev-5',
+            date: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString(),
+            note: 'Case settled after execution',
+          },
+        ],
+        rulings: [],
+        createdAt: new Date(now.getTime() - 120 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+    ];
+    this.storage.set(STORAGE_KEY, cases);
   }
 
   getById(id: string): CaseItem | undefined {

@@ -32,7 +32,48 @@ export class ExecutionCasesService {
   }
 
   list(): ExecutionCase[] {
-    return this.storage.get<ExecutionCase[]>(STORAGE_KEY, []);
+    const cases = this.storage.get<ExecutionCase[]>(STORAGE_KEY, []);
+    if (cases.length === 0) {
+      this.seedData();
+      return this.storage.get<ExecutionCase[]>(STORAGE_KEY, []);
+    }
+    return cases;
+  }
+
+  private seedData(): void {
+    const now = new Date();
+    const cases: ExecutionCase[] = [
+      {
+        id: 'exec-1',
+        executionCaseNo: 'EX-2025-001',
+        fileNo: 'FILE-2025-001',
+        fileDate: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+        courtRoom: 'Room 15',
+        companyLawyer: 'Dr. Mohammed Al-Sheikh',
+        lastCourtType: 'Cassation Court',
+        lastCourtLevel: 'Cassation',
+        amountRuled: 150000,
+        amountPaid: 75000,
+        linkedCaseId: 'case-3',
+        createdAt: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'exec-2',
+        executionCaseNo: 'EX-2025-002',
+        fileNo: 'FILE-2025-045',
+        fileDate: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+        courtRoom: 'Room 22',
+        companyLawyer: 'Fatima Al-Otaibi',
+        lastCourtType: 'Appeal Court',
+        lastCourtLevel: 'Appeal',
+        amountRuled: 85000,
+        amountPaid: 0,
+        createdAt: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+    ];
+    this.storage.set(STORAGE_KEY, cases);
   }
 
   getById(id: string): ExecutionCase | undefined {

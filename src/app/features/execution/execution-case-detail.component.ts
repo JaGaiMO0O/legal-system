@@ -15,57 +15,57 @@ import {
   selector: 'app-execution-case-detail',
   imports: [CommonModule, FormsModule, TranslateModule, UIButtonComponent, UICardComponent],
   template: `
-    <h2 class="mb-4">{{ 'execution.title' | translate }}</h2>
+    <div class="mb-6">
+      <button
+        (click)="cancel()"
+        class="mb-4 flex items-center text-[rgb(var(--text-muted))] hover:text-[rgb(var(--text))] transition"
+      >
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+        Back to Execution Cases
+      </button>
+      <h2 class="text-2xl font-bold">Execution Case</h2>
+    </div>
 
     <ui-card>
-      <h3 class="font-semibold mb-4">{{ 'execution.sections.mainInfo' | translate }}</h3>
+      <h3 class="font-semibold mb-4">Main Info</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'execution.fields.executionCaseNo' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Execution Case No</label>
           <input type="text" [(ngModel)]="executionCase.executionCaseNo" class="w-full" />
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'execution.fields.fileNo' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">File No</label>
           <input type="text" [(ngModel)]="executionCase.fileNo" class="w-full" />
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'execution.fields.fileDate' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">File Date</label>
           <input type="date" [(ngModel)]="fileDate" class="w-full" />
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'execution.fields.courtRoom' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Court Room</label>
           <input type="text" [(ngModel)]="executionCase.courtRoom" class="w-full" />
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'execution.fields.companyLawyer' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Company Lawyer</label>
           <input type="text" [(ngModel)]="executionCase.companyLawyer" class="w-full" />
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'execution.fields.lastCourtType' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Last Court Type</label>
           <input type="text" [(ngModel)]="executionCase.lastCourtType" class="w-full" />
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'execution.fields.lastCourtLevel' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Last Court Level</label>
           <input type="text" [(ngModel)]="executionCase.lastCourtLevel" class="w-full" />
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'execution.fields.amountRuled' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Amount Ruled</label>
           <input
             type="number"
             [(ngModel)]="executionCase.amountRuled"
@@ -75,9 +75,7 @@ import {
           />
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'execution.fields.amountPaid' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Amount Paid</label>
           <input
             type="number"
             [(ngModel)]="executionCase.amountPaid"
@@ -90,8 +88,8 @@ import {
     </ui-card>
 
     <div class="mt-6 flex gap-2">
-      <ui-button variant="primary" (click)="save()">{{ 'actions.save' | translate }}</ui-button>
-      <ui-button variant="ghost" (click)="cancel()">{{ 'actions.cancel' | translate }}</ui-button>
+      <ui-button variant="primary" (click)="save()">Save</ui-button>
+      <ui-button variant="ghost" (click)="cancel()">Cancel</ui-button>
     </div>
   `,
 })

@@ -15,15 +15,29 @@ import {
   selector: 'app-business-settlement-detail',
   imports: [CommonModule, FormsModule, TranslateModule, UIButtonComponent, UICardComponent],
   template: `
-    <h2 class="mb-4">{{ 'settlement.title' | translate }}</h2>
+    <div class="mb-6">
+      <button
+        (click)="cancel()"
+        class="mb-4 flex items-center text-[rgb(var(--text-muted))] hover:text-[rgb(var(--text))] transition"
+      >
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+        Back to Settlements
+      </button>
+      <h2 class="text-2xl font-bold">Business Settlement</h2>
+    </div>
 
     <ui-card>
-      <h3 class="font-semibold mb-4">{{ 'settlement.sections.suggestedAmounts' | translate }}</h3>
+      <h3 class="font-semibold mb-4">Suggested Amounts</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'settlement.fields.departmentAmount' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Department Amount</label>
           <input
             type="number"
             [(ngModel)]="settlement.departmentAmount"
@@ -33,9 +47,9 @@ import {
           />
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'settlement.fields.legalDepartmentAmount' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1"
+            >Legal Department Amount</label
+          >
           <input
             type="number"
             [(ngModel)]="settlement.legalDepartmentAmount"
@@ -45,9 +59,7 @@ import {
           />
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'settlement.fields.managementAmount' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Management Amount</label>
           <input
             type="number"
             [(ngModel)]="settlement.managementAmount"
@@ -57,9 +69,7 @@ import {
           />
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'settlement.fields.adversaryAmount' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Adversary Amount</label>
           <input
             type="number"
             [(ngModel)]="settlement.adversaryAmount"
@@ -69,9 +79,9 @@ import {
           />
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'settlement.fields.amountOfAmicableAgreement' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1"
+            >Amount of Amicable Agreement</label
+          >
           <input
             type="number"
             [(ngModel)]="settlement.amountOfAmicableAgreement"
@@ -84,8 +94,8 @@ import {
     </ui-card>
 
     <div class="mt-6 flex gap-2">
-      <ui-button variant="primary" (click)="save()">{{ 'actions.save' | translate }}</ui-button>
-      <ui-button variant="ghost" (click)="cancel()">{{ 'actions.cancel' | translate }}</ui-button>
+      <ui-button variant="primary" (click)="save()">Save</ui-button>
+      <ui-button variant="ghost" (click)="cancel()">Cancel</ui-button>
     </div>
   `,
 })

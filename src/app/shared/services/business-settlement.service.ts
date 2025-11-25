@@ -28,7 +28,41 @@ export class BusinessSettlementService {
   }
 
   list(): BusinessSettlement[] {
-    return this.storage.get<BusinessSettlement[]>(STORAGE_KEY, []);
+    const settlements = this.storage.get<BusinessSettlement[]>(STORAGE_KEY, []);
+    if (settlements.length === 0) {
+      this.seedData();
+      return this.storage.get<BusinessSettlement[]>(STORAGE_KEY, []);
+    }
+    return settlements;
+  }
+
+  private seedData(): void {
+    const now = new Date();
+    const settlements: BusinessSettlement[] = [
+      {
+        id: 'settle-1',
+        departmentAmount: 50000,
+        legalDepartmentAmount: 30000,
+        managementAmount: 20000,
+        adversaryAmount: 40000,
+        amountOfAmicableAgreement: 100000,
+        linkedClaimId: 'claim-2',
+        createdAt: new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'settle-2',
+        departmentAmount: 75000,
+        legalDepartmentAmount: 45000,
+        managementAmount: 30000,
+        adversaryAmount: 60000,
+        amountOfAmicableAgreement: 150000,
+        linkedClaimId: 'claim-3',
+        createdAt: new Date(now.getTime() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+    ];
+    this.storage.set(STORAGE_KEY, settlements);
   }
 
   getById(id: string): BusinessSettlement | undefined {

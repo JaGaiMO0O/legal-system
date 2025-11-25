@@ -18,112 +18,96 @@ import {
   selector: 'app-motor-liability-case-detail',
   imports: [CommonModule, FormsModule, TranslateModule, UIButtonComponent, UICardComponent],
   template: `
-    <h2 class="mb-4">{{ 'motorLiability.title' | translate }}</h2>
+    <div class="mb-6">
+      <button
+        (click)="cancel()"
+        class="mb-4 flex items-center text-[rgb(var(--text-muted))] hover:text-[rgb(var(--text))] transition"
+      >
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+        Back to Cases
+      </button>
+      <h2 class="text-2xl font-bold">Motor Liability Case</h2>
+    </div>
 
     <ui-card>
-      <h3 class="font-semibold mb-4">{{ 'motorLiability.sections.case' | translate }}</h3>
+      <h3 class="font-semibold mb-4">Case</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'motorLiability.fields.caseNo' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Case No</label>
           <input type="text" [(ngModel)]="caseData.caseNo" class="w-full" />
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'motorLiability.fields.courtType' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Court Type</label>
           <input type="text" [(ngModel)]="caseData.courtType" class="w-full" />
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'motorLiability.fields.courtLevel' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Court Level</label>
           <input type="text" [(ngModel)]="caseData.courtLevel" class="w-full" />
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'motorLiability.fields.courtCity' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Court City</label>
           <input type="text" [(ngModel)]="caseData.courtCity" class="w-full" />
         </div>
         <div class="md:col-span-2">
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'motorLiability.fields.caseDescription' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Case Description</label>
           <textarea [(ngModel)]="caseData.caseDescription" rows="3" class="w-full"></textarea>
         </div>
       </div>
     </ui-card>
 
     <ui-card class="mt-6">
-      <h3 class="font-semibold mb-4">{{ 'motorLiability.sections.claimantInfo' | translate }}</h3>
+      <h3 class="font-semibold mb-4">Claimant Info</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'motorLiability.fields.claimantName' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Claimant Name</label>
           <input type="text" [(ngModel)]="caseData.claimantName" class="w-full" />
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'motorLiability.fields.nationality' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Nationality</label>
           <input type="text" [(ngModel)]="caseData.nationality" class="w-full" />
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'motorLiability.fields.gender' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Gender</label>
           <select [(ngModel)]="caseData.gender" class="w-full">
-            <option value="Male">{{ 'motorLiability.gender.male' | translate }}</option>
-            <option value="Female">{{ 'motorLiability.gender.female' | translate }}</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'motorLiability.fields.age' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Age</label>
           <input type="number" [(ngModel)]="caseData.age" min="0" class="w-full" />
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'motorLiability.fields.maritalStatus' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Marital Status</label>
           <select [(ngModel)]="caseData.maritalStatus" class="w-full">
-            <option value="Single">{{ 'motorLiability.maritalStatus.single' | translate }}</option>
-            <option value="Married">
-              {{ 'motorLiability.maritalStatus.married' | translate }}
-            </option>
-            <option value="Divorced">
-              {{ 'motorLiability.maritalStatus.divorced' | translate }}
-            </option>
-            <option value="Widowed">
-              {{ 'motorLiability.maritalStatus.widowed' | translate }}
-            </option>
+            <option value="Single">Single</option>
+            <option value="Married">Married</option>
+            <option value="Divorced">Divorced</option>
+            <option value="Widowed">Widowed</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'motorLiability.fields.profession' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Profession</label>
           <input type="text" [(ngModel)]="caseData.profession" class="w-full" />
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'motorLiability.fields.damageType' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Damage Type</label>
           <select [(ngModel)]="caseData.damageType" class="w-full">
-            <option value="Fatal">{{ 'motorLiability.damageType.fatal' | translate }}</option>
-            <option value="Disability">
-              {{ 'motorLiability.damageType.disability' | translate }}
-            </option>
+            <option value="Fatal">Fatal</option>
+            <option value="Disability">Disability</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'motorLiability.fields.percentMoralPhysical' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1"
+            >Percent of (Moral, Physical)</label
+          >
           <input
             type="text"
             [(ngModel)]="caseData.percentMoralPhysical"
@@ -132,9 +116,9 @@ import {
           />
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'motorLiability.fields.totalClaimedAmount' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1"
+            >Total Claimed Amount</label
+          >
           <input
             type="number"
             [(ngModel)]="caseData.totalClaimedAmount"
@@ -144,9 +128,7 @@ import {
           />
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'motorLiability.fields.totalPaidAmount' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Total Paid Amount</label>
           <input
             type="number"
             [(ngModel)]="caseData.totalPaidAmount"
@@ -156,59 +138,45 @@ import {
           />
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'motorLiability.fields.dateOfInsertion' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Date of Insertion</label>
           <input type="date" [(ngModel)]="dateOfInsertion" class="w-full" />
         </div>
       </div>
     </ui-card>
 
     <ui-card class="mt-6">
-      <h3 class="font-semibold mb-4">{{ 'motorLiability.sections.hearings' | translate }}</h3>
+      <h3 class="font-semibold mb-4">Hearings and Case Development</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'motorLiability.fields.periodFrom' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Period (From)</label>
           <input type="date" [(ngModel)]="periodFrom" class="w-full" />
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'motorLiability.fields.periodTo' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Period (To)</label>
           <input type="date" [(ngModel)]="periodTo" class="w-full" />
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'motorLiability.fields.hearingsCourtType' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Court Type</label>
           <input type="text" [(ngModel)]="caseData.hearingsCourtType" class="w-full" />
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'motorLiability.fields.hearingsCourtLevel' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Court Level</label>
           <input type="text" [(ngModel)]="caseData.hearingsCourtLevel" class="w-full" />
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'motorLiability.fields.courtRoom' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Court Room</label>
           <input type="text" [(ngModel)]="caseData.courtRoom" class="w-full" />
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
-            'motorLiability.fields.rulingDate' | translate
-          }}</label>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Ruling Date</label>
           <input type="date" [(ngModel)]="rulingDate" class="w-full" />
         </div>
       </div>
     </ui-card>
 
     <div class="mt-6 flex gap-2">
-      <ui-button variant="primary" (click)="save()">{{ 'actions.save' | translate }}</ui-button>
-      <ui-button variant="ghost" (click)="cancel()">{{ 'actions.cancel' | translate }}</ui-button>
+      <ui-button variant="primary" (click)="save()">Save</ui-button>
+      <ui-button variant="ghost" (click)="cancel()">Cancel</ui-button>
     </div>
   `,
 })

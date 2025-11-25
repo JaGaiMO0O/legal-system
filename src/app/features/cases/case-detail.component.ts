@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { UIButtonComponent } from '../../shared/components/ui/button.component';
 import { UICardComponent } from '../../shared/components/ui/card.component';
@@ -18,20 +18,37 @@ import { TranslateModule } from '@ngx-translate/core';
   selector: 'app-case-detail',
   imports: [CommonModule, UIButtonComponent, UICardComponent, FormsModule, TranslateModule],
   template: `
-    <h2 class="mb-2">{{ 'nav.cases' | translate }} - {{ caseItem?.title || '...' }}</h2>
+    <div class="mb-6">
+      <button
+        (click)="goBack()"
+        class="mb-4 flex items-center text-[rgb(var(--text-muted))] hover:text-[rgb(var(--text))] transition"
+      >
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+        Back to Cases
+      </button>
+      <h2 class="text-2xl font-bold">{{ caseItem?.title || '...' }}</h2>
+      <p class="text-sm text-[rgb(var(--text-muted))] mt-1">Client: {{ caseItem?.client }}</p>
+    </div>
     <div class="mb-4 text-sm">
       <span class="inline-flex items-center rounded-full px-2 py-0.5 border">
         Stage: {{ caseItem?.stage || 'primary' | titlecase }}
       </span>
       <button class="ml-2 px-2 py-1 border rounded text-xs" (click)="nextStage()">
-        {{ 'cases.nextCourt' | translate }}
+        Next Court
       </button>
       <button
         class="ml-2 px-2 py-1 border rounded text-xs"
         (click)="execute()"
         *ngIf="caseItem?.stage === 'execution'"
       >
-        {{ 'cases.execute' | translate }}
+        Execute Case
       </button>
     </div>
     <ui-card>
@@ -60,7 +77,7 @@ import { TranslateModule } from '@ngx-translate/core';
       </div>
       <div class="mt-4 flex gap-2">
         <ui-button variant="primary" (click)="save()">Save</ui-button>
-        <ui-button variant="ghost">Cancel</ui-button>
+        <ui-button variant="ghost" (click)="goBack()">Cancel</ui-button>
       </div>
     </ui-card>
 
@@ -123,65 +140,45 @@ import { TranslateModule } from '@ngx-translate/core';
         </ul>
       </ui-card>
       <ui-card>
-        <h3 class="font-semibold mb-4">{{ 'cases.rulings.title' | translate }}</h3>
+        <h3 class="font-semibold mb-4">Court Rulings</h3>
 
         <!-- Ruling Form -->
         <div class="border rounded p-4 mb-4 bg-gray-50">
-          <h4 class="font-semibold mb-3">{{ 'cases.rulings.sections.mainInfo' | translate }}</h4>
+          <h4 class="font-semibold mb-3">Main Info</h4>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
             <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">{{
-                'cases.rulings.fields.caseNo' | translate
-              }}</label>
+              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Case No</label>
               <input type="text" [(ngModel)]="newRuling.caseNo" class="w-full text-sm" />
             </div>
             <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">{{
-                'cases.rulings.fields.caseType' | translate
-              }}</label>
+              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Case Type</label>
               <select [(ngModel)]="newRuling.caseType" class="w-full text-sm">
-                <option value="Plaintiff">
-                  {{ 'cases.rulings.caseType.plaintiff' | translate }}
-                </option>
-                <option value="Defendant">
-                  {{ 'cases.rulings.caseType.defendant' | translate }}
-                </option>
+                <option value="Plaintiff">Plaintiff</option>
+                <option value="Defendant">Defendant</option>
               </select>
             </div>
             <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">{{
-                'cases.rulings.fields.courtType' | translate
-              }}</label>
+              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Court Type</label>
               <input type="text" [(ngModel)]="newRuling.courtType" class="w-full text-sm" />
             </div>
             <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">{{
-                'cases.rulings.fields.courtLevel' | translate
-              }}</label>
+              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Court Level</label>
               <input type="text" [(ngModel)]="newRuling.courtLevel" class="w-full text-sm" />
             </div>
             <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">{{
-                'cases.rulings.fields.courtCity' | translate
-              }}</label>
+              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Court City</label>
               <input type="text" [(ngModel)]="newRuling.courtCity" class="w-full text-sm" />
             </div>
             <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">{{
-                'cases.rulings.fields.filingDate' | translate
-              }}</label>
+              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Filing Date</label>
               <input type="date" [(ngModel)]="newRuling.filingDate" class="w-full text-sm" />
             </div>
             <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">{{
-                'cases.rulings.fields.filingNo' | translate
-              }}</label>
+              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Filing No</label>
               <input type="text" [(ngModel)]="newRuling.filingNo" class="w-full text-sm" />
             </div>
             <div class="md:col-span-2">
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">{{
-                'cases.rulings.fields.caseDetails' | translate
-              }}</label>
+              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Case Details</label>
               <textarea
                 [(ngModel)]="newRuling.caseDetails"
                 rows="2"
@@ -190,12 +187,10 @@ import { TranslateModule } from '@ngx-translate/core';
             </div>
           </div>
 
-          <h4 class="font-semibold mb-3">{{ 'cases.rulings.sections.stageInfo' | translate }}</h4>
+          <h4 class="font-semibold mb-3">Stage Info</h4>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
             <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">{{
-                'cases.rulings.fields.stage' | translate
-              }}</label>
+              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Stage</label>
               <select [(ngModel)]="newRuling.stage" class="w-full text-sm">
                 <option value="primary">Primary</option>
                 <option value="appeal">Appeal</option>
@@ -204,34 +199,24 @@ import { TranslateModule } from '@ngx-translate/core';
               </select>
             </div>
             <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">{{
-                'cases.rulings.fields.stageNo' | translate
-              }}</label>
+              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Stage No</label>
               <input type="number" [(ngModel)]="newRuling.stageNo" min="1" class="w-full text-sm" />
             </div>
             <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">{{
-                'cases.rulings.fields.rulingInFavorOf' | translate
-              }}</label>
+              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1"
+                >Ruling in favor of</label
+              >
               <select [(ngModel)]="newRuling.rulingInFavorOf" class="w-full text-sm">
-                <option value="Company">
-                  {{ 'cases.rulings.rulingInFavorOf.company' | translate }}
-                </option>
-                <option value="Adversary">
-                  {{ 'cases.rulings.rulingInFavorOf.adversary' | translate }}
-                </option>
+                <option value="Company">Company</option>
+                <option value="Adversary">Adversary</option>
               </select>
             </div>
             <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">{{
-                'cases.rulings.fields.rulingDate' | translate
-              }}</label>
+              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Ruling Date</label>
               <input type="date" [(ngModel)]="newRuling.rulingDate" class="w-full text-sm" />
             </div>
             <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">{{
-                'cases.rulings.fields.courtFees' | translate
-              }}</label>
+              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Court Fees</label>
               <input
                 type="number"
                 [(ngModel)]="newRuling.courtFees"
@@ -241,9 +226,7 @@ import { TranslateModule } from '@ngx-translate/core';
               />
             </div>
             <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">{{
-                'cases.rulings.fields.legalExpenses' | translate
-              }}</label>
+              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Legal Expenses</label>
               <input
                 type="number"
                 [(ngModel)]="newRuling.legalExpenses"
@@ -253,9 +236,9 @@ import { TranslateModule } from '@ngx-translate/core';
               />
             </div>
             <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">{{
-                'cases.rulings.fields.translationCourtFees' | translate
-              }}</label>
+              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1"
+                >Translation Court Fees</label
+              >
               <input
                 type="number"
                 [(ngModel)]="newRuling.translationCourtFees"
@@ -265,9 +248,9 @@ import { TranslateModule } from '@ngx-translate/core';
               />
             </div>
             <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">{{
-                'cases.rulings.fields.courtFeesInCash' | translate
-              }}</label>
+              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1"
+                >Court Fees in Cash</label
+              >
               <input
                 type="number"
                 [(ngModel)]="newRuling.courtFeesInCash"
@@ -277,9 +260,7 @@ import { TranslateModule } from '@ngx-translate/core';
               />
             </div>
             <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">{{
-                'cases.rulings.fields.expertFees' | translate
-              }}</label>
+              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Expert Fees</label>
               <input
                 type="number"
                 [(ngModel)]="newRuling.expertFees"
@@ -289,9 +270,7 @@ import { TranslateModule } from '@ngx-translate/core';
               />
             </div>
             <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">{{
-                'cases.rulings.fields.advocacyFees' | translate
-              }}</label>
+              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Advocacy Fees</label>
               <input
                 type="number"
                 [(ngModel)]="newRuling.advocacyFees"
@@ -301,9 +280,7 @@ import { TranslateModule } from '@ngx-translate/core';
               />
             </div>
             <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">{{
-                'cases.rulings.fields.otherExpenses' | translate
-              }}</label>
+              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Other Expenses</label>
               <input
                 type="number"
                 [(ngModel)]="newRuling.otherExpenses"
@@ -314,20 +291,16 @@ import { TranslateModule } from '@ngx-translate/core';
             </div>
           </div>
 
-          <h4 class="font-semibold mb-3">
-            {{ 'cases.rulings.sections.adversaryInfo' | translate }}
-          </h4>
+          <h4 class="font-semibold mb-3">Adversary Info</h4>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
             <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">{{
-                'cases.rulings.fields.adversaryName' | translate
-              }}</label>
+              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Adversary Name</label>
               <input type="text" [(ngModel)]="newRuling.adversaryName" class="w-full text-sm" />
             </div>
             <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">{{
-                'cases.rulings.fields.indemnityByCourtAmount' | translate
-              }}</label>
+              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1"
+                >Indemnity by Court Amount</label
+              >
               <input
                 type="number"
                 [(ngModel)]="newRuling.indemnityByCourtAmount"
@@ -340,7 +313,7 @@ import { TranslateModule } from '@ngx-translate/core';
 
           <div class="flex justify-end">
             <button class="px-4 py-2 bg-blue-600 text-white rounded text-sm" (click)="addRuling()">
-              {{ 'actions.add' | translate }} {{ 'cases.rulings.title' | translate }}
+              Add Court Ruling
             </button>
           </div>
         </div>
@@ -349,46 +322,30 @@ import { TranslateModule } from '@ngx-translate/core';
         <ul class="space-y-3">
           <li *ngFor="let r of caseItem?.rulings" class="border rounded p-3">
             <div class="flex items-center justify-between mb-2">
-              <span class="font-medium"
-                >{{ r.stage | titlecase }} - {{ 'cases.rulings.fields.stageNo' | translate }}:
-                {{ r.stageNo }}</span
-              >
+              <span class="font-medium">{{ r.stage | titlecase }} - Stage No: {{ r.stageNo }}</span>
               <span class="text-xs text-[rgb(var(--text-muted))]">{{
                 r.rulingDate | date: 'short'
               }}</span>
             </div>
             <div class="text-sm space-y-1">
+              <div><strong>Case No:</strong> {{ r.caseNo }}</div>
+              <div><strong>Case Type:</strong> {{ r.caseType }}</div>
+              <div><strong>Ruling in favor of:</strong> {{ r.rulingInFavorOf }}</div>
+              <div><strong>Adversary Name:</strong> {{ r.adversaryName || '-' }}</div>
               <div>
-                <strong>{{ 'cases.rulings.fields.caseNo' | translate }}:</strong> {{ r.caseNo }}
-              </div>
-              <div>
-                <strong>{{ 'cases.rulings.fields.caseType' | translate }}:</strong> {{ r.caseType }}
-              </div>
-              <div>
-                <strong>{{ 'cases.rulings.fields.rulingInFavorOf' | translate }}:</strong>
-                {{ r.rulingInFavorOf }}
-              </div>
-              <div>
-                <strong>{{ 'cases.rulings.fields.adversaryName' | translate }}:</strong>
-                {{ r.adversaryName || '-' }}
-              </div>
-              <div>
-                <strong>{{ 'cases.rulings.fields.indemnityByCourtAmount' | translate }}:</strong>
-                {{ r.indemnityByCourtAmount | number }}
+                <strong>Indemnity by Court Amount:</strong> {{ r.indemnityByCourtAmount | number }}
               </div>
               <div class="text-xs text-[rgb(var(--text-muted))] mt-2">
-                {{ 'cases.rulings.fields.courtFees' | translate }}: {{ r.courtFees | number }} |
-                {{ 'cases.rulings.fields.legalExpenses' | translate }}:
-                {{ r.legalExpenses | number }} |
-                {{ 'cases.rulings.fields.expertFees' | translate }}: {{ r.expertFees | number }}
+                Court Fees: {{ r.courtFees | number }} | Legal Expenses:
+                {{ r.legalExpenses | number }} | Expert Fees: {{ r.expertFees | number }}
               </div>
             </div>
           </li>
           <li
-            *ngIf="!caseItem?.rulings || caseItem.rulings.length === 0"
+            *ngIf="!caseItem?.rulings || caseItem?.rulings?.length === 0"
             class="text-sm text-[rgb(var(--text-muted))] text-center py-4"
           >
-            {{ 'cases.rulings.empty' | translate }}
+            No rulings yet
           </li>
         </ul>
       </ui-card>
@@ -397,6 +354,7 @@ import { TranslateModule } from '@ngx-translate/core';
 })
 export class CaseDetailComponent {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly cases = inject(CasesService);
   protected caseItem: CaseItem | undefined;
   protected title = '';
@@ -430,15 +388,19 @@ export class CaseDetailComponent {
   };
 
   constructor() {
-    const id = this.route.snapshot.paramMap.get('id')!;
-    this.caseItem = this.cases.getById(id);
-    if (!this.caseItem) {
-      // if not found, create a placeholder
-      this.caseItem = this.cases.create({ title: 'New Case', client: 'Client' });
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id && id !== 'new') {
+      this.caseItem = this.cases.getById(id);
+      if (this.caseItem) {
+        this.title = this.caseItem.title;
+        this.client = this.caseItem.client;
+        this.status = this.caseItem.status;
+      }
     }
-    this.title = this.caseItem.title;
-    this.client = this.caseItem.client;
-    this.status = (this.caseItem.status as any) || 'open';
+  }
+
+  goBack(): void {
+    this.router.navigate(['/cases']);
   }
 
   save(): void {
