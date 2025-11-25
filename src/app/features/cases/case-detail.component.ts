@@ -18,10 +18,10 @@ import { TranslateModule } from '@ngx-translate/core';
   selector: 'app-case-detail',
   imports: [CommonModule, UIButtonComponent, UICardComponent, FormsModule, TranslateModule],
   template: `
-    <div class="mb-6">
+    <div class="mb-8">
       <button
         (click)="goBack()"
-        class="mb-4 flex items-center text-[rgb(var(--text-muted))] hover:text-[rgb(var(--text))] transition"
+        class="mb-6 flex items-center text-[rgb(var(--text-muted))] hover:text-[rgb(var(--primary))] transition-colors font-medium"
       >
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -33,321 +33,490 @@ import { TranslateModule } from '@ngx-translate/core';
         </svg>
         Back to Cases
       </button>
-      <h2 class="text-2xl font-bold">{{ caseItem?.title || '...' }}</h2>
-      <p class="text-sm text-[rgb(var(--text-muted))] mt-1">Client: {{ caseItem?.client }}</p>
-    </div>
-    <div class="mb-4 text-sm">
-      <span class="inline-flex items-center rounded-full px-2 py-0.5 border">
-        Stage: {{ caseItem?.stage || 'primary' | titlecase }}
-      </span>
-      <button class="ml-2 px-2 py-1 border rounded text-xs" (click)="nextStage()">
-        Next Court
-      </button>
-      <button
-        class="ml-2 px-2 py-1 border rounded text-xs"
-        (click)="execute()"
-        *ngIf="caseItem?.stage === 'execution'"
-      >
-        Execute Case
-      </button>
+      <div class="flex items-start justify-between mb-6">
+        <div>
+          <h2 class="text-3xl font-bold mb-2">{{ caseItem?.title || 'New Case' }}</h2>
+          <p class="text-sm text-[rgb(var(--text-muted))]">
+            Client: {{ caseItem?.client || 'Not set' }}
+          </p>
+        </div>
+        <div class="flex items-center gap-3">
+          <span
+            class="inline-flex items-center rounded-full px-3 py-1.5 text-sm font-semibold bg-blue-50 text-blue-700 border border-blue-200"
+          >
+            Stage: {{ caseItem?.stage || 'primary' | titlecase }}
+          </span>
+          <ui-button variant="ghost" (click)="nextStage()" class="text-sm"> Next Court </ui-button>
+          <ui-button
+            variant="primary"
+            (click)="execute()"
+            *ngIf="caseItem?.stage === 'execution'"
+            class="text-sm"
+          >
+            Execute Case
+          </ui-button>
+        </div>
+      </div>
     </div>
     <ui-card>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <h3 class="text-lg font-bold mb-6">Case Information</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">ID</label>
-          <input type="text" [value]="caseItem?.id || ''" readonly />
+          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Case ID</label>
+          <input
+            type="text"
+            [value]="caseItem?.id || 'Will be generated'"
+            readonly
+            class="w-full bg-[rgb(var(--surface-muted))] cursor-not-allowed"
+          />
         </div>
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Client</label>
-          <input type="text" [(ngModel)]="client" />
-        </div>
-        <div class="md:col-span-2">
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Title</label>
-          <input type="text" [(ngModel)]="title" />
-        </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Status</label>
-          <select [(ngModel)]="status">
+          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Status</label>
+          <select [(ngModel)]="status" class="w-full">
             <option value="open">Open</option>
             <option value="pending">Pending</option>
             <option value="closed">Closed</option>
             <option value="on-hold">On Hold</option>
           </select>
         </div>
+        <div class="md:col-span-2">
+          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Title</label>
+          <input type="text" [(ngModel)]="title" class="w-full" placeholder="Enter case title" />
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Client</label>
+          <input type="text" [(ngModel)]="client" class="w-full" placeholder="Enter client name" />
+        </div>
       </div>
-      <div class="mt-4 flex gap-2">
-        <ui-button variant="primary" (click)="save()">Save</ui-button>
+      <div class="mt-8 pt-6 border-t border-[rgb(var(--border-light))] flex gap-3 justify-end">
         <ui-button variant="ghost" (click)="goBack()">Cancel</ui-button>
+        <ui-button variant="primary" (click)="save()">Save Changes</ui-button>
       </div>
     </ui-card>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
       <ui-card>
-        <div class="flex items-center justify-between mb-2">
-          <h3 class="font-semibold">Tasks</h3>
-          <div>
-            <input
-              class="border rounded px-2 py-1 text-sm"
-              [(ngModel)]="taskTitle"
-              placeholder="New task"
-            />
-            <button class="ml-2 px-2 py-1 border rounded text-sm" (click)="addTask()">Add</button>
+        <div class="mb-6">
+          <h3 class="text-lg font-bold mb-4">Tasks</h3>
+          <div class="flex gap-2">
+            <input class="flex-1" [(ngModel)]="taskTitle" placeholder="Enter new task" />
+            <ui-button variant="primary" (click)="addTask()" class="whitespace-nowrap"
+              >Add</ui-button
+            >
           </div>
         </div>
-        <ul class="space-y-2">
-          <li *ngFor="let t of caseItem?.tasks" class="flex items-center justify-between">
-            <label class="flex items-center gap-2">
-              <input type="checkbox" [checked]="t.done" (change)="toggleTask(t.id)" />
-              <span [class.line-through]="t.done">{{ t.title }}</span>
+        <ul class="space-y-3">
+          <li
+            *ngFor="let t of caseItem?.tasks"
+            class="flex items-center justify-between p-3 bg-[rgb(var(--surface-muted))] rounded-lg"
+          >
+            <label class="flex items-center gap-3 flex-1 cursor-pointer">
+              <input
+                type="checkbox"
+                [checked]="t.done"
+                (change)="toggleTask(t.id)"
+                class="w-4 h-4"
+              />
+              <span [class.line-through]="t.done" [class.text-[rgb(var(--text-muted))]]="t.done">{{
+                t.title
+              }}</span>
             </label>
-            <button class="text-xs text-red-600" (click)="removeTask(t.id)">Remove</button>
+            <button
+              class="text-sm text-red-600 hover:text-red-700 font-medium px-2"
+              (click)="removeTask(t.id)"
+            >
+              Remove
+            </button>
+          </li>
+          <li
+            *ngIf="!caseItem?.tasks || caseItem?.tasks?.length === 0"
+            class="text-sm text-[rgb(var(--text-muted))] text-center py-4"
+          >
+            No tasks yet
           </li>
         </ul>
       </ui-card>
       <ui-card>
-        <div class="flex items-center justify-between mb-2">
-          <h3 class="font-semibold">Deadlines</h3>
-          <div class="flex items-center gap-2">
-            <input
-              class="border rounded px-2 py-1 text-sm"
-              [(ngModel)]="deadlineTitle"
-              placeholder="Title"
-            />
-            <input
-              type="date"
-              class="border rounded px-2 py-1 text-sm"
-              [(ngModel)]="deadlineDate"
-            />
-            <button class="px-2 py-1 border rounded text-sm" (click)="addDeadline()">Add</button>
+        <div class="mb-6">
+          <h3 class="text-lg font-bold mb-4">Deadlines</h3>
+          <div class="space-y-2">
+            <input class="w-full" [(ngModel)]="deadlineTitle" placeholder="Deadline title" />
+            <div class="flex gap-2">
+              <input type="date" class="flex-1" [(ngModel)]="deadlineDate" />
+              <ui-button variant="primary" (click)="addDeadline()" class="whitespace-nowrap"
+                >Add</ui-button
+              >
+            </div>
           </div>
         </div>
-        <ul class="space-y-2">
-          <li *ngFor="let d of caseItem?.deadlines" class="flex items-center justify-between">
-            <span>{{ d.title }} — {{ d.date }}</span>
-            <button class="text-xs text-red-600" (click)="removeDeadline(d.id)">Remove</button>
+        <ul class="space-y-3">
+          <li
+            *ngFor="let d of caseItem?.deadlines"
+            class="flex items-center justify-between p-3 bg-[rgb(var(--surface-muted))] rounded-lg"
+          >
+            <div>
+              <span class="font-medium">{{ d.title }}</span>
+              <span class="text-sm text-[rgb(var(--text-muted))] ml-2">— {{ d.date }}</span>
+            </div>
+            <button
+              class="text-sm text-red-600 hover:text-red-700 font-medium px-2"
+              (click)="removeDeadline(d.id)"
+            >
+              Remove
+            </button>
+          </li>
+          <li
+            *ngIf="!caseItem?.deadlines || caseItem?.deadlines?.length === 0"
+            class="text-sm text-[rgb(var(--text-muted))] text-center py-4"
+          >
+            No deadlines yet
           </li>
         </ul>
       </ui-card>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
       <ui-card>
-        <h3 class="font-semibold mb-2">Developments</h3>
-        <ul class="space-y-2 text-sm">
-          <li *ngFor="let dev of caseItem?.developments">
-            <span class="text-gray-500">{{ dev.date | date: 'short' }}</span> — {{ dev.note }}
+        <h3 class="text-lg font-bold mb-6">Developments</h3>
+        <ul class="space-y-3">
+          <li
+            *ngFor="let dev of caseItem?.developments"
+            class="p-3 bg-[rgb(var(--surface-muted))] rounded-lg"
+          >
+            <div class="text-xs text-[rgb(var(--text-muted))] mb-1">
+              {{ dev.date | date: 'short' }}
+            </div>
+            <div class="text-sm">{{ dev.note }}</div>
+          </li>
+          <li
+            *ngIf="!caseItem?.developments || caseItem?.developments?.length === 0"
+            class="text-sm text-[rgb(var(--text-muted))] text-center py-4"
+          >
+            No developments yet
           </li>
         </ul>
       </ui-card>
       <ui-card>
-        <h3 class="font-semibold mb-4">Court Rulings</h3>
+        <h3 class="text-lg font-bold mb-6">Court Rulings</h3>
 
         <!-- Ruling Form -->
-        <div class="border rounded p-4 mb-4 bg-gray-50">
-          <h4 class="font-semibold mb-3">Main Info</h4>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+        <div
+          class="border border-[rgb(var(--border))] rounded-xl p-6 mb-6 bg-[rgb(var(--surface-muted))]"
+        >
+          <h4 class="font-bold mb-4 text-[rgb(var(--text))]">Main Info</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Case No</label>
-              <input type="text" [(ngModel)]="newRuling.caseNo" class="w-full text-sm" />
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Case No</label
+              >
+              <input
+                type="text"
+                [(ngModel)]="newRuling.caseNo"
+                class="w-full"
+                placeholder="Enter case number"
+              />
             </div>
             <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Case Type</label>
-              <select [(ngModel)]="newRuling.caseType" class="w-full text-sm">
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Case Type</label
+              >
+              <select [(ngModel)]="newRuling.caseType" class="w-full">
                 <option value="Plaintiff">Plaintiff</option>
                 <option value="Defendant">Defendant</option>
               </select>
             </div>
             <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Court Type</label>
-              <input type="text" [(ngModel)]="newRuling.courtType" class="w-full text-sm" />
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Court Type</label
+              >
+              <input
+                type="text"
+                [(ngModel)]="newRuling.courtType"
+                class="w-full"
+                placeholder="Enter court type"
+              />
             </div>
             <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Court Level</label>
-              <input type="text" [(ngModel)]="newRuling.courtLevel" class="w-full text-sm" />
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Court Level</label
+              >
+              <input
+                type="text"
+                [(ngModel)]="newRuling.courtLevel"
+                class="w-full"
+                placeholder="Enter court level"
+              />
             </div>
             <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Court City</label>
-              <input type="text" [(ngModel)]="newRuling.courtCity" class="w-full text-sm" />
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Court City</label
+              >
+              <input
+                type="text"
+                [(ngModel)]="newRuling.courtCity"
+                class="w-full"
+                placeholder="Enter court city"
+              />
             </div>
             <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Filing Date</label>
-              <input type="date" [(ngModel)]="newRuling.filingDate" class="w-full text-sm" />
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Filing Date</label
+              >
+              <input type="date" [(ngModel)]="newRuling.filingDate" class="w-full" />
             </div>
             <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Filing No</label>
-              <input type="text" [(ngModel)]="newRuling.filingNo" class="w-full text-sm" />
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Filing No</label
+              >
+              <input
+                type="text"
+                [(ngModel)]="newRuling.filingNo"
+                class="w-full"
+                placeholder="Enter filing number"
+              />
             </div>
             <div class="md:col-span-2">
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Case Details</label>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Case Details</label
+              >
               <textarea
                 [(ngModel)]="newRuling.caseDetails"
-                rows="2"
-                class="w-full text-sm"
+                rows="3"
+                class="w-full"
+                placeholder="Enter case details"
               ></textarea>
             </div>
           </div>
 
-          <h4 class="font-semibold mb-3">Stage Info</h4>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-            <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Stage</label>
-              <select [(ngModel)]="newRuling.stage" class="w-full text-sm">
-                <option value="primary">Primary</option>
-                <option value="appeal">Appeal</option>
-                <option value="cassation">Cassation</option>
-                <option value="execution">Execution</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Stage No</label>
-              <input type="number" [(ngModel)]="newRuling.stageNo" min="1" class="w-full text-sm" />
-            </div>
-            <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1"
-                >Ruling in favor of</label
-              >
-              <select [(ngModel)]="newRuling.rulingInFavorOf" class="w-full text-sm">
-                <option value="Company">Company</option>
-                <option value="Adversary">Adversary</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Ruling Date</label>
-              <input type="date" [(ngModel)]="newRuling.rulingDate" class="w-full text-sm" />
-            </div>
-            <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Court Fees</label>
-              <input
-                type="number"
-                [(ngModel)]="newRuling.courtFees"
-                min="0"
-                step="0.01"
-                class="w-full text-sm"
-              />
-            </div>
-            <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Legal Expenses</label>
-              <input
-                type="number"
-                [(ngModel)]="newRuling.legalExpenses"
-                min="0"
-                step="0.01"
-                class="w-full text-sm"
-              />
-            </div>
-            <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1"
-                >Translation Court Fees</label
-              >
-              <input
-                type="number"
-                [(ngModel)]="newRuling.translationCourtFees"
-                min="0"
-                step="0.01"
-                class="w-full text-sm"
-              />
-            </div>
-            <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1"
-                >Court Fees in Cash</label
-              >
-              <input
-                type="number"
-                [(ngModel)]="newRuling.courtFeesInCash"
-                min="0"
-                step="0.01"
-                class="w-full text-sm"
-              />
-            </div>
-            <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Expert Fees</label>
-              <input
-                type="number"
-                [(ngModel)]="newRuling.expertFees"
-                min="0"
-                step="0.01"
-                class="w-full text-sm"
-              />
-            </div>
-            <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Advocacy Fees</label>
-              <input
-                type="number"
-                [(ngModel)]="newRuling.advocacyFees"
-                min="0"
-                step="0.01"
-                class="w-full text-sm"
-              />
-            </div>
-            <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Other Expenses</label>
-              <input
-                type="number"
-                [(ngModel)]="newRuling.otherExpenses"
-                min="0"
-                step="0.01"
-                class="w-full text-sm"
-              />
+          <div class="border-t border-[rgb(var(--border))] pt-6 mt-6">
+            <h4 class="font-bold mb-4 text-[rgb(var(--text))]">Stage Info</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Stage</label
+                >
+                <select [(ngModel)]="newRuling.stage" class="w-full">
+                  <option value="primary">Primary</option>
+                  <option value="appeal">Appeal</option>
+                  <option value="cassation">Cassation</option>
+                  <option value="execution">Execution</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Stage No</label
+                >
+                <input type="number" [(ngModel)]="newRuling.stageNo" min="1" class="w-full" />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Ruling in favor of</label
+                >
+                <select [(ngModel)]="newRuling.rulingInFavorOf" class="w-full">
+                  <option value="Company">Company</option>
+                  <option value="Adversary">Adversary</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Ruling Date</label
+                >
+                <input type="date" [(ngModel)]="newRuling.rulingDate" class="w-full" />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Court Fees</label
+                >
+                <input
+                  type="number"
+                  [(ngModel)]="newRuling.courtFees"
+                  min="0"
+                  step="0.01"
+                  class="w-full"
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Legal Expenses</label
+                >
+                <input
+                  type="number"
+                  [(ngModel)]="newRuling.legalExpenses"
+                  min="0"
+                  step="0.01"
+                  class="w-full"
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Translation Court Fees</label
+                >
+                <input
+                  type="number"
+                  [(ngModel)]="newRuling.translationCourtFees"
+                  min="0"
+                  step="0.01"
+                  class="w-full"
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Court Fees in Cash</label
+                >
+                <input
+                  type="number"
+                  [(ngModel)]="newRuling.courtFeesInCash"
+                  min="0"
+                  step="0.01"
+                  class="w-full"
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Expert Fees</label
+                >
+                <input
+                  type="number"
+                  [(ngModel)]="newRuling.expertFees"
+                  min="0"
+                  step="0.01"
+                  class="w-full"
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Advocacy Fees</label
+                >
+                <input
+                  type="number"
+                  [(ngModel)]="newRuling.advocacyFees"
+                  min="0"
+                  step="0.01"
+                  class="w-full"
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Other Expenses</label
+                >
+                <input
+                  type="number"
+                  [(ngModel)]="newRuling.otherExpenses"
+                  min="0"
+                  step="0.01"
+                  class="w-full"
+                  placeholder="0.00"
+                />
+              </div>
             </div>
           </div>
 
-          <h4 class="font-semibold mb-3">Adversary Info</h4>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-            <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1">Adversary Name</label>
-              <input type="text" [(ngModel)]="newRuling.adversaryName" class="w-full text-sm" />
-            </div>
-            <div>
-              <label class="block text-xs text-[rgb(var(--text-muted))] mb-1"
-                >Indemnity by Court Amount</label
-              >
-              <input
-                type="number"
-                [(ngModel)]="newRuling.indemnityByCourtAmount"
-                min="0"
-                step="0.01"
-                class="w-full text-sm"
-              />
+          <div class="border-t border-[rgb(var(--border))] pt-6 mt-6">
+            <h4 class="font-bold mb-4 text-[rgb(var(--text))]">Adversary Info</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Adversary Name</label
+                >
+                <input
+                  type="text"
+                  [(ngModel)]="newRuling.adversaryName"
+                  class="w-full"
+                  placeholder="Enter adversary name"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Indemnity by Court Amount</label
+                >
+                <input
+                  type="number"
+                  [(ngModel)]="newRuling.indemnityByCourtAmount"
+                  min="0"
+                  step="0.01"
+                  class="w-full"
+                  placeholder="0.00"
+                />
+              </div>
             </div>
           </div>
 
-          <div class="flex justify-end">
-            <button class="px-4 py-2 bg-blue-600 text-white rounded text-sm" (click)="addRuling()">
-              Add Court Ruling
-            </button>
+          <div class="flex justify-end pt-4 border-t border-[rgb(var(--border))]">
+            <ui-button variant="primary" (click)="addRuling()">Add Court Ruling</ui-button>
           </div>
         </div>
 
         <!-- Existing Rulings List -->
-        <ul class="space-y-3">
-          <li *ngFor="let r of caseItem?.rulings" class="border rounded p-3">
-            <div class="flex items-center justify-between mb-2">
-              <span class="font-medium">{{ r.stage | titlecase }} - Stage No: {{ r.stageNo }}</span>
-              <span class="text-xs text-[rgb(var(--text-muted))]">{{
-                r.rulingDate | date: 'short'
-              }}</span>
-            </div>
-            <div class="text-sm space-y-1">
-              <div><strong>Case No:</strong> {{ r.caseNo }}</div>
-              <div><strong>Case Type:</strong> {{ r.caseType }}</div>
-              <div><strong>Ruling in favor of:</strong> {{ r.rulingInFavorOf }}</div>
-              <div><strong>Adversary Name:</strong> {{ r.adversaryName || '-' }}</div>
-              <div>
-                <strong>Indemnity by Court Amount:</strong> {{ r.indemnityByCourtAmount | number }}
+        <div class="mt-6">
+          <h4 class="font-bold mb-4 text-[rgb(var(--text))]">Existing Rulings</h4>
+          <ul class="space-y-4">
+            <li
+              *ngFor="let r of caseItem?.rulings"
+              class="border border-[rgb(var(--border))] rounded-xl p-5 bg-[rgb(var(--surface-muted))]"
+            >
+              <div
+                class="flex items-center justify-between mb-4 pb-3 border-b border-[rgb(var(--border-light))]"
+              >
+                <span class="font-bold text-[rgb(var(--text))]"
+                  >{{ r.stage | titlecase }} - Stage No: {{ r.stageNo }}</span
+                >
+                <span class="text-sm text-[rgb(var(--text-muted))]">{{
+                  r.rulingDate | date: 'short'
+                }}</span>
               </div>
-              <div class="text-xs text-[rgb(var(--text-muted))] mt-2">
-                Court Fees: {{ r.courtFees | number }} | Legal Expenses:
-                {{ r.legalExpenses | number }} | Expert Fees: {{ r.expertFees | number }}
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <div>
+                  <strong class="text-[rgb(var(--text))]">Case No:</strong>
+                  <span class="text-[rgb(var(--text-muted))]">{{ r.caseNo }}</span>
+                </div>
+                <div>
+                  <strong class="text-[rgb(var(--text))]">Case Type:</strong>
+                  <span class="text-[rgb(var(--text-muted))]">{{ r.caseType }}</span>
+                </div>
+                <div>
+                  <strong class="text-[rgb(var(--text))]">Ruling in favor of:</strong>
+                  <span class="text-[rgb(var(--text-muted))]">{{ r.rulingInFavorOf }}</span>
+                </div>
+                <div>
+                  <strong class="text-[rgb(var(--text))]">Adversary Name:</strong>
+                  <span class="text-[rgb(var(--text-muted))]">{{ r.adversaryName || '-' }}</span>
+                </div>
+                <div class="md:col-span-2">
+                  <strong class="text-[rgb(var(--text))]">Indemnity by Court Amount:</strong>
+                  <span class="text-[rgb(var(--primary))] font-semibold"
+                    >{{ r.indemnityByCourtAmount | number }} SAR</span
+                  >
+                </div>
+                <div class="md:col-span-2 pt-2 border-t border-[rgb(var(--border-light))]">
+                  <div class="text-xs text-[rgb(var(--text-muted))] space-y-1">
+                    <div>
+                      Court Fees: <span class="font-medium">{{ r.courtFees | number }} SAR</span>
+                    </div>
+                    <div>
+                      Legal Expenses:
+                      <span class="font-medium">{{ r.legalExpenses | number }} SAR</span>
+                    </div>
+                    <div>
+                      Expert Fees: <span class="font-medium">{{ r.expertFees | number }} SAR</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          </li>
-          <li
-            *ngIf="!caseItem?.rulings || caseItem?.rulings?.length === 0"
-            class="text-sm text-[rgb(var(--text-muted))] text-center py-4"
-          >
-            No rulings yet
-          </li>
-        </ul>
+            </li>
+            <li
+              *ngIf="!caseItem?.rulings || caseItem?.rulings?.length === 0"
+              class="text-sm text-[rgb(var(--text-muted))] text-center py-8 bg-[rgb(var(--surface-muted))] rounded-lg"
+            >
+              No rulings yet. Add your first ruling above.
+            </li>
+          </ul>
+        </div>
       </ui-card>
     </div>
   `,
