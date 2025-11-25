@@ -1,7 +1,7 @@
 {
 	"app": { "title": "Legal System", "welcome": "Welcome to the Legal System portal" },
 	"nav": { "cases": "Cases", "lawyers": "Lawyers", "arbitrations": "Arbitrations", "settings": "Settings" },
-	"actions": { "view": "View", "edit": "Edit", "print": "Print", "save": "Save", "delete": "Delete", "download": "Download", "actions": "Actions" },
+	"actions": { "view": "View", "edit": "Edit", "print": "Print", "save": "Save", "delete": "Delete", "download": "Download", "actions": "Actions", "add": "Add", "remove": "Remove", "cancel": "Cancel" },
   "documents": {
     "title": "Documents",
     "new": { "placeholder": "New document title", "create": "Create" },
@@ -46,6 +46,156 @@
     "convert": "Convert to legal",
     "viewCase": "View case",
     "empty": "No claims yet"
+  },
+  "cases": {
+    "title": "Cases",
+    "nextCourt": "Next Court",
+    "execute": "Execute Case",
+    "rulings": {
+      "title": "Court Rulings",
+      "empty": "No rulings yet",
+      "sections": {
+        "mainInfo": "Main Info",
+        "stageInfo": "Stage Info",
+        "adversaryInfo": "Adversary Info"
+      },
+      "fields": {
+        "caseNo": "Case No",
+        "caseType": "Case Type",
+        "courtType": "Court Type",
+        "courtLevel": "Court Level",
+        "courtCity": "Court City",
+        "caseDetails": "Case Details",
+        "filingDate": "Filing Date",
+        "filingNo": "Filing No",
+        "stage": "Stage",
+        "stageNo": "Stage No",
+        "rulingInFavorOf": "Ruling in favor of",
+        "rulingDate": "Ruling Date",
+        "courtFees": "Court Fees",
+        "legalExpenses": "Legal Expenses",
+        "translationCourtFees": "Translation Court Fees",
+        "courtFeesInCash": "Court Fees in Cash",
+        "expertFees": "Expert Fees",
+        "advocacyFees": "Advocacy Fees",
+        "otherExpenses": "Other Expenses",
+        "adversaryName": "Adversary Name",
+        "indemnityByCourtAmount": "Indemnity by Court Amount"
+      },
+      "caseType": {
+        "plaintiff": "Plaintiff",
+        "defendant": "Defendant"
+      },
+      "rulingInFavorOf": {
+        "company": "Company",
+        "adversary": "Adversary"
+      }
+    }
+  },
+  "arbitrations": {
+    "title": "Arbitrations",
+    "empty": "No arbitrations yet",
+    "noDescription": "No description",
+    "noHearings": "No hearings scheduled",
+    "hearingsCount": "Hearings",
+    "sections": {
+      "arbitrationInfo": "Arbitration Info",
+      "companyRepresentative": "Company Representative",
+      "oppositionRepresentative": "Opposition Representative",
+      "hearings": "Hearings"
+    },
+    "fields": {
+      "appealability": "Appealability",
+      "fillingDate": "Filling Date",
+      "caseDescription": "Case Description",
+      "arbitrationRoom": "Arbitration Room",
+      "arbitrationFees": "Arbitration Fees",
+      "maximumPeriod": "Maximum Period",
+      "lawyerName": "Lawyer Name",
+      "position": "Position",
+      "address": "Address",
+      "remarks": "Remarks"
+    }
+  },
+  "motorLiability": {
+    "title": "Motor Liability Case",
+    "sections": {
+      "case": "Case",
+      "claimantInfo": "Claimant Info",
+      "hearings": "Hearings and Case Development"
+    },
+    "fields": {
+      "caseNo": "Case No",
+      "courtType": "Court Type",
+      "courtLevel": "Court Level",
+      "courtCity": "Court City",
+      "caseDescription": "Case Description",
+      "claimantName": "Claimant Name",
+      "nationality": "Nationality",
+      "gender": "Gender",
+      "age": "Age",
+      "maritalStatus": "Marital Status",
+      "profession": "Profession",
+      "damageType": "Damage Type",
+      "percentMoralPhysical": "Percent of (Moral, Physical)",
+      "totalClaimedAmount": "Total Claimed Amount",
+      "totalPaidAmount": "Total Paid Amount",
+      "dateOfInsertion": "Date of Insertion",
+      "periodFrom": "Period (From)",
+      "periodTo": "Period (To)",
+      "hearingsCourtType": "Court Type",
+      "hearingsCourtLevel": "Court Level",
+      "courtRoom": "Court Room",
+      "rulingDate": "Ruling Date"
+    },
+    "gender": {
+      "male": "Male",
+      "female": "Female"
+    },
+    "maritalStatus": {
+      "single": "Single",
+      "married": "Married",
+      "divorced": "Divorced",
+      "widowed": "Widowed"
+    },
+    "damageType": {
+      "fatal": "Fatal",
+      "disability": "Disability"
+    }
+  },
+  "execution": {
+    "title": "Execution Cases",
+    "empty": "No execution cases yet",
+    "noCaseNo": "No case number",
+    "sections": {
+      "mainInfo": "Main Info"
+    },
+    "fields": {
+      "executionCaseNo": "Execution Case No",
+      "fileNo": "File No",
+      "fileDate": "File Date",
+      "courtRoom": "Court Room",
+      "companyLawyer": "Company Lawyer",
+      "lastCourtType": "Last Court Type",
+      "lastCourtLevel": "Last Court Level",
+      "amountRuled": "Amount Ruled",
+      "amountPaid": "Amount Paid"
+    }
+  },
+  "settlement": {
+    "title": "Business Amicable Settlement",
+    "empty": "No settlements yet",
+    "settlement": "Settlement",
+    "sections": {
+      "suggestedAmounts": "Suggested Amounts"
+    },
+    "fields": {
+      "departmentAmount": "Department Amount",
+      "legalDepartmentAmount": "Legal Department Amount",
+      "managementAmount": "Management Amount",
+      "adversaryAmount": "Adversary Amount",
+      "amountOfAmicableAgreement": "Amount of Amicable Agreement"
+    }
   }
 }
 

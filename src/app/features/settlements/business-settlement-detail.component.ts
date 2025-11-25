@@ -1,0 +1,145 @@
+import { Component, inject } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { UIButtonComponent } from '../../shared/components/ui/button.component';
+import { UICardComponent } from '../../shared/components/ui/card.component';
+import {
+  BusinessSettlementService,
+  BusinessSettlement,
+} from '../../shared/services/business-settlement.service';
+
+@Component({
+  standalone: true,
+  selector: 'app-business-settlement-detail',
+  imports: [CommonModule, FormsModule, TranslateModule, UIButtonComponent, UICardComponent],
+  template: `
+    <h2 class="mb-4">{{ 'settlement.title' | translate }}</h2>
+
+    <ui-card>
+      <h3 class="font-semibold mb-4">{{ 'settlement.sections.suggestedAmounts' | translate }}</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
+            'settlement.fields.departmentAmount' | translate
+          }}</label>
+          <input
+            type="number"
+            [(ngModel)]="settlement.departmentAmount"
+            min="0"
+            step="0.01"
+            class="w-full"
+          />
+        </div>
+        <div>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
+            'settlement.fields.legalDepartmentAmount' | translate
+          }}</label>
+          <input
+            type="number"
+            [(ngModel)]="settlement.legalDepartmentAmount"
+            min="0"
+            step="0.01"
+            class="w-full"
+          />
+        </div>
+        <div>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
+            'settlement.fields.managementAmount' | translate
+          }}</label>
+          <input
+            type="number"
+            [(ngModel)]="settlement.managementAmount"
+            min="0"
+            step="0.01"
+            class="w-full"
+          />
+        </div>
+        <div>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
+            'settlement.fields.adversaryAmount' | translate
+          }}</label>
+          <input
+            type="number"
+            [(ngModel)]="settlement.adversaryAmount"
+            min="0"
+            step="0.01"
+            class="w-full"
+          />
+        </div>
+        <div>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
+            'settlement.fields.amountOfAmicableAgreement' | translate
+          }}</label>
+          <input
+            type="number"
+            [(ngModel)]="settlement.amountOfAmicableAgreement"
+            min="0"
+            step="0.01"
+            class="w-full"
+          />
+        </div>
+      </div>
+    </ui-card>
+
+    <div class="mt-6 flex gap-2">
+      <ui-button variant="primary" (click)="save()">{{ 'actions.save' | translate }}</ui-button>
+      <ui-button variant="ghost" (click)="cancel()">{{ 'actions.cancel' | translate }}</ui-button>
+    </div>
+  `,
+})
+export class BusinessSettlementDetailComponent {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly businessSettlementService = inject(BusinessSettlementService);
+
+  protected settlement: BusinessSettlement;
+
+  constructor() {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      const existing = this.businessSettlementService.getById(id);
+      if (existing) {
+        this.settlement = { ...existing };
+      } else {
+        this.settlement = this.createEmptySettlement();
+      }
+    } else {
+      this.settlement = this.createEmptySettlement();
+    }
+  }
+
+  private createEmptySettlement(): BusinessSettlement {
+    return {
+      id: '',
+      departmentAmount: 0,
+      legalDepartmentAmount: 0,
+      managementAmount: 0,
+      adversaryAmount: 0,
+      amountOfAmicableAgreement: 0,
+      createdAt: '',
+      updatedAt: '',
+    };
+  }
+
+  save(): void {
+    if (this.settlement.id) {
+      this.businessSettlementService.update(this.settlement.id, this.settlement);
+    } else {
+      const created = this.businessSettlementService.create({
+        departmentAmount: this.settlement.departmentAmount,
+        legalDepartmentAmount: this.settlement.legalDepartmentAmount,
+        managementAmount: this.settlement.managementAmount,
+        adversaryAmount: this.settlement.adversaryAmount,
+        amountOfAmicableAgreement: this.settlement.amountOfAmicableAgreement,
+        linkedClaimId: this.settlement.linkedClaimId,
+      });
+      this.router.navigate(['/settlements', created.id]);
+    }
+  }
+
+  cancel(): void {
+    this.router.navigate(['/settlements']);
+  }
+}

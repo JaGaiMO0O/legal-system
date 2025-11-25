@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { MockStorageService } from './mock-storage.service';
 import { CasesService } from './cases.service';
+import { MotorLiabilityService } from './motor-liability.service';
 
 export interface Claim {
   id: string;
@@ -19,6 +20,7 @@ const STORAGE_KEY = 'claims';
 export class ClaimsService {
   private readonly storage = inject(MockStorageService);
   private readonly cases = inject(CasesService);
+  private readonly motorLiabilityService = inject(MotorLiabilityService);
 
   private generateId(): string {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -45,22 +47,51 @@ export class ClaimsService {
   }
 
   markToLegal(claimId: string): Claim | undefined {
-    let createdCaseId: string | undefined;
+    let createdMotorLiabilityCaseId: string | undefined;
+    const claim = this.list().find((c) => c.id === claimId);
+
+    if (!claim) return undefined;
+
     this.storage.update<Claim[]>(
       STORAGE_KEY,
       (current) =>
         (current ?? []).map((c) => {
           if (c.id !== claimId) return c;
-          // create a case if not linked
-          if (!c.linkedCaseId) {
-            const created = this.cases.create({
-              title: `Case for claim ${c.reference}`,
-              client: c.claimant,
-              tags: ['motor'],
+          // create a motor liability case if not linked
+          if (!c.linkedCaseId && c.kind === 'motor') {
+            const now = new Date().toISOString();
+            const created = this.motorLiabilityService.create({
+              caseNo: `ML-${c.reference}`,
+              courtType: '',
+              courtLevel: '',
+              courtCity: '',
+              caseDescription: c.details || `Motor liability case for claim ${c.reference}`,
+              claimantName: c.claimant,
+              nationality: '',
+              gender: 'Male',
+              age: 0,
+              maritalStatus: 'Single',
+              profession: '',
+              damageType: 'Fatal',
+              percentMoralPhysical: '',
+              totalClaimedAmount: 0,
+              totalPaidAmount: 0,
+              dateOfInsertion: now,
+              periodFrom: now,
+              periodTo: now,
+              hearingsCourtType: '',
+              hearingsCourtLevel: '',
+              courtRoom: '',
+              rulingDate: '',
+              linkedClaimId: claimId,
             });
-            createdCaseId = created.id;
+            createdMotorLiabilityCaseId = created.id;
           }
-          return { ...c, legalFlag: 1, linkedCaseId: createdCaseId ?? c.linkedCaseId };
+          return {
+            ...c,
+            legalFlag: 1,
+            linkedCaseId: createdMotorLiabilityCaseId ?? c.linkedCaseId,
+          };
         }),
       [],
     );

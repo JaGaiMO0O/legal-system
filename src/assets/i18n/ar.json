@@ -62,6 +62,8 @@
     "titleField": "العنوان",
     "nextHearing": "الجلسة القادمة",
     "reference": "المرجع",
+    "nextCourt": "المحكمة التالية",
+    "execute": "تنفيذ القضية",
     "statuses": {
       "open": "مفتوحة",
       "pending": "قيد المعالجة",
@@ -77,6 +79,46 @@
       "title": "المواعيد النهائية",
       "date": "التاريخ",
       "titlePlaceholder": "عنوان الموعد"
+    },
+    "rulings": {
+      "title": "أحكام المحكمة",
+      "empty": "لا توجد أحكام بعد",
+      "sections": {
+        "mainInfo": "المعلومات الرئيسية",
+        "stageInfo": "معلومات المرحلة",
+        "adversaryInfo": "معلومات الخصم"
+      },
+      "fields": {
+        "caseNo": "رقم القضية",
+        "caseType": "نوع القضية",
+        "courtType": "نوع المحكمة",
+        "courtLevel": "مستوى المحكمة",
+        "courtCity": "مدينة المحكمة",
+        "caseDetails": "تفاصيل القضية",
+        "filingDate": "تاريخ الإيداع",
+        "filingNo": "رقم الإيداع",
+        "stage": "المرحلة",
+        "stageNo": "رقم المرحلة",
+        "rulingInFavorOf": "الحكم لصالح",
+        "rulingDate": "تاريخ الحكم",
+        "courtFees": "رسوم المحكمة",
+        "legalExpenses": "المصروفات القانونية",
+        "translationCourtFees": "رسوم ترجمة المحكمة",
+        "courtFeesInCash": "رسوم المحكمة نقداً",
+        "expertFees": "رسوم الخبير",
+        "advocacyFees": "رسوم المحاماة",
+        "otherExpenses": "مصروفات أخرى",
+        "adversaryName": "اسم الخصم",
+        "indemnityByCourtAmount": "مبلغ التعويض من المحكمة"
+      },
+      "caseType": {
+        "plaintiff": "المدعي",
+        "defendant": "المدعى عليه"
+      },
+      "rulingInFavorOf": {
+        "company": "الشركة",
+        "adversary": "الخصم"
+      }
     }
   },
   "claims": {
@@ -90,5 +132,110 @@
     "convert": "تحويل إلى قانوني",
     "viewCase": "عرض القضية",
     "empty": "لا توجد مطالبات بعد"
+  },
+  "arbitrations": {
+    "title": "التحكيم",
+    "empty": "لا توجد تحكيمات بعد",
+    "noDescription": "لا يوجد وصف",
+    "noHearings": "لا توجد جلسات مجدولة",
+    "hearingsCount": "الجلسات",
+    "sections": {
+      "arbitrationInfo": "معلومات التحكيم",
+      "companyRepresentative": "ممثل الشركة",
+      "oppositionRepresentative": "ممثل المعارضة",
+      "hearings": "الجلسات"
+    },
+    "fields": {
+      "appealability": "القابلية للاستئناف",
+      "fillingDate": "تاريخ الإيداع",
+      "caseDescription": "وصف القضية",
+      "arbitrationRoom": "غرفة التحكيم",
+      "arbitrationFees": "رسوم التحكيم",
+      "maximumPeriod": "الفترة القصوى",
+      "lawyerName": "اسم المحامي",
+      "position": "المنصب",
+      "address": "العنوان",
+      "remarks": "ملاحظات"
+    }
+  },
+  "motorLiability": {
+    "title": "قضية المسؤولية عن المركبات",
+    "sections": {
+      "case": "القضية",
+      "claimantInfo": "معلومات المدعي",
+      "hearings": "الجلسات وتطور القضية"
+    },
+    "fields": {
+      "caseNo": "رقم القضية",
+      "courtType": "نوع المحكمة",
+      "courtLevel": "مستوى المحكمة",
+      "courtCity": "مدينة المحكمة",
+      "caseDescription": "وصف القضية",
+      "claimantName": "اسم المدعي",
+      "nationality": "الجنسية",
+      "gender": "الجنس",
+      "age": "العمر",
+      "maritalStatus": "الحالة الاجتماعية",
+      "profession": "المهنة",
+      "damageType": "نوع الضرر",
+      "percentMoralPhysical": "نسبة (أدبي، جسدي)",
+      "totalClaimedAmount": "إجمالي المبلغ المطالب به",
+      "totalPaidAmount": "إجمالي المبلغ المدفوع",
+      "dateOfInsertion": "تاريخ الإدراج",
+      "periodFrom": "الفترة (من)",
+      "periodTo": "الفترة (إلى)",
+      "hearingsCourtType": "نوع المحكمة",
+      "hearingsCourtLevel": "مستوى المحكمة",
+      "courtRoom": "قاعة المحكمة",
+      "rulingDate": "تاريخ الحكم"
+    },
+    "gender": {
+      "male": "ذكر",
+      "female": "أنثى"
+    },
+    "maritalStatus": {
+      "single": "أعزب",
+      "married": "متزوج",
+      "divorced": "مطلق",
+      "widowed": "أرمل"
+    },
+    "damageType": {
+      "fatal": "قاتل",
+      "disability": "إعاقة"
+    }
+  },
+  "execution": {
+    "title": "قضايا التنفيذ",
+    "empty": "لا توجد قضايا تنفيذ بعد",
+    "noCaseNo": "لا يوجد رقم قضية",
+    "sections": {
+      "mainInfo": "المعلومات الرئيسية"
+    },
+    "fields": {
+      "executionCaseNo": "رقم قضية التنفيذ",
+      "fileNo": "رقم الملف",
+      "fileDate": "تاريخ الملف",
+      "courtRoom": "قاعة المحكمة",
+      "companyLawyer": "محامي الشركة",
+      "lastCourtType": "نوع المحكمة الأخيرة",
+      "lastCourtLevel": "مستوى المحكمة الأخيرة",
+      "amountRuled": "المبلغ المحكوم به",
+      "amountPaid": "المبلغ المدفوع"
+    }
+  },
+  "settlement": {
+    "title": "التسوية الودية التجارية",
+    "empty": "لا توجد تسويات بعد",
+    "settlement": "التسوية",
+    "sections": {
+      "suggestedAmounts": "المبالغ المقترحة"
+    },
+    "fields": {
+      "departmentAmount": "مبلغ القسم",
+      "legalDepartmentAmount": "مبلغ الدائرة القانونية",
+      "managementAmount": "مبلغ الإدارة",
+      "adversaryAmount": "مبلغ الخصم",
+      "amountOfAmicableAgreement": "مبلغ الاتفاق الودي"
+    }
   }
 }
