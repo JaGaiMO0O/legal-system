@@ -38,9 +38,7 @@ import { UndoRedoService } from '../../shared/services/undo-redo.service';
     BreadcrumbComponent,
   ],
   template: `
-    <app-breadcrumb
-      [items]="breadcrumbItems"
-    ></app-breadcrumb>
+    <app-breadcrumb [items]="breadcrumbItems"></app-breadcrumb>
     <div class="mb-8">
       <div class="flex items-start justify-between mb-6">
         <div>
@@ -64,12 +62,7 @@ import { UndoRedoService } from '../../shared/services/undo-redo.service';
           >
             Execute Case
           </ui-button>
-          <ui-button
-            variant="ghost"
-            (click)="exportCase()"
-            *ngIf="caseItem"
-            class="text-sm"
-          >
+          <ui-button variant="ghost" (click)="exportCase()" *ngIf="caseItem" class="text-sm">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -105,9 +98,7 @@ import { UndoRedoService } from '../../shared/services/undo-redo.service';
           </select>
         </div>
         <div class="md:col-span-2">
-          <label
-            for="case-title"
-            class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+          <label for="case-title" class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
             >Title <span class="text-red-500">*</span></label
           >
           <input
@@ -122,19 +113,12 @@ import { UndoRedoService } from '../../shared/services/undo-redo.service';
             [attr.aria-invalid]="!!titleError"
             [attr.aria-describedby]="titleError ? 'title-error' : null"
           />
-          <p
-            *ngIf="titleError"
-            id="title-error"
-            class="text-red-600 text-xs mt-1"
-            role="alert"
-          >
+          <p *ngIf="titleError" id="title-error" class="text-red-600 text-xs mt-1" role="alert">
             {{ titleError }}
           </p>
         </div>
         <div class="md:col-span-2">
-          <label
-            for="case-client"
-            class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+          <label for="case-client" class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
             >Client <span class="text-red-500">*</span></label
           >
           <input
@@ -149,17 +133,14 @@ import { UndoRedoService } from '../../shared/services/undo-redo.service';
             [attr.aria-invalid]="!!clientError"
             [attr.aria-describedby]="clientError ? 'client-error' : null"
           />
-          <p
-            *ngIf="clientError"
-            id="client-error"
-            class="text-red-600 text-xs mt-1"
-            role="alert"
-          >
+          <p *ngIf="clientError" id="client-error" class="text-red-600 text-xs mt-1" role="alert">
             {{ clientError }}
           </p>
         </div>
       </div>
-      <div class="mt-8 pt-6 border-t border-[rgb(var(--border-light))] flex items-center justify-between">
+      <div
+        class="mt-8 pt-6 border-t border-[rgb(var(--border-light))] flex items-center justify-between"
+      >
         <div class="flex items-center gap-2 text-sm">
           <span
             *ngIf="caseItem && autoSaveStatus === 'saved'"
@@ -179,7 +160,7 @@ import { UndoRedoService } from '../../shared/services/undo-redo.service';
             *ngIf="caseItem && autoSaveStatus === 'saving'"
             class="flex items-center gap-1.5 text-amber-600"
           >
-            <app-loading-spinner size="small" show="true"></app-loading-spinner>
+            <app-loading-spinner size="small" [show]="true"></app-loading-spinner>
             Saving...
           </span>
           <span
@@ -198,23 +179,23 @@ import { UndoRedoService } from '../../shared/services/undo-redo.service';
           </span>
         </div>
         <div class="flex gap-3">
-        <ui-button
-          variant="ghost"
-          (click)="goBack()"
-          [disabled]="saving"
-          aria-label="Cancel and go back"
-        >
-          Cancel
-        </ui-button>
-        <ui-button
-          variant="primary"
-          (click)="save()"
-          [disabled]="!isFormValid() || saving"
-          aria-label="Save case"
-        >
+          <ui-button
+            variant="ghost"
+            (click)="goBack()"
+            [disabled]="saving"
+            aria-label="Cancel and go back"
+          >
+            Cancel
+          </ui-button>
+          <ui-button
+            variant="primary"
+            (click)="save()"
+            [disabled]="!isFormValid() || saving"
+            aria-label="Save case"
+          >
             <span *ngIf="!saving">{{ caseItem ? 'Save Changes' : 'Create Case' }}</span>
             <span *ngIf="saving" class="flex items-center gap-2">
-              <app-loading-spinner size="small" show="true"></app-loading-spinner>
+              <app-loading-spinner size="small" [show]="true"></app-loading-spinner>
               Saving...
             </span>
           </ui-button>
@@ -236,7 +217,7 @@ import { UndoRedoService } from '../../shared/services/undo-redo.service';
             >
               <span *ngIf="!addingTask">Add</span>
               <span *ngIf="addingTask" class="flex items-center gap-2">
-                <app-loading-spinner size="small" show="true"></app-loading-spinner>
+                <app-loading-spinner size="small" [show]="true"></app-loading-spinner>
                 Adding...
               </span>
             </ui-button>
@@ -301,7 +282,9 @@ import { UndoRedoService } from '../../shared/services/undo-redo.service';
                 [class.border-red-300]="deadlineTitleError"
                 [class.bg-red-50]="deadlineTitleError"
               />
-              <p *ngIf="deadlineTitleError" class="text-red-600 text-xs mt-1">{{ deadlineTitleError }}</p>
+              <p *ngIf="deadlineTitleError" class="text-red-600 text-xs mt-1">
+                {{ deadlineTitleError }}
+              </p>
             </div>
             <div>
               <div class="flex gap-2">
@@ -320,16 +303,14 @@ import { UndoRedoService } from '../../shared/services/undo-redo.service';
                 >
                   <span *ngIf="!addingDeadline">Add</span>
                   <span *ngIf="addingDeadline" class="flex items-center gap-2">
-                    <app-loading-spinner size="small" show="true"></app-loading-spinner>
+                    <app-loading-spinner size="small" [show]="true"></app-loading-spinner>
                     Adding...
                   </span>
                 </ui-button>
               </div>
-              <p *ngIf="deadlineDateError" class="text-red-600 text-xs mt-1">{{ deadlineDateError }}</p>
-            </div>
-              <ui-button variant="primary" (click)="addDeadline()" class="whitespace-nowrap"
-                >Add</ui-button
-              >
+              <p *ngIf="deadlineDateError" class="text-red-600 text-xs mt-1">
+                {{ deadlineDateError }}
+              </p>
             </div>
           </div>
         </div>
@@ -418,7 +399,7 @@ import { UndoRedoService } from '../../shared/services/undo-redo.service';
             >
               <span *ngIf="!addingDevelopment">Add Development</span>
               <span *ngIf="addingDevelopment" class="flex items-center gap-2">
-                <app-loading-spinner size="small" show="true"></app-loading-spinner>
+                <app-loading-spinner size="small" [show]="true"></app-loading-spinner>
                 Adding...
               </span>
             </ui-button>
@@ -479,7 +460,9 @@ import { UndoRedoService } from '../../shared/services/undo-redo.service';
                 [class.bg-red-50]="rulingCaseNoError"
                 placeholder="Enter case number"
               />
-              <p *ngIf="rulingCaseNoError" class="text-red-600 text-xs mt-1">{{ rulingCaseNoError }}</p>
+              <p *ngIf="rulingCaseNoError" class="text-red-600 text-xs mt-1">
+                {{ rulingCaseNoError }}
+              </p>
             </div>
             <div>
               <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
@@ -502,7 +485,9 @@ import { UndoRedoService } from '../../shared/services/undo-redo.service';
                 [class.bg-red-50]="rulingCourtTypeError"
                 placeholder="Enter court type"
               />
-              <p *ngIf="rulingCourtTypeError" class="text-red-600 text-xs mt-1">{{ rulingCourtTypeError }}</p>
+              <p *ngIf="rulingCourtTypeError" class="text-red-600 text-xs mt-1">
+                {{ rulingCourtTypeError }}
+              </p>
             </div>
             <div>
               <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
@@ -537,9 +522,9 @@ import { UndoRedoService } from '../../shared/services/undo-redo.service';
                 [class.border-red-300]="rulingFilingDateError"
                 [class.bg-red-50]="rulingFilingDateError"
               />
-              <p *ngIf="rulingFilingDateError" class="text-red-600 text-xs mt-1">{{
-                rulingFilingDateError
-              }}</p>
+              <p *ngIf="rulingFilingDateError" class="text-red-600 text-xs mt-1">
+                {{ rulingFilingDateError }}
+              </p>
             </div>
             <div>
               <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
@@ -594,21 +579,21 @@ import { UndoRedoService } from '../../shared/services/undo-redo.service';
                   <option value="Adversary">Adversary</option>
                 </select>
               </div>
-            <div>
-              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                >Ruling Date</label
-              >
-              <input
-                type="date"
-                [(ngModel)]="newRuling.rulingDate"
-                class="w-full"
-                [class.border-red-300]="rulingRulingDateError"
-                [class.bg-red-50]="rulingRulingDateError"
-              />
-              <p *ngIf="rulingRulingDateError" class="text-red-600 text-xs mt-1">{{
-                rulingRulingDateError
-              }}</p>
-            </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Ruling Date</label
+                >
+                <input
+                  type="date"
+                  [(ngModel)]="newRuling.rulingDate"
+                  class="w-full"
+                  [class.border-red-300]="rulingRulingDateError"
+                  [class.bg-red-50]="rulingRulingDateError"
+                />
+                <p *ngIf="rulingRulingDateError" class="text-red-600 text-xs mt-1">
+                  {{ rulingRulingDateError }}
+                </p>
+              </div>
               <div>
                 <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
                   >Court Fees</label
@@ -737,7 +722,7 @@ import { UndoRedoService } from '../../shared/services/undo-redo.service';
             <ui-button variant="primary" (click)="addRuling()" [disabled]="addingRuling">
               <span *ngIf="!addingRuling">Add Court Ruling</span>
               <span *ngIf="addingRuling" class="flex items-center gap-2">
-                <app-loading-spinner size="small" show="true"></app-loading-spinner>
+                <app-loading-spinner size="small" [show]="true"></app-loading-spinner>
                 Adding...
               </span>
             </ui-button>
@@ -786,7 +771,10 @@ import { UndoRedoService } from '../../shared/services/undo-redo.service';
                   </ui-button>
                 </div>
               </div>
-              <div *ngIf="editingRulingId !== r.id" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <div
+                *ngIf="editingRulingId !== r.id"
+                class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm"
+              >
                 <div>
                   <strong class="text-[rgb(var(--text))]">Case No:</strong>
                   <span class="text-[rgb(var(--text-muted))]">{{ r.caseNo }}</span>

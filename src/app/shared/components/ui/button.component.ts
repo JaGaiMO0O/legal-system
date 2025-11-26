@@ -5,10 +5,11 @@ import { CommonModule } from '@angular/common';
   selector: 'ui-button',
   standalone: true,
   imports: [CommonModule],
-  template: ` <button [ngClass]="classes"><ng-content /></button> `,
+  template: ` <button [ngClass]="classes" [disabled]="disabled"><ng-content /></button> `,
 })
 export class UIButtonComponent {
   @Input() variant: 'primary' | 'ghost' | 'default' = 'default';
+  @Input() disabled: boolean = false;
 
   get classes() {
     switch (this.variant) {

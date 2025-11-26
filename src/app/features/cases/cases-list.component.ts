@@ -108,11 +108,12 @@ import { ToastService } from '../../shared/services/toast.service';
               type="text"
               [(ngModel)]="searchQuery"
               (ngModelChange)="onSearchChange()"
-              class="w-full pl-10"
+              class="w-full pr-4 py-2.5"
+              style="padding-left: 2.5rem;"
               placeholder="Search by title or client..."
             />
             <svg
-              class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[rgb(var(--text-muted))]"
+              class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[rgb(var(--text-muted))] pointer-events-none z-10"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

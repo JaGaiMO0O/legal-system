@@ -177,6 +177,16 @@ textarea {
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
+/* Select elements need extra right padding for dropdown arrow */
+select {
+  padding-right: 2.5rem;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.25em 1.25em;
+}
+
 input:focus,
 select:focus,
 textarea:focus {
