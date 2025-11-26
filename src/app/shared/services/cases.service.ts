@@ -229,11 +229,19 @@ export class CasesService {
   }
 
   create(input: { title: string; client: string; tags?: string[] }): CaseItem {
+    // Validate input
+    if (!input.title || !input.title.trim()) {
+      throw new Error('Case title is required');
+    }
+    if (!input.client || !input.client.trim()) {
+      throw new Error('Client name is required');
+    }
+
     const now = new Date().toISOString();
     const item: CaseItem = {
       id: this.generateId(),
-      title: input.title,
-      client: input.client,
+      title: input.title.trim(),
+      client: input.client.trim(),
       status: 'open',
       stage: 'primary',
       tags: input.tags ?? [],
@@ -304,7 +312,21 @@ export class CasesService {
   }
 
   addDeadline(id: string, title: string, date: string): CaseDeadline | undefined {
-    const dl: CaseDeadline = { id: this.generateId(), title, date };
+    // Validate input
+    if (!title || !title.trim()) {
+      throw new Error('Deadline title is required');
+    }
+    if (!date) {
+      throw new Error('Deadline date is required');
+    }
+    // Validate date is in the future
+    const deadlineDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (deadlineDate < today) {
+      throw new Error('Deadline date must be in the future');
+    }
+    const dl: CaseDeadline = { id: this.generateId(), title: title.trim(), date };
     this.mutate((cases) =>
       cases.map((c) =>
         c.id === id
@@ -330,7 +352,15 @@ export class CasesService {
   }
 
   addDevelopment(id: string, note: string): void {
-    const dev: CaseDevelopment = { id: this.generateId(), date: new Date().toISOString(), note };
+    // Validate input
+    if (!note || !note.trim()) {
+      throw new Error('Development note is required');
+    }
+    const dev: CaseDevelopment = {
+      id: this.generateId(),
+      date: new Date().toISOString(),
+      note: note.trim(),
+    };
     this.mutate((cases) =>
       cases.map((c) =>
         c.id === id
@@ -362,6 +392,25 @@ export class CasesService {
       adversaryName: string;
     },
   ): void {
+    // Validate required fields
+    if (!input.caseNo || !input.caseNo.trim()) {
+      throw new Error('Case number is required');
+    }
+    if (!input.courtType || !input.courtType.trim()) {
+      throw new Error('Court type is required');
+    }
+    // Check for duplicate case number in the same case
+    const caseItem = this.getById(id);
+    if (caseItem?.rulings) {
+      const duplicate = caseItem.rulings.find(
+        (r) => r.caseNo === input.caseNo.trim() && r.stage === input.stage,
+      );
+      if (duplicate) {
+        throw new Error(
+          `A ruling with case number "${input.caseNo}" already exists for ${input.stage} stage`,
+        );
+      }
+    }
     const ruling: CaseRuling = {
       id: this.generateId(),
       // Main Info
@@ -400,6 +449,41 @@ export class CasesService {
           ? {
               ...c,
               rulings: [ruling, ...(c.rulings ?? [])],
+              updatedAt: new Date().toISOString(),
+            }
+          : c,
+      ),
+    );
+  }
+
+  updateRuling(caseId: string, rulingId: string, input: Partial<Omit<CaseRuling, 'id'>>): void {
+    this.mutate((cases) =>
+      cases.map((c) =>
+        c.id === caseId
+          ? {
+              ...c,
+              rulings: (c.rulings ?? []).map((r) =>
+                r.id === rulingId
+                  ? {
+                      ...r,
+                      ...input,
+                    }
+                  : r,
+              ),
+              updatedAt: new Date().toISOString(),
+            }
+          : c,
+      ),
+    );
+  }
+
+  deleteRuling(caseId: string, rulingId: string): void {
+    this.mutate((cases) =>
+      cases.map((c) =>
+        c.id === caseId
+          ? {
+              ...c,
+              rulings: (c.rulings ?? []).filter((r) => r.id !== rulingId),
               updatedAt: new Date().toISOString(),
             }
           : c,

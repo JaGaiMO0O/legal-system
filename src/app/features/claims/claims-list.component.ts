@@ -4,6 +4,8 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ClaimsService, Claim } from '../../shared/services/claims.service';
 import { RouterModule } from '@angular/router';
 import { UIButtonComponent } from '../../shared/components/ui/button.component';
+import { ConfirmDialogService } from '../../shared/services/confirm-dialog.service';
+import { ToastService } from '../../shared/services/toast.service';
 
 @Component({
   standalone: true,
@@ -19,8 +21,30 @@ import { UIButtonComponent } from '../../shared/components/ui/button.component';
       </div>
     </div>
 
-    <div *ngIf="claims.length === 0" class="card p-12 text-center">
-      <p class="text-[rgb(var(--text-muted))]">{{ 'claims.empty' | translate }}</p>
+    <div *ngIf="claims.length === 0" class="card p-16 text-center">
+      <div class="max-w-md mx-auto">
+        <div
+          class="w-20 h-20 mx-auto mb-6 bg-[rgb(var(--surface-muted))] rounded-full flex items-center justify-center"
+        >
+          <svg
+            class="w-10 h-10 text-[rgb(var(--text-muted))]"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-[rgb(var(--text))] mb-2">No claims yet</h3>
+        <p class="text-sm text-[rgb(var(--text-muted))]">
+          Claims will appear here when they are added to the system
+        </p>
+      </div>
     </div>
 
     <div class="card overflow-hidden" *ngIf="claims.length > 0">
@@ -76,10 +100,26 @@ import { UIButtonComponent } from '../../shared/components/ui/button.component';
 })
 export class ClaimsListComponent {
   private readonly claimsSvc = inject(ClaimsService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
+  private readonly toast = inject(ToastService);
   protected claims: Claim[] = this.claimsSvc.list();
 
-  convert(c: Claim): void {
-    this.claimsSvc.markToLegal(c.id);
-    this.claims = this.claimsSvc.list();
+  async convert(c: Claim): Promise<void> {
+    const confirmed = await this.confirmDialog.confirm({
+      title: 'Convert to Legal',
+      message: `Are you sure you want to convert claim "${c.reference}" to a legal case? This will create a new motor liability case.`,
+      confirmText: 'Convert',
+      cancelText: 'Cancel',
+      type: 'info',
+    });
+    if (!confirmed) return;
+    try {
+      this.claimsSvc.markToLegal(c.id);
+      this.claims = this.claimsSvc.list();
+      this.toast.success('Claim converted to legal case successfully');
+    } catch (error) {
+      this.toast.error('Failed to convert claim');
+      console.error('Error converting claim:', error);
+    }
   }
 }

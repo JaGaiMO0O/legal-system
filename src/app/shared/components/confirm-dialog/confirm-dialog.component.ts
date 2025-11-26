@@ -1,0 +1,154 @@
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ConfirmDialogService, ConfirmDialogData } from '../../services/confirm-dialog.service';
+import { Subscription } from 'rxjs';
+import { UIButtonComponent } from '../ui/button.component';
+
+@Component({
+  standalone: true,
+  selector: 'app-confirm-dialog',
+  imports: [CommonModule, UIButtonComponent],
+  template: `
+    <div
+      *ngIf="dialogData"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in"
+      (click)="handleBackdropClick($event)"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-labelledby]="'dialog-title'"
+    >
+      <div
+        class="card p-6 max-w-md w-full mx-4 shadow-2xl animate-scale-in"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="flex items-start gap-4 mb-6">
+          <div
+            class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center"
+            [class.bg-red-100]="dialogData.type === 'danger'"
+            [class.bg-amber-100]="dialogData.type === 'warning'"
+            [class.bg-blue-100]="dialogData.type === 'info' || !dialogData.type"
+          >
+            <svg
+              *ngIf="dialogData.type === 'danger'"
+              class="w-6 h-6 text-red-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+            <svg
+              *ngIf="dialogData.type === 'warning'"
+              class="w-6 h-6 text-amber-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+            <svg
+              *ngIf="dialogData.type === 'info' || !dialogData.type"
+              class="w-6 h-6 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <div class="flex-1">
+            <h3 id="dialog-title" class="text-lg font-bold text-[rgb(var(--text))] mb-2">
+              {{ dialogData.title }}
+            </h3>
+            <p class="text-sm text-[rgb(var(--text-muted))]">{{ dialogData.message }}</p>
+          </div>
+        </div>
+        <div class="flex gap-3 justify-end">
+          <ui-button variant="ghost" (click)="cancel()">
+            {{ dialogData.cancelText || 'Cancel' }}
+          </ui-button>
+          <ui-button
+            [variant]="dialogData.type === 'danger' ? 'primary' : 'primary'"
+            (click)="confirm()"
+            [class.bg-red-600]="dialogData.type === 'danger'"
+            [class.hover:bg-red-700]="dialogData.type === 'danger'"
+          >
+            {{ dialogData.confirmText || 'Confirm' }}
+          </ui-button>
+        </div>
+      </div>
+    </div>
+  `,
+  styles: [
+    `
+      @keyframes fade-in {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      @keyframes scale-in {
+        from {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      .animate-fade-in {
+        animation: fade-in 0.2s ease-out;
+      }
+      .animate-scale-in {
+        animation: scale-in 0.2s ease-out;
+      }
+    `,
+  ],
+})
+export class ConfirmDialogComponent implements OnInit, OnDestroy {
+  private readonly confirmDialogService = inject(ConfirmDialogService);
+  protected dialogData: ConfirmDialogData | null = null;
+  private subscription?: Subscription;
+
+  ngOnInit(): void {
+    this.subscription = this.confirmDialogService.getDialog().subscribe((data) => {
+      this.dialogData = data;
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.subscription?.unsubscribe();
+  }
+
+  confirm(): void {
+    this.confirmDialogService.handleResult(true);
+  }
+
+  cancel(): void {
+    this.confirmDialogService.handleResult(false);
+  }
+
+  handleBackdropClick(event: MouseEvent): void {
+    if (event.target === event.currentTarget) {
+      this.cancel();
+    }
+  }
+}

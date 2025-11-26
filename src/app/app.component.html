@@ -24,22 +24,41 @@
               </svg>
             </div>
             <div>
-              <h1 class="text-2xl font-bold tracking-tight">Legal System</h1>
-              <p class="text-xs text-white/80 mt-0.5">Case Management Portal</p>
+              <h1 class="text-xl md:text-2xl font-bold tracking-tight">Legal System</h1>
+              <p class="text-xs text-white/80 mt-0.5 hidden sm:block">Case Management Portal</p>
             </div>
           </div>
         </div>
-        <div class="flex items-center space-x-3 rtl:space-x-reverse">
+        <div class="flex items-center space-x-2 md:space-x-3 rtl:space-x-reverse">
+          <app-undo-redo class="hidden md:block"></app-undo-redo>
           <app-theme-toggle></app-theme-toggle>
         </div>
       </div>
     </div>
   </header>
 
-  <div class="flex">
+  <div class="flex flex-col md:flex-row">
+    <!-- Mobile Menu Button -->
+    <button
+      (click)="toggleSidebar()"
+      class="md:hidden fixed top-20 left-4 z-50 p-2 bg-[rgb(var(--surface))] rounded-lg shadow-lg border border-[rgb(var(--border))]"
+      aria-label="Toggle menu"
+    >
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M4 6h16M4 12h16M4 18h16"
+        />
+      </svg>
+    </button>
+
     <!-- Sidebar Navigation -->
     <aside
-      class="w-64 bg-[rgb(var(--surface))] border-r border-[rgb(var(--border-light))] min-h-[calc(100vh-5rem)] shadow-lg"
+      [class.hidden]="!sidebarOpen"
+      [class.fixed]="sidebarOpen"
+      class="w-64 bg-[rgb(var(--surface))] border-r border-[rgb(var(--border-light))] min-h-[calc(100vh-5rem)] shadow-lg md:block z-40 md:relative"
     >
       <nav class="p-4 space-y-2">
         <a
@@ -148,9 +167,11 @@
 
     <!-- Main Content -->
     <main
-      class="flex-1 p-8 bg-gradient-to-br from-[rgb(var(--surface-muted))] via-[rgb(var(--surface))] to-[rgb(var(--surface-muted))]"
+      class="flex-1 p-4 md:p-8 bg-gradient-to-br from-[rgb(var(--surface-muted))] via-[rgb(var(--surface))] to-[rgb(var(--surface-muted))]"
     >
       <router-outlet></router-outlet>
     </main>
   </div>
+  <app-toast></app-toast>
+  <app-confirm-dialog></app-confirm-dialog>
 </div>
