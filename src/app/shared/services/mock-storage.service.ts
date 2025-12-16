@@ -66,4 +66,20 @@ export class MockStorageService {
       subject.next(this.memory[key]);
     }
   }
+
+  /**
+   * Clear all stored data (useful for testing/resetting)
+   */
+  clearAll(): void {
+    try {
+      localStorage.removeItem(NAMESPACE);
+      this.memory = {};
+      // Clear all subjects
+      this.subjects.forEach((subject) => subject.next(undefined));
+      this.subjects.clear();
+      console.log('✓ All data cleared from localStorage');
+    } catch (error) {
+      console.error('Error clearing data:', error);
+    }
+  }
 }

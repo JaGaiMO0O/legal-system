@@ -12,6 +12,7 @@ import {
   MaritalStatus,
   DamageType,
 } from '../../shared/services/motor-liability.service';
+import { CasesService } from '../../shared/services/cases.service';
 
 @Component({
   standalone: true,
@@ -42,6 +43,17 @@ import {
         <div>
           <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Case No</label>
           <input type="text" [(ngModel)]="caseData.caseNo" class="w-full" />
+        </div>
+        <div *ngIf="linkedLegalCaseNumber">
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1"
+            >Linked Legal Case No</label
+          >
+          <input
+            type="text"
+            [value]="linkedLegalCaseNumber"
+            readonly
+            class="w-full font-mono bg-[rgb(var(--surface-muted))]"
+          />
         </div>
         <div>
           <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Court Type</label>
@@ -184,12 +196,14 @@ export class MotorLiabilityCaseDetailComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly motorLiabilityService = inject(MotorLiabilityService);
+  private readonly casesService = inject(CasesService);
 
   protected caseData: MotorLiabilityCase;
   protected dateOfInsertion: string = '';
   protected periodFrom: string = '';
   protected periodTo: string = '';
   protected rulingDate: string = '';
+  protected linkedLegalCaseNumber: string = '';
 
   constructor() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -203,12 +217,19 @@ export class MotorLiabilityCaseDetailComponent {
         this.periodFrom = existing.periodFrom ? existing.periodFrom.split('T')[0] : '';
         this.periodTo = existing.periodTo ? existing.periodTo.split('T')[0] : '';
         this.rulingDate = existing.rulingDate ? existing.rulingDate.split('T')[0] : '';
+        this.linkedLegalCaseNumber = this.resolveLegalCaseNumber(existing.unifiedCaseId);
       } else {
         this.caseData = this.createEmptyCase();
       }
     } else {
       this.caseData = this.createEmptyCase();
     }
+  }
+
+  private resolveLegalCaseNumber(unifiedCaseId?: string): string {
+    if (!unifiedCaseId) return '';
+    const match = this.casesService.list().find((c) => c.unifiedCaseId === unifiedCaseId);
+    return match?.caseNumber || match?.baseCaseNumber || '';
   }
 
   private createEmptyCase(): MotorLiabilityCase {
@@ -236,6 +257,7 @@ export class MotorLiabilityCaseDetailComponent {
       hearingsCourtLevel: '',
       courtRoom: '',
       rulingDate: '',
+      unifiedCaseId: '',
       createdAt: '',
       updatedAt: '',
     };

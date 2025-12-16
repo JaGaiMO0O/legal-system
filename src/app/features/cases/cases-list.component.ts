@@ -1,15 +1,16 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
-import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CasesService, CaseItem } from '../../shared/services/cases.service';
-import { UIButtonComponent } from '../../shared/components/ui/button.component';
+import { RouterModule } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { CaseWorkflowComponent } from '../../shared/components/case-workflow/case-workflow.component';
+import { UIButtonComponent } from '../../shared/components/ui/button.component';
 import { RelativeDatePipe } from '../../shared/pipes/relative-date.pipe';
-import { ExportService } from '../../shared/services/export.service';
+import { CaseItem, CasesService } from '../../shared/services/cases.service';
 import { ConfirmDialogService } from '../../shared/services/confirm-dialog.service';
+import { ExportService } from '../../shared/services/export.service';
 import { ToastService } from '../../shared/services/toast.service';
 
 @Component({
@@ -22,6 +23,7 @@ import { ToastService } from '../../shared/services/toast.service';
     UIButtonComponent,
     FormsModule,
     RelativeDatePipe,
+    CaseWorkflowComponent,
   ],
   template: `
     <div class="flex items-center justify-between mb-6">
@@ -147,6 +149,18 @@ import { ToastService } from '../../shared/services/toast.service';
             <option value="settled">Settled</option>
           </select>
         </div>
+        <div>
+          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+            >Legal Status</label
+          >
+          <select [(ngModel)]="legalStatusFilter" (ngModelChange)="applyFilters()" class="w-full">
+            <option value="">All Legal Statuses</option>
+            <option value="0">Normal</option>
+            <option value="1">To Legal Dept</option>
+            <option value="3">In Execution</option>
+            <option value="4">Settled</option>
+          </select>
+        </div>
       </div>
       <div class="mt-4 flex items-center justify-between">
         <div class="flex items-center gap-4">
@@ -172,7 +186,7 @@ import { ToastService } from '../../shared/services/toast.service';
         </div>
       </div>
       <div
-        *ngIf="searchQuery || statusFilter || stageFilter"
+        *ngIf="searchQuery || statusFilter || stageFilter || legalStatusFilter"
         class="mt-4 flex items-center gap-2 flex-wrap"
       >
         <span class="text-sm text-[rgb(var(--text-muted))]">Active filters:</span>
@@ -214,6 +228,22 @@ import { ToastService } from '../../shared/services/toast.service';
         >
           Stage: {{ stageFilter | titlecase }}
           <button (click)="clearStageFilter()" class="hover:text-blue-900">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </span>
+        <span
+          *ngIf="legalStatusFilter"
+          class="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium"
+        >
+          Legal: {{ getLegalStatusFilterLabel() }}
+          <button (click)="clearLegalStatusFilter()" class="hover:text-blue-900">
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -295,9 +325,6 @@ import { ToastService } from '../../shared/services/toast.service';
             (click)="$event.stopPropagation()"
           />
           <div class="flex-1 relative">
-            <div
-              class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[rgb(var(--primary))] to-[rgb(var(--primary-dark))] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            ></div>
             <a
               [routerLink]="['/cases', case.id]"
               class="block"
@@ -311,6 +338,13 @@ import { ToastService } from '../../shared/services/toast.service';
                     >
                       {{ case.title }}
                     </h3>
+                    <span
+                      *ngIf="case.caseNumber || case.baseCaseNumber"
+                      class="px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-300 font-mono shadow-sm"
+                      title="Case Number"
+                    >
+                      #{{ case.caseNumber || case.baseCaseNumber }}
+                    </span>
                     <span
                       class="px-3 py-1 rounded-full text-xs font-semibold shadow-sm"
                       [class.bg-emerald-50]="case.status === 'open'"
@@ -334,6 +368,38 @@ import { ToastService } from '../../shared/services/toast.service';
                     >
                       {{ case.stage | titlecase }}
                     </span>
+                    <span
+                      class="px-3 py-1 rounded-full text-xs font-semibold shadow-sm"
+                      *ngIf="case.legalStatus !== undefined"
+                      [class.bg-gray-100]="case.legalStatus === 0"
+                      [class.text-gray-800]="case.legalStatus === 0"
+                      [class.bg-blue-100]="case.legalStatus === 1"
+                      [class.text-blue-800]="case.legalStatus === 1"
+                      [class.bg-yellow-100]="case.legalStatus === 3"
+                      [class.text-yellow-800]="case.legalStatus === 3"
+                      [class.bg-emerald-100]="case.legalStatus === 4"
+                      [class.text-emerald-800]="case.legalStatus === 4"
+                      [class.border]="true"
+                      [class.border-gray-300]="case.legalStatus === 0"
+                      [class.border-blue-300]="case.legalStatus === 1"
+                      [class.border-yellow-300]="case.legalStatus === 3"
+                      [class.border-emerald-300]="case.legalStatus === 4"
+                      title="Legal Status"
+                    >
+                      {{ getLegalStatusLabel(case.legalStatus) }}
+                    </span>
+                    <span
+                      *ngIf="case.settledStatus === 2"
+                      class="px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-300 shadow-sm"
+                    >
+                      Legally Settled
+                    </span>
+                  </div>
+                  <div class="mb-3">
+                    <app-case-workflow
+                      [currentStage]="case.stage || 'primary'"
+                      mode="compact"
+                    ></app-case-workflow>
                   </div>
                   <p class="text-sm text-[rgb(var(--text-muted))] mb-4 font-medium">
                     Client: <span class="text-[rgb(var(--text))]">{{ case.client }}</span>
@@ -444,6 +510,21 @@ import { ToastService } from '../../shared/services/toast.service';
   `,
 })
 export class CasesListComponent implements OnInit, OnDestroy {
+  getLegalStatusLabel(legalStatus?: number): string {
+    const status = legalStatus ?? 1; // Default to 1 (To Legal Department)
+    switch (status) {
+      case 0:
+        return 'Normal';
+      case 1:
+        return 'To Legal Dept';
+      case 3:
+        return 'In Execution';
+      case 4:
+        return 'Settled';
+      default:
+        return 'Unknown';
+    }
+  }
   private readonly casesService = inject(CasesService);
   private readonly exportService = inject(ExportService);
   private readonly confirmDialog = inject(ConfirmDialogService);
@@ -454,6 +535,7 @@ export class CasesListComponent implements OnInit, OnDestroy {
   protected searchQuery = '';
   protected statusFilter = '';
   protected stageFilter = '';
+  protected legalStatusFilter = '';
   protected sortBy = 'newest';
   protected itemsPerPage = 20;
   protected currentPage = 1;
@@ -501,6 +583,12 @@ export class CasesListComponent implements OnInit, OnDestroy {
     // Stage filter
     if (this.stageFilter) {
       filtered = filtered.filter((c) => c.stage === this.stageFilter);
+    }
+
+    // Legal status filter
+    if (this.legalStatusFilter) {
+      const filterVal = Number(this.legalStatusFilter);
+      filtered = filtered.filter((c) => (c.legalStatus ?? 1) === filterVal);
     }
 
     this.filteredCases = filtered;
@@ -578,12 +666,24 @@ export class CasesListComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
+  clearLegalStatusFilter(): void {
+    this.legalStatusFilter = '';
+    this.applyFilters();
+  }
+
   clearAllFilters(): void {
     this.searchQuery = '';
     this.statusFilter = '';
     this.stageFilter = '';
+    this.legalStatusFilter = '';
     this.currentPage = 1;
     this.applyFilters();
+  }
+
+  getLegalStatusFilterLabel(): string {
+    if (!this.legalStatusFilter) return '';
+    const num = Number(this.legalStatusFilter);
+    return this.getLegalStatusLabel(num);
   }
 
   exportCases(): void {
@@ -640,9 +740,6 @@ export class CasesListComponent implements OnInit, OnDestroy {
     });
     if (!confirmed) return;
     try {
-      this.selectedCases.forEach((id) => {
-        this.casesService.updateMeta(id, { status: this.bulkStatusAction as any });
-      });
       const count = this.selectedCases.size;
       this.selectedCases.forEach((id) => {
         this.casesService.updateMeta(id, { status: this.bulkStatusAction as any });

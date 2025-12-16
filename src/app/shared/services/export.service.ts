@@ -14,6 +14,8 @@ export class ExportService {
       'Client',
       'Status',
       'Stage',
+      'Case Number',
+      'Base Case Number',
       'Tasks Count',
       'Deadlines Count',
       'Rulings Count',
@@ -27,6 +29,8 @@ export class ExportService {
       c.client,
       c.status,
       c.stage || '',
+      c.caseNumber || '',
+      c.baseCaseNumber || '',
       c.tasks.length.toString(),
       c.deadlines.length.toString(),
       (c.rulings?.length || 0).toString(),
@@ -52,6 +56,8 @@ export class ExportService {
     lines.push(`Client,${caseItem.client}`);
     lines.push(`Status,${caseItem.status}`);
     lines.push(`Stage,${caseItem.stage || ''}`);
+    lines.push(`Case Number,${caseItem.caseNumber || ''}`);
+    lines.push(`Base Case Number,${caseItem.baseCaseNumber || ''}`);
     lines.push(`Created At,${new Date(caseItem.createdAt).toLocaleString()}`);
     lines.push(`Updated At,${new Date(caseItem.updatedAt).toLocaleString()}`);
     lines.push('');

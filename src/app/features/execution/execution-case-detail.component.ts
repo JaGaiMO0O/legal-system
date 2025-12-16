@@ -9,6 +9,8 @@ import {
   ExecutionCasesService,
   ExecutionCase,
 } from '../../shared/services/execution-cases.service';
+import { CasesService, CaseStage } from '../../shared/services/cases.service';
+import { ToastService } from '../../shared/services/toast.service';
 
 @Component({
   standalone: true,
@@ -43,6 +45,14 @@ import {
         <div>
           <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">File No</label>
           <input type="text" [(ngModel)]="executionCase.fileNo" class="w-full" />
+        </div>
+        <div>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Linked Case ID</label>
+          <input type="text" [(ngModel)]="executionCase.linkedCaseId" class="w-full font-mono" />
+        </div>
+        <div>
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Unified Case ID</label>
+          <input type="text" [(ngModel)]="executionCase.unifiedCaseId" class="w-full font-mono" />
         </div>
         <div>
           <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">File Date</label>
@@ -90,6 +100,14 @@ import {
     <div class="mt-6 flex gap-2">
       <ui-button variant="primary" (click)="save()">Save</ui-button>
       <ui-button variant="ghost" (click)="cancel()">Cancel</ui-button>
+      <ui-button
+        *ngIf="executionCase.linkedCaseId"
+        variant="ghost"
+        class="text-emerald-700"
+        (click)="finalizeAndSettle()"
+      >
+        Finalize & Settle Case
+      </ui-button>
     </div>
   `,
 })
@@ -97,6 +115,8 @@ export class ExecutionCaseDetailComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly executionCasesService = inject(ExecutionCasesService);
+  private readonly casesService = inject(CasesService);
+  private readonly toast = inject(ToastService);
 
   protected executionCase: ExecutionCase;
   protected fileDate: string = '';
@@ -128,6 +148,8 @@ export class ExecutionCaseDetailComponent {
       lastCourtLevel: '',
       amountRuled: 0,
       amountPaid: 0,
+      linkedCaseId: '',
+      unifiedCaseId: '',
       createdAt: '',
       updatedAt: '',
     };
@@ -150,6 +172,7 @@ export class ExecutionCaseDetailComponent {
         amountRuled: this.executionCase.amountRuled,
         amountPaid: this.executionCase.amountPaid,
         linkedCaseId: this.executionCase.linkedCaseId,
+        unifiedCaseId: this.executionCase.unifiedCaseId,
       });
       this.router.navigate(['/execution', created.id]);
     }
@@ -157,5 +180,16 @@ export class ExecutionCaseDetailComponent {
 
   cancel(): void {
     this.router.navigate(['/execution']);
+  }
+
+  finalizeAndSettle(): void {
+    if (!this.executionCase.linkedCaseId) return;
+    try {
+      this.casesService.settleCase(this.executionCase.linkedCaseId, 'execution' as CaseStage);
+      this.toast.success('Linked case settled');
+    } catch (error) {
+      this.toast.error('Failed to settle linked case');
+      console.error('Error settling linked case:', error);
+    }
   }
 }

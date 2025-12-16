@@ -1,9 +1,11 @@
-import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
-import { ClaimsService, Claim } from '../../shared/services/claims.service';
+import { Component, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { UIButtonComponent } from '../../shared/components/ui/button.component';
+import { BusinessSettlementService } from '../../shared/services/business-settlement.service';
+import { CaseTrackingService } from '../../shared/services/case-tracking.service';
+import { Claim, ClaimsService } from '../../shared/services/claims.service';
 import { ConfirmDialogService } from '../../shared/services/confirm-dialog.service';
 import { ToastService } from '../../shared/services/toast.service';
 
@@ -75,21 +77,33 @@ import { ToastService } from '../../shared/services/toast.service';
                   {{ c.legalFlag === 1 ? 'To Legal Dept.' : 'Normal' }}
                 </span>
               </td>
-              <td class="space-x-2 rtl:space-x-reverse">
+              <td class="flex items-end align-end space-x-2 rtl:space-x-reverse">
                 <a
                   *ngIf="c.linkedCaseId"
-                  class="text-[rgb(var(--primary))] hover:underline font-medium"
+                  class="btn btn-primary btn-xs"
                   [routerLink]="['/cases', c.linkedCaseId]"
+                  (click)="viewClaim(c)"
                 >
                   View Case
                 </a>
                 <button
                   *ngIf="c.legalFlag === 0"
-                  class="btn btn-primary text-xs px-3 py-1"
+                  class="btn btn-primary btn-xs"
                   (click)="convert(c)"
                 >
                   Convert to Legal
                 </button>
+                <a class="btn btn-primary btn-xs" [routerLink]="['/claims', c.id]"> View Claim </a>
+                <button class="btn btn-primary btn-xs" (click)="createSettlement(c)">
+                  Business Settlement
+                </button>
+                <span
+                  *ngIf="c.unifiedCaseId"
+                  class="text-xs text-[rgb(var(--text-muted))] font-mono ml-2"
+                  title="Unified Case ID: {{ c.unifiedCaseId }}"
+                >
+                  UC: {{ c.unifiedCaseId.substring(0, 8) }}...
+                </span>
               </td>
             </tr>
           </tbody>
@@ -102,7 +116,29 @@ export class ClaimsListComponent {
   private readonly claimsSvc = inject(ClaimsService);
   private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly toast = inject(ToastService);
+  private readonly caseTracking = inject(CaseTrackingService);
+  private readonly settlementSvc = inject(BusinessSettlementService);
   protected claims: Claim[] = this.claimsSvc.list();
+
+  constructor() {
+    // Update claims list when data changes (for reactive updates)
+    this.claims = this.claimsSvc.list();
+  }
+
+  viewClaim(claim: Claim): void {
+    // Set the current case when viewing a claim
+    if (claim.unifiedCaseId) {
+      this.caseTracking.setCurrentCase(claim.unifiedCaseId);
+      this.caseTracking.linkEntityToCase(claim.unifiedCaseId, 'claim', claim.id);
+      this.caseTracking.upsertUnifiedCase({
+        unifiedCaseId: claim.unifiedCaseId,
+        claimId: claim.id,
+        title: `Claim ${claim.reference}`,
+        client: claim.claimant,
+        reference: claim.reference,
+      });
+    }
+  }
 
   async convert(c: Claim): Promise<void> {
     const confirmed = await this.confirmDialog.confirm({
@@ -120,6 +156,29 @@ export class ClaimsListComponent {
     } catch (error) {
       this.toast.error('Failed to convert claim');
       console.error('Error converting claim:', error);
+    }
+  }
+
+  createSettlement(c: Claim): void {
+    try {
+      const existing = this.settlementSvc.getByClaimId(c.id);
+      if (existing) {
+        this.toast.info('Settlement already exists for this claim');
+        return;
+      }
+      this.settlementSvc.create({
+        departmentAmount: 0,
+        legalDepartmentAmount: 0,
+        managementAmount: 0,
+        adversaryAmount: 0,
+        amountOfAmicableAgreement: 0,
+        linkedClaimId: c.id,
+        linkedCaseId: c.linkedCaseId,
+      });
+      this.toast.success('Business settlement created');
+    } catch (error) {
+      this.toast.error('Failed to create settlement');
+      console.error('Error creating settlement from claim:', error);
     }
   }
 }

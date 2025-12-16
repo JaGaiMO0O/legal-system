@@ -1,5 +1,13 @@
 import { Injectable, inject } from '@angular/core';
 import { MockStorageService } from './mock-storage.service';
+import { BusinessSettlementService } from './business-settlement.service';
+import { ExecutionCasesService } from './execution-cases.service';
+import { CaseTrackingService } from './case-tracking.service';
+
+export type CaseStage = 'primary' | 'appeal' | 'cassation' | 'execution' | 'settled';
+export type CaseStatus = 'open' | 'pending' | 'closed';
+export type CaseType = 'Plaintiff' | 'Defendant';
+export type RulingInFavorOf = 'Company' | 'Adversary';
 
 export interface CaseTask {
   id: string;
@@ -14,33 +22,29 @@ export interface CaseDeadline {
   date: string;
 }
 
-export type CaseStage = 'primary' | 'appeal' | 'cassation' | 'execution' | 'settled';
-
 export interface CaseDevelopment {
   id: string;
-  date: string; // ISO
+  date: string;
   note: string;
 }
 
-export type CaseType = 'Plaintiff' | 'Defendant';
-export type RulingInFavorOf = 'Company' | 'Adversary';
-
 export interface CaseRuling {
   id: string;
-  stage: Exclude<CaseStage, 'settled'>;
   // Main Info
+  stage: CaseStage;
   caseNo: string;
   caseType: CaseType;
   courtType: string;
   courtLevel: string;
   courtCity: string;
   caseDetails: string;
-  filingDate: string; // ISO date
+  filingDate: string;
   filingNo: string;
   // Stage Info
   stageNo: number;
   rulingInFavorOf: RulingInFavorOf;
-  rulingDate: string; // ISO date
+  rulingDate: string;
+  // Financial Info
   courtFees: number;
   legalExpenses: number;
   translationCourtFees: number;
@@ -51,24 +55,34 @@ export interface CaseRuling {
   // Adversary Info
   adversaryName: string;
   indemnityByCourtAmount: number;
-  // Legacy fields (for backward compatibility)
+  // Legacy fields for backward compatibility
   fees?: number;
   adversary?: string;
   indemnity?: number;
-  date: string; // ISO (legacy, use rulingDate)
+  date: string;
 }
 
 export interface CaseItem {
   id: string;
   title: string;
   client: string;
-  status: 'open' | 'pending' | 'closed';
-  stage?: CaseStage;
+  claimant?: string;
+  beneficiary?: string;
+  initialHearingDate?: string;
+  status: CaseStatus;
+  stage: CaseStage;
+  caseNumber?: string; // Auto-generated case number (e.g., 2020205)
+  baseCaseNumber?: string; // Original case number before stage appending
+  legalStatus?: number; // 0: Normal, 1: To Legal Dept, 3: In Execution, 4: Settled
+  settledStatus?: number; // 2: Legally Settled
+  companyLawyerId?: string;
+  companyLawyerName?: string;
+  unifiedCaseId?: string;
   tags: string[];
   deadlines: CaseDeadline[];
   tasks: CaseTask[];
-  developments?: CaseDevelopment[];
-  rulings?: CaseRuling[];
+  developments: CaseDevelopment[];
+  rulings: CaseRuling[];
   createdAt: string;
   updatedAt: string;
 }
@@ -78,6 +92,9 @@ const STORAGE_KEY = 'cases';
 @Injectable({ providedIn: 'root' })
 export class CasesService {
   private readonly storage = inject(MockStorageService);
+  private readonly businessSettlementService = inject(BusinessSettlementService);
+  private readonly executionCasesService = inject(ExecutionCasesService);
+  private readonly caseTracking = inject(CaseTrackingService);
 
   private generateId(): string {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -85,6 +102,56 @@ export class CasesService {
       const v = c === 'x' ? r : (r & 0x3) | 0x8;
       return v.toString(16);
     });
+  }
+
+  private generateCaseNumber(): string {
+    const cases = this.list();
+    const year = new Date().getFullYear();
+    const yearCases = cases.filter((c) => {
+      const caseYear = c.baseCaseNumber
+        ? parseInt(c.baseCaseNumber.substring(0, 4), 10)
+        : c.caseNumber
+          ? parseInt(c.caseNumber.substring(0, 4), 10)
+          : 0;
+      return caseYear === year;
+    });
+
+    // Find the highest sequential number for this year
+    let maxSeq = 0;
+    yearCases.forEach((c) => {
+      const baseNum = c.baseCaseNumber || c.caseNumber || '';
+      if (baseNum.length >= 7) {
+        const seq = parseInt(baseNum.substring(4), 10);
+        if (!isNaN(seq) && seq > maxSeq) {
+          maxSeq = seq;
+        }
+      }
+    });
+
+    const nextSeq = maxSeq + 1;
+    return `${year}${String(nextSeq).padStart(3, '0')}`;
+  }
+
+  private appendStageSuffix(baseCaseNumber: string, stage: CaseStage): string {
+    if (!baseCaseNumber) return baseCaseNumber;
+
+    // Remove any existing suffix (01, 02, 03) to get the base
+    const base = baseCaseNumber.replace(/\d{2}$/, '');
+
+    switch (stage) {
+      case 'primary':
+        return base;
+      case 'appeal':
+        return `${base}01`;
+      case 'cassation':
+        return `${base}02`;
+      case 'execution':
+        return `${base}03`;
+      case 'settled':
+        return baseCaseNumber; // Keep current number when settled
+      default:
+        return baseCaseNumber;
+    }
   }
 
   list(): CaseItem[] {
@@ -105,6 +172,7 @@ export class CasesService {
         client: 'Ahmed Al-Mansouri',
         status: 'open',
         stage: 'primary',
+        unifiedCaseId: 'uc-1', // Links to claim-1, ml-1
         tags: ['motor', 'accident'],
         deadlines: [
           { id: 'dl-1', title: 'Submit evidence', date: '2025-01-15' },
@@ -126,596 +194,9 @@ export class CasesService {
             note: 'Initial hearing scheduled',
           },
         ],
-        rulings: [
-          {
-            id: 'ruling-1',
-            stage: 'primary',
-            caseNo: '2025-001',
-            caseType: 'Plaintiff',
-            courtType: 'Civil Court',
-            courtLevel: 'Primary',
-            courtCity: 'Riyadh',
-            caseDetails: 'Motor vehicle accident claim',
-            filingDate: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-            filingNo: 'FIL-2025-001',
-            stageNo: 1,
-            rulingInFavorOf: 'Company',
-            rulingDate: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-            courtFees: 5000,
-            legalExpenses: 15000,
-            translationCourtFees: 2000,
-            courtFeesInCash: 3000,
-            expertFees: 8000,
-            advocacyFees: 12000,
-            otherExpenses: 2000,
-            adversaryName: 'Mohammed Al-Rashid',
-            indemnityByCourtAmount: 50000,
-            date: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-          },
-        ],
+        rulings: [],
         createdAt: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString(),
         updatedAt: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 'case-2',
-        title: 'Appeal of Ruling #1234',
-        client: 'Salama Insurance Co.',
-        status: 'pending',
-        stage: 'appeal',
-        tags: ['appeal', 'insurance'],
-        deadlines: [{ id: 'dl-3', title: 'Appeal submission deadline', date: '2025-01-20' }],
-        tasks: [{ id: 'task-3', title: 'Prepare appeal documents', done: false }],
-        developments: [
-          {
-            id: 'dev-3',
-            date: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Appeal filed',
-          },
-        ],
-        rulings: [],
-        createdAt: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 'case-3',
-        title: 'Execution Order Issuance',
-        client: 'Abdullah Al-Saud',
-        status: 'open',
-        stage: 'execution',
-        tags: ['execution'],
-        deadlines: [],
-        tasks: [],
-        developments: [
-          {
-            id: 'dev-4',
-            date: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Moved to Execution Court',
-          },
-        ],
-        rulings: [],
-        createdAt: new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 'case-4',
-        title: 'Cassation Review',
-        client: 'Fatima Al-Zahra',
-        status: 'closed',
-        stage: 'settled',
-        tags: ['cassation', 'settled'],
-        deadlines: [],
-        tasks: [],
-        developments: [
-          {
-            id: 'dev-5',
-            date: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Case settled after execution',
-          },
-        ],
-        rulings: [],
-        createdAt: new Date(now.getTime() - 120 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 'case-5',
-        title: 'Commercial Contract Dispute - Case #2025-015',
-        client: 'Al-Rajhi Trading Company',
-        status: 'open',
-        stage: 'primary',
-        tags: ['commercial', 'contract'],
-        deadlines: [
-          { id: 'dl-5', title: 'Submit contract documents', date: '2025-01-25' },
-          { id: 'dl-6', title: 'Mediation session', date: '2025-02-05' },
-        ],
-        tasks: [
-          { id: 'task-5', title: 'Review contract terms', done: true },
-          { id: 'task-6', title: 'Contact witnesses', done: false },
-          { id: 'task-7', title: 'Prepare financial analysis', done: false },
-        ],
-        developments: [
-          {
-            id: 'dev-6',
-            date: new Date(now.getTime() - 25 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Case filed regarding breach of contract',
-          },
-        ],
-        rulings: [],
-        createdAt: new Date(now.getTime() - 25 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 'case-6',
-        title: 'Property Damage Claim - Case #2025-028',
-        client: 'Noura Al-Mutairi',
-        status: 'open',
-        stage: 'primary',
-        tags: ['property', 'damage'],
-        deadlines: [
-          { id: 'dl-7', title: 'Property inspection', date: '2025-01-18' },
-          { id: 'dl-8', title: 'Expert report submission', date: '2025-01-30' },
-        ],
-        tasks: [
-          { id: 'task-8', title: 'Schedule property inspection', done: false },
-          { id: 'task-9', title: 'Collect damage photos', done: true },
-        ],
-        developments: [
-          {
-            id: 'dev-7',
-            date: new Date(now.getTime() - 18 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Initial claim filed',
-          },
-        ],
-        rulings: [],
-        createdAt: new Date(now.getTime() - 18 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 'case-7',
-        title: 'Labor Dispute - Case #2024-189',
-        client: 'Saudi Construction Group',
-        status: 'pending',
-        stage: 'appeal',
-        tags: ['labor', 'employment'],
-        deadlines: [{ id: 'dl-9', title: 'Appeal response deadline', date: '2025-01-22' }],
-        tasks: [
-          { id: 'task-10', title: 'Review labor law regulations', done: true },
-          { id: 'task-11', title: 'Prepare counter-arguments', done: false },
-        ],
-        developments: [
-          {
-            id: 'dev-8',
-            date: new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Primary court ruling received',
-          },
-          {
-            id: 'dev-9',
-            date: new Date(now.getTime() - 12 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Appeal filed at Appeal Court',
-          },
-        ],
-        rulings: [
-          {
-            id: 'ruling-2',
-            stage: 'primary',
-            caseNo: '2024-189',
-            caseType: 'Defendant',
-            courtType: 'Labor Court',
-            courtLevel: 'Primary',
-            courtCity: 'Jeddah',
-            caseDetails: 'Employment termination dispute',
-            filingDate: new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-            filingNo: 'FIL-2024-189',
-            stageNo: 1,
-            rulingInFavorOf: 'Adversary',
-            rulingDate: new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-            courtFees: 3000,
-            legalExpenses: 10000,
-            translationCourtFees: 1500,
-            courtFeesInCash: 2000,
-            expertFees: 5000,
-            advocacyFees: 8000,
-            otherExpenses: 1500,
-            adversaryName: 'Hassan Al-Qahtani',
-            indemnityByCourtAmount: 35000,
-            date: new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000).toISOString(),
-          },
-        ],
-        createdAt: new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(now.getTime() - 12 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 'case-8',
-        title: 'Insurance Claim Dispute - Case #2025-042',
-        client: 'Tawuniya Insurance',
-        status: 'open',
-        stage: 'primary',
-        tags: ['insurance', 'claim'],
-        deadlines: [
-          { id: 'dl-10', title: 'Medical report review', date: '2025-01-28' },
-          { id: 'dl-11', title: 'Settlement negotiation', date: '2025-02-15' },
-        ],
-        tasks: [
-          { id: 'task-12', title: 'Review policy terms', done: true },
-          { id: 'task-13', title: 'Analyze medical reports', done: false },
-        ],
-        developments: [
-          {
-            id: 'dev-10',
-            date: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Case filed at Primary Court',
-          },
-        ],
-        rulings: [],
-        createdAt: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 'case-9',
-        title: 'Cassation Court Review - Case #2023-456',
-        client: 'Mohammed Al-Dosari',
-        status: 'pending',
-        stage: 'cassation',
-        tags: ['cassation', 'review'],
-        deadlines: [{ id: 'dl-12', title: 'Final submission', date: '2025-02-01' }],
-        tasks: [
-          { id: 'task-14', title: 'Prepare cassation brief', done: false },
-          { id: 'task-15', title: 'Review legal precedents', done: true },
-        ],
-        developments: [
-          {
-            id: 'dev-11',
-            date: new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Original case filed',
-          },
-          {
-            id: 'dev-12',
-            date: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Appeal court ruling received',
-          },
-          {
-            id: 'dev-13',
-            date: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Cassation review requested',
-          },
-        ],
-        rulings: [
-          {
-            id: 'ruling-3',
-            stage: 'primary',
-            caseNo: '2023-456',
-            caseType: 'Plaintiff',
-            courtType: 'Civil Court',
-            courtLevel: 'Primary',
-            courtCity: 'Riyadh',
-            caseDetails: 'Property ownership dispute',
-            filingDate: new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-            filingNo: 'FIL-2023-456',
-            stageNo: 1,
-            rulingInFavorOf: 'Company',
-            rulingDate: new Date(now.getTime() - 150 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-            courtFees: 6000,
-            legalExpenses: 18000,
-            translationCourtFees: 2500,
-            courtFeesInCash: 3500,
-            expertFees: 10000,
-            advocacyFees: 15000,
-            otherExpenses: 3000,
-            adversaryName: 'Khalid Al-Mutairi',
-            indemnityByCourtAmount: 75000,
-            date: new Date(now.getTime() - 150 * 24 * 60 * 60 * 1000).toISOString(),
-          },
-          {
-            id: 'ruling-4',
-            stage: 'appeal',
-            caseNo: '2023-456',
-            caseType: 'Plaintiff',
-            courtType: 'Appeal Court',
-            courtLevel: 'Appeal',
-            courtCity: 'Riyadh',
-            caseDetails: 'Property ownership dispute - Appeal',
-            filingDate: new Date(now.getTime() - 120 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-            filingNo: 'FIL-2023-456-AP',
-            stageNo: 2,
-            rulingInFavorOf: 'Adversary',
-            rulingDate: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-            courtFees: 8000,
-            legalExpenses: 20000,
-            translationCourtFees: 3000,
-            courtFeesInCash: 4000,
-            expertFees: 12000,
-            advocacyFees: 18000,
-            otherExpenses: 4000,
-            adversaryName: 'Khalid Al-Mutairi',
-            indemnityByCourtAmount: 0,
-            date: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString(),
-          },
-        ],
-        createdAt: new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 'case-10',
-        title: 'Medical Malpractice - Case #2025-067',
-        client: 'Dr. Sarah Al-Harbi',
-        status: 'open',
-        stage: 'primary',
-        tags: ['medical', 'malpractice'],
-        deadlines: [
-          { id: 'dl-13', title: 'Expert medical review', date: '2025-02-08' },
-          { id: 'dl-14', title: 'Witness depositions', date: '2025-02-20' },
-        ],
-        tasks: [
-          { id: 'task-16', title: 'Gather medical records', done: true },
-          { id: 'task-17', title: 'Consult medical experts', done: false },
-        ],
-        developments: [
-          {
-            id: 'dev-14',
-            date: new Date(now.getTime() - 8 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Case filed at Primary Court',
-          },
-        ],
-        rulings: [],
-        createdAt: new Date(now.getTime() - 8 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 'case-11',
-        title: 'Debt Collection - Case #2024-234',
-        client: 'Al-Faisal Bank',
-        status: 'closed',
-        stage: 'settled',
-        tags: ['debt', 'collection', 'settled'],
-        deadlines: [],
-        tasks: [],
-        developments: [
-          {
-            id: 'dev-15',
-            date: new Date(now.getTime() - 200 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Case filed for debt collection',
-          },
-          {
-            id: 'dev-16',
-            date: new Date(now.getTime() - 150 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Ruling in favor of company',
-          },
-          {
-            id: 'dev-17',
-            date: new Date(now.getTime() - 100 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Execution completed, debt collected',
-          },
-          {
-            id: 'dev-18',
-            date: new Date(now.getTime() - 80 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Case settled and closed',
-          },
-        ],
-        rulings: [
-          {
-            id: 'ruling-5',
-            stage: 'primary',
-            caseNo: '2024-234',
-            caseType: 'Plaintiff',
-            courtType: 'Commercial Court',
-            courtLevel: 'Primary',
-            courtCity: 'Riyadh',
-            caseDetails: 'Loan default and debt collection',
-            filingDate: new Date(now.getTime() - 200 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-            filingNo: 'FIL-2024-234',
-            stageNo: 1,
-            rulingInFavorOf: 'Company',
-            rulingDate: new Date(now.getTime() - 150 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-            courtFees: 4000,
-            legalExpenses: 12000,
-            translationCourtFees: 1800,
-            courtFeesInCash: 2500,
-            expertFees: 0,
-            advocacyFees: 10000,
-            otherExpenses: 1500,
-            adversaryName: 'Omar Al-Shammari',
-            indemnityByCourtAmount: 125000,
-            date: new Date(now.getTime() - 150 * 24 * 60 * 60 * 1000).toISOString(),
-          },
-        ],
-        createdAt: new Date(now.getTime() - 200 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(now.getTime() - 80 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 'case-12',
-        title: 'Construction Dispute - Case #2025-089',
-        client: 'Saudi Binladin Group',
-        status: 'open',
-        stage: 'primary',
-        tags: ['construction', 'contract'],
-        deadlines: [
-          { id: 'dl-15', title: 'Site inspection', date: '2025-01-27' },
-          { id: 'dl-16', title: 'Technical report submission', date: '2025-02-12' },
-        ],
-        tasks: [
-          { id: 'task-18', title: 'Review construction contracts', done: true },
-          { id: 'task-19', title: 'Schedule site visit', done: false },
-          { id: 'task-20', title: 'Consult engineering experts', done: false },
-        ],
-        developments: [
-          {
-            id: 'dev-19',
-            date: new Date(now.getTime() - 12 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Case filed regarding construction defects',
-          },
-        ],
-        rulings: [],
-        createdAt: new Date(now.getTime() - 12 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 'case-13',
-        title: 'Family Inheritance Dispute - Case #2024-312',
-        client: 'Layla Al-Ghamdi',
-        status: 'pending',
-        stage: 'appeal',
-        tags: ['family', 'inheritance'],
-        deadlines: [{ id: 'dl-17', title: 'Appeal hearing', date: '2025-02-03' }],
-        tasks: [
-          { id: 'task-21', title: 'Review inheritance documents', done: true },
-          { id: 'task-22', title: 'Prepare appeal arguments', done: false },
-        ],
-        developments: [
-          {
-            id: 'dev-20',
-            date: new Date(now.getTime() - 100 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Primary court ruling received',
-          },
-          {
-            id: 'dev-21',
-            date: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Appeal filed at Appeal Court',
-          },
-        ],
-        rulings: [
-          {
-            id: 'ruling-6',
-            stage: 'primary',
-            caseNo: '2024-312',
-            caseType: 'Plaintiff',
-            courtType: 'Family Court',
-            courtLevel: 'Primary',
-            courtCity: 'Jeddah',
-            caseDetails: 'Inheritance distribution dispute',
-            filingDate: new Date(now.getTime() - 120 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-            filingNo: 'FIL-2024-312',
-            stageNo: 1,
-            rulingInFavorOf: 'Adversary',
-            rulingDate: new Date(now.getTime() - 100 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-            courtFees: 3500,
-            legalExpenses: 11000,
-            translationCourtFees: 1700,
-            courtFeesInCash: 2200,
-            expertFees: 6000,
-            advocacyFees: 9000,
-            otherExpenses: 1800,
-            adversaryName: 'Ahmad Al-Ghamdi',
-            indemnityByCourtAmount: 0,
-            date: new Date(now.getTime() - 100 * 24 * 60 * 60 * 1000).toISOString(),
-          },
-        ],
-        createdAt: new Date(now.getTime() - 120 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 'case-14',
-        title: 'Execution Case - Case #2024-178',
-        client: 'Abdulrahman Al-Otaibi',
-        status: 'open',
-        stage: 'execution',
-        tags: ['execution', 'enforcement'],
-        deadlines: [
-          { id: 'dl-18', title: 'Asset seizure deadline', date: '2025-02-05' },
-          { id: 'dl-19', title: 'Payment verification', date: '2025-02-18' },
-        ],
-        tasks: [
-          { id: 'task-23', title: 'Locate debtor assets', done: false },
-          { id: 'task-24', title: 'File execution request', done: true },
-        ],
-        developments: [
-          {
-            id: 'dev-22',
-            date: new Date(now.getTime() - 140 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Original case filed',
-          },
-          {
-            id: 'dev-23',
-            date: new Date(now.getTime() - 80 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Ruling in favor of company',
-          },
-          {
-            id: 'dev-24',
-            date: new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Moved to Execution Court',
-          },
-        ],
-        rulings: [
-          {
-            id: 'ruling-7',
-            stage: 'primary',
-            caseNo: '2024-178',
-            caseType: 'Plaintiff',
-            courtType: 'Civil Court',
-            courtLevel: 'Primary',
-            courtCity: 'Dammam',
-            caseDetails: 'Contract breach and compensation',
-            filingDate: new Date(now.getTime() - 140 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-            filingNo: 'FIL-2024-178',
-            stageNo: 1,
-            rulingInFavorOf: 'Company',
-            rulingDate: new Date(now.getTime() - 80 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-            courtFees: 5500,
-            legalExpenses: 16000,
-            translationCourtFees: 2200,
-            courtFeesInCash: 3200,
-            expertFees: 9000,
-            advocacyFees: 13000,
-            otherExpenses: 2500,
-            adversaryName: 'Yusuf Al-Mutairi',
-            indemnityByCourtAmount: 95000,
-            date: new Date(now.getTime() - 80 * 24 * 60 * 60 * 1000).toISOString(),
-          },
-        ],
-        createdAt: new Date(now.getTime() - 140 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 'case-15',
-        title: 'Intellectual Property - Case #2025-103',
-        client: 'Tech Solutions Arabia',
-        status: 'open',
-        stage: 'primary',
-        tags: ['IP', 'trademark'],
-        deadlines: [
-          { id: 'dl-20', title: 'Trademark registration review', date: '2025-02-07' },
-          { id: 'dl-21', title: 'Expert opinion submission', date: '2025-02-25' },
-        ],
-        tasks: [
-          { id: 'task-25', title: 'Review trademark documents', done: true },
-          { id: 'task-26', title: 'Consult IP specialist', done: false },
-        ],
-        developments: [
-          {
-            id: 'dev-25',
-            date: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Trademark infringement case filed',
-          },
-        ],
-        rulings: [],
-        createdAt: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
       },
     ];
     this.storage.set(STORAGE_KEY, cases);
@@ -725,7 +206,17 @@ export class CasesService {
     return this.list().find((c) => c.id === id);
   }
 
-  create(input: { title: string; client: string; tags?: string[] }): CaseItem {
+  create(input: {
+    title: string;
+    client: string;
+    claimant?: string;
+    beneficiary?: string;
+    initialHearingDate?: string;
+    tags?: string[];
+    legalStatus?: number;
+    companyLawyerId?: string;
+    companyLawyerName?: string;
+  }): CaseItem {
     // Validate input
     if (!input.title || !input.title.trim()) {
       throw new Error('Case title is required');
@@ -735,12 +226,21 @@ export class CasesService {
     }
 
     const now = new Date().toISOString();
+    const caseNumber = this.generateCaseNumber();
     const item: CaseItem = {
       id: this.generateId(),
       title: input.title.trim(),
       client: input.client.trim(),
+      claimant: input.claimant?.trim(),
+      beneficiary: input.beneficiary?.trim(),
+      initialHearingDate: input.initialHearingDate,
       status: 'open',
       stage: 'primary',
+      caseNumber: caseNumber,
+      baseCaseNumber: caseNumber,
+      legalStatus: input.legalStatus ?? 1, // Default to 1 (To Legal Department) when created from claim
+      companyLawyerId: input.companyLawyerId,
+      companyLawyerName: input.companyLawyerName,
       tags: input.tags ?? [],
       deadlines: [],
       tasks: [],
@@ -755,7 +255,21 @@ export class CasesService {
 
   updateMeta(
     id: string,
-    meta: Partial<Pick<CaseItem, 'title' | 'client' | 'status' | 'tags'>>,
+    meta: Partial<
+      Pick<
+        CaseItem,
+        | 'title'
+        | 'client'
+        | 'status'
+        | 'tags'
+        | 'unifiedCaseId'
+        | 'companyLawyerId'
+        | 'companyLawyerName'
+        | 'claimant'
+        | 'beneficiary'
+        | 'initialHearingDate'
+      >
+    >,
   ): void {
     this.mutate((cases) =>
       cases.map((c) =>
@@ -766,12 +280,17 @@ export class CasesService {
     );
   }
 
-  delete(id: string): void {
-    this.mutate((cases) => cases.filter((c) => c.id !== id));
-  }
-
   addTask(id: string, title: string, due?: string): CaseTask | undefined {
-    const task: CaseTask = { id: this.generateId(), title, due, done: false };
+    // Validate input
+    if (!title || !title.trim()) {
+      throw new Error('Task title is required');
+    }
+    const task: CaseTask = {
+      id: this.generateId(),
+      title: title.trim(),
+      due,
+      done: false,
+    };
     this.mutate((cases) =>
       cases.map((c) =>
         c.id === id ? { ...c, tasks: [...c.tasks, task], updatedAt: new Date().toISOString() } : c,
@@ -875,7 +394,7 @@ export class CasesService {
     id: string,
     input: Partial<Omit<CaseRuling, 'id'>> & {
       stage: Exclude<CaseStage, 'settled'>;
-      caseNo: string;
+      caseNo?: string;
       caseType: CaseType;
       courtType: string;
       courtLevel: string;
@@ -889,29 +408,42 @@ export class CasesService {
       adversaryName: string;
     },
   ): void {
-    // Validate required fields
-    if (!input.caseNo || !input.caseNo.trim()) {
+    const caseItem = this.getById(id);
+    if (!caseItem) {
+      throw new Error('Case not found');
+    }
+
+    // Default case number to current case number/base
+    const caseNumber =
+      (input.caseNo && input.caseNo.trim()) || caseItem.caseNumber || caseItem.baseCaseNumber;
+    if (!caseNumber) {
       throw new Error('Case number is required');
     }
     if (!input.courtType || !input.courtType.trim()) {
       throw new Error('Court type is required');
     }
+    // Stage validation: cannot add ruling ahead of current stage
+    const stageOrder: CaseStage[] = ['primary', 'appeal', 'cassation', 'execution', 'settled'];
+    const currentStageIndex = stageOrder.indexOf(caseItem.stage ?? 'primary');
+    const rulingStageIndex = stageOrder.indexOf(input.stage);
+    if (rulingStageIndex > currentStageIndex) {
+      throw new Error(`Cannot add ruling for ${input.stage} before case reaches that stage`);
+    }
     // Check for duplicate case number in the same case
-    const caseItem = this.getById(id);
     if (caseItem?.rulings) {
       const duplicate = caseItem.rulings.find(
-        (r) => r.caseNo === input.caseNo.trim() && r.stage === input.stage,
+        (r) => r.caseNo === caseNumber && r.stage === input.stage,
       );
       if (duplicate) {
         throw new Error(
-          `A ruling with case number "${input.caseNo}" already exists for ${input.stage} stage`,
+          `A ruling with case number "${caseNumber}" already exists for ${input.stage} stage`,
         );
       }
     }
     const ruling: CaseRuling = {
       id: this.generateId(),
       // Main Info
-      caseNo: input.caseNo,
+      caseNo: caseNumber,
       caseType: input.caseType,
       courtType: input.courtType,
       courtLevel: input.courtLevel,
@@ -988,14 +520,33 @@ export class CasesService {
     );
   }
 
-  advanceStage(id: string): void {
+  moveToNextStage(id: string): void {
     const order: CaseStage[] = ['primary', 'appeal', 'cassation', 'execution', 'settled'];
     this.mutate((cases) =>
       cases.map((c) => {
         if (c.id !== id) return c;
+        // Prevent advancing from settled stage
+        if (c.stage === 'settled') {
+          return c;
+        }
         const currentStage = c.stage ?? 'primary';
         const idx = order.indexOf(currentStage);
         const next = order[Math.min(idx + 1, order.length - 1)];
+
+        // Get base case number (use baseCaseNumber if available, otherwise caseNumber)
+        const baseCaseNumber = c.baseCaseNumber || c.caseNumber || '';
+        const updatedCaseNumber = baseCaseNumber
+          ? this.appendStageSuffix(baseCaseNumber, next)
+          : c.caseNumber;
+
+        // Update legal status based on stage
+        let legalStatus = c.legalStatus ?? 1;
+        if (next === 'execution') {
+          legalStatus = 3; // In Execution
+        } else if (next === 'settled') {
+          legalStatus = 4; // Settled
+        }
+
         const note =
           next === 'settled'
             ? 'Case settled after execution'
@@ -1004,6 +555,8 @@ export class CasesService {
           ...c,
           stage: next,
           status: next === 'settled' ? 'closed' : c.status,
+          caseNumber: updatedCaseNumber,
+          legalStatus: legalStatus,
           developments: [
             { id: this.generateId(), date: new Date().toISOString(), note },
             ...(c.developments ?? []),
@@ -1014,7 +567,158 @@ export class CasesService {
     );
   }
 
+  advanceStage(id: string): void {
+    this.moveToNextStage(id);
+  }
+
   executeCase(id: string): void {
+    const caseItem = this.getById(id);
+    if (!caseItem) return;
+
+    // Get the case number for execution stage (append 03)
+    const baseCaseNumber = caseItem.baseCaseNumber || caseItem.caseNumber || '';
+    const executionCaseNumber = baseCaseNumber
+      ? this.appendStageSuffix(baseCaseNumber, 'execution')
+      : '';
+
+    // Create execution case record
+    if (executionCaseNumber && caseItem.unifiedCaseId) {
+      // Get the last ruling to extract court information
+      const lastRuling =
+        caseItem.rulings && caseItem.rulings.length > 0
+          ? caseItem.rulings[caseItem.rulings.length - 1]
+          : null;
+
+      const createdExec = this.executionCasesService.create({
+        executionCaseNo: executionCaseNumber,
+        fileNo: `FILE-${executionCaseNumber}`,
+        fileDate: new Date().toISOString(),
+        courtRoom: lastRuling?.courtCity || '',
+        companyLawyer: '',
+        lastCourtType: lastRuling?.courtType || '',
+        lastCourtLevel: lastRuling?.courtLevel || '',
+        amountRuled: lastRuling?.indemnityByCourtAmount || 0,
+        amountPaid: 0,
+        linkedCaseId: id,
+        unifiedCaseId: caseItem.unifiedCaseId,
+      });
+
+      // Link execution case to unified case
+      this.caseTracking.linkEntityToCase(caseItem.unifiedCaseId, 'execution', createdExec.id);
+    }
+
+    // Move case to execution stage and update status
+    this.mutate((cases) =>
+      cases.map((c) =>
+        c.id === id
+          ? {
+              ...c,
+              stage: 'execution',
+              legalStatus: 3, // In Execution
+              caseNumber: executionCaseNumber || c.caseNumber,
+              developments: [
+                {
+                  id: this.generateId(),
+                  date: new Date().toISOString(),
+                  note: 'Case moved to Execution Court',
+                },
+                ...(c.developments ?? []),
+              ],
+              updatedAt: new Date().toISOString(),
+            }
+          : c,
+      ),
+    );
+  }
+
+  settleCase(id: string, stage: CaseStage): void {
+    const stageLabels: Record<CaseStage, string> = {
+      primary: 'Primary Court',
+      appeal: 'Appeal Court',
+      cassation: 'Cassation Court',
+      execution: 'Execution Court',
+      settled: 'Settled',
+    };
+
+    const caseItem = this.getById(id);
+    if (!caseItem) return;
+
+    // Check if business settlement already exists for this case
+    const existingSettlement = this.businessSettlementService.getByCaseId(id);
+
+    // Create business settlement if it doesn't exist
+    if (!existingSettlement) {
+      this.businessSettlementService.create({
+        departmentAmount: 0,
+        legalDepartmentAmount: 0,
+        managementAmount: 0,
+        adversaryAmount: 0,
+        amountOfAmicableAgreement: 0,
+        linkedCaseId: id,
+      });
+    }
+
+    // If settling from execution stage, create execution case if not exists
+    if (stage === 'execution' && caseItem.stage === 'execution') {
+      const baseCaseNumber = caseItem.baseCaseNumber || caseItem.caseNumber || '';
+      const executionCaseNumber = baseCaseNumber
+        ? this.appendStageSuffix(baseCaseNumber, 'execution')
+        : '';
+
+      if (executionCaseNumber && caseItem.unifiedCaseId) {
+        const existingExecutionCase = this.executionCasesService
+          .list()
+          .find((ec) => ec.executionCaseNo === executionCaseNumber || ec.linkedCaseId === id);
+
+        if (!existingExecutionCase) {
+          const lastRuling =
+            caseItem.rulings && caseItem.rulings.length > 0
+              ? caseItem.rulings[caseItem.rulings.length - 1]
+              : null;
+
+          const createdExec = this.executionCasesService.create({
+            executionCaseNo: executionCaseNumber,
+            fileNo: `FILE-${executionCaseNumber}`,
+            fileDate: new Date().toISOString(),
+            courtRoom: lastRuling?.courtCity || '',
+            companyLawyer: '',
+            lastCourtType: lastRuling?.courtType || '',
+            lastCourtLevel: lastRuling?.courtLevel || '',
+            amountRuled: lastRuling?.indemnityByCourtAmount || 0,
+            amountPaid: 0,
+            linkedCaseId: id,
+            unifiedCaseId: caseItem.unifiedCaseId,
+          });
+          this.caseTracking.linkEntityToCase(caseItem.unifiedCaseId, 'execution', createdExec.id);
+        }
+      }
+    }
+
+    this.mutate((cases) =>
+      cases.map((c) =>
+        c.id === id
+          ? {
+              ...c,
+              stage: 'settled',
+              status: 'closed',
+              legalStatus: 4, // Settled
+              settledStatus: 2, // Legally Settled
+              developments: [
+                {
+                  id: this.generateId(),
+                  date: new Date().toISOString(),
+                  note: `Case settled at ${stageLabels[stage]}`,
+                },
+                ...(c.developments ?? []),
+              ],
+              updatedAt: new Date().toISOString(),
+            }
+          : c,
+      ),
+    );
+  }
+
+  markAsSettled(id: string): void {
     this.mutate((cases) =>
       cases.map((c) =>
         c.id === id
@@ -1035,6 +739,10 @@ export class CasesService {
           : c,
       ),
     );
+  }
+
+  delete(id: string): void {
+    this.mutate((cases) => cases.filter((c) => c.id !== id));
   }
 
   private mutate(mutator: (cases: CaseItem[]) => CaseItem[]): void {

@@ -13,6 +13,11 @@ export const routes: Routes = [
       import('./features/claims/claims-list.component').then((m) => m.ClaimsListComponent),
   },
   {
+    path: 'claims/:id',
+    loadComponent: () =>
+      import('./features/claims/claim-detail.component').then((m) => m.ClaimDetailComponent),
+  },
+  {
     path: 'cases/:id',
     loadComponent: () =>
       import('./features/cases/case-detail.component').then((m) => m.CaseDetailComponent),
@@ -63,6 +68,36 @@ export const routes: Routes = [
       import('./features/execution/execution-case-detail.component').then(
         (m) => m.ExecutionCaseDetailComponent,
       ),
+  },
+  {
+    path: 'courts',
+    loadComponent: () =>
+      import('./features/courts/courts-list.component').then((m) => m.CourtsListComponent),
+  },
+  {
+    path: 'courts/new',
+    loadComponent: () =>
+      import('./features/courts/court-detail.component').then((m) => m.CourtDetailComponent),
+  },
+  {
+    path: 'courts/:id',
+    loadComponent: () =>
+      import('./features/courts/court-detail.component').then((m) => m.CourtDetailComponent),
+  },
+  {
+    path: 'lawyers',
+    loadComponent: () =>
+      import('./features/lawyers/lawyers-list.component').then((m) => m.LawyersListComponent),
+  },
+  {
+    path: 'lawyers/new',
+    loadComponent: () =>
+      import('./features/lawyers/lawyer-detail.component').then((m) => m.LawyerDetailComponent),
+  },
+  {
+    path: 'lawyers/:id',
+    loadComponent: () =>
+      import('./features/lawyers/lawyer-detail.component').then((m) => m.LawyerDetailComponent),
   },
   {
     path: 'settlements',

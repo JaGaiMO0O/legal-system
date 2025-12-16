@@ -1,27 +1,45 @@
-import { Component, inject, HostListener, OnInit, OnDestroy } from '@angular/core';
-import { interval, Subscription } from 'rxjs';
-import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { Component, HostListener, inject, OnDestroy, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
+import { interval, Subscription } from 'rxjs';
+import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
+import { CaseWorkflowComponent } from '../../shared/components/case-workflow/case-workflow.component';
+import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner/loading-spinner.component';
 import { UIButtonComponent } from '../../shared/components/ui/button.component';
 import { UICardComponent } from '../../shared/components/ui/card.component';
-import { FormsModule } from '@angular/forms';
+import { DeadlineStatusPipe } from '../../shared/pipes/deadline-status.pipe';
+import { RelativeDatePipe } from '../../shared/pipes/relative-date.pipe';
 import {
-  CasesService,
+  BusinessSettlement,
+  BusinessSettlementService,
+} from '../../shared/services/business-settlement.service';
+import { CaseTrackingService } from '../../shared/services/case-tracking.service';
+import {
   CaseItem,
+  CaseRuling,
+  CasesService,
   CaseStage,
   CaseType,
   RulingInFavorOf,
-  CaseRuling,
 } from '../../shared/services/cases.service';
-import { TranslateModule } from '@ngx-translate/core';
-import { ToastService } from '../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../shared/services/confirm-dialog.service';
-import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner/loading-spinner.component';
-import { RelativeDatePipe } from '../../shared/pipes/relative-date.pipe';
-import { DeadlineStatusPipe } from '../../shared/pipes/deadline-status.pipe';
+import { CourtLevel, CourtsService, CourtType } from '../../shared/services/courts.service';
 import { ExportService } from '../../shared/services/export.service';
-import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
+import { Lawyer, LawyersService } from '../../shared/services/lawyers.service';
+import { ToastService } from '../../shared/services/toast.service';
 import { UndoRedoService } from '../../shared/services/undo-redo.service';
+
+type LastSavedData = {
+  title: string;
+  client: string;
+  status: string;
+  companyLawyerId: string;
+  claimant: string;
+  beneficiary: string;
+  initialHearingDate: string;
+};
 
 @Component({
   standalone: true,
@@ -32,10 +50,12 @@ import { UndoRedoService } from '../../shared/services/undo-redo.service';
     UICardComponent,
     FormsModule,
     TranslateModule,
+    RouterModule,
     LoadingSpinnerComponent,
     RelativeDatePipe,
     DeadlineStatusPipe,
     BreadcrumbComponent,
+    CaseWorkflowComponent,
   ],
   template: `
     <app-breadcrumb [items]="breadcrumbItems"></app-breadcrumb>
@@ -53,7 +73,24 @@ import { UndoRedoService } from '../../shared/services/undo-redo.service';
           >
             Stage: {{ caseItem?.stage || 'primary' | titlecase }}
           </span>
-          <ui-button variant="ghost" (click)="nextStage()" class="text-sm"> Next Court </ui-button>
+          <ui-button
+            variant="ghost"
+            (click)="nextStage()"
+            *ngIf="caseItem?.stage !== 'settled'"
+            class="text-sm"
+          >
+            Next Court
+          </ui-button>
+          <ui-button
+            variant="primary"
+            (click)="settle()"
+            *ngIf="
+              caseItem?.stage && caseItem?.stage !== 'settled' && caseItem?.stage !== 'execution'
+            "
+            class="text-sm"
+          >
+            Settle Case
+          </ui-button>
           <ui-button
             variant="primary"
             (click)="execute()"
@@ -76,17 +113,54 @@ import { UndoRedoService } from '../../shared/services/undo-redo.service';
         </div>
       </div>
     </div>
+
+    <!-- Case Workflow -->
+    <ui-card *ngIf="caseItem">
+      <app-case-workflow
+        [currentStage]="caseItem.stage || 'primary'"
+        mode="full"
+      ></app-case-workflow>
+    </ui-card>
+
     <ui-card>
       <h3 class="text-lg font-bold mb-6">Case Information</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Case ID</label>
+          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+            >Case Number</label
+          >
           <input
             type="text"
-            [value]="caseItem?.id || 'Will be generated'"
+            [value]="caseItem?.caseNumber || caseItem?.baseCaseNumber || 'Will be generated'"
             readonly
-            class="w-full bg-[rgb(var(--surface-muted))] cursor-not-allowed"
+            class="w-full bg-[rgb(var(--surface-muted))] cursor-not-allowed font-mono"
           />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+            >Legal Status</label
+          >
+          <div class="flex items-center gap-2">
+            <span
+              class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium"
+              [class.bg-gray-100]="getLegalStatusValue() === 0"
+              [class.text-gray-800]="getLegalStatusValue() === 0"
+              [class.bg-blue-100]="getLegalStatusValue() === 1"
+              [class.text-blue-800]="getLegalStatusValue() === 1"
+              [class.bg-yellow-100]="getLegalStatusValue() === 3"
+              [class.text-yellow-800]="getLegalStatusValue() === 3"
+              [class.bg-emerald-100]="getLegalStatusValue() === 4"
+              [class.text-emerald-800]="getLegalStatusValue() === 4"
+            >
+              {{ getLegalStatusLabel() }}
+            </span>
+            <span
+              *ngIf="caseItem?.settledStatus === 2"
+              class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-purple-100 text-purple-800"
+            >
+              Legally Settled
+            </span>
+          </div>
         </div>
         <div>
           <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Status</label>
@@ -96,6 +170,29 @@ import { UndoRedoService } from '../../shared/services/undo-redo.service';
             <option value="closed">Closed</option>
             <option value="on-hold">On Hold</option>
           </select>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+            >Company Lawyer</label
+          >
+          <select [(ngModel)]="companyLawyerId" class="w-full">
+            <option value="">Unassigned</option>
+            <option *ngFor="let l of lawyers" [value]="l.id">
+              {{ l.lawyerNumber }} - {{ l.name }}
+            </option>
+          </select>
+          <p class="text-xs text-[rgb(var(--text-muted))] mt-1" *ngIf="companyLawyerId">
+            Assigned: {{ getCompanyLawyerDisplay() }}
+          </p>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Case ID</label>
+          <input
+            type="text"
+            [value]="caseItem?.id || 'Will be generated'"
+            readonly
+            class="w-full bg-[rgb(var(--surface-muted))] cursor-not-allowed text-xs"
+          />
         </div>
         <div class="md:col-span-2">
           <label for="case-title" class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
@@ -117,7 +214,7 @@ import { UndoRedoService } from '../../shared/services/undo-redo.service';
             {{ titleError }}
           </p>
         </div>
-        <div class="md:col-span-2">
+        <div>
           <label for="case-client" class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
             >Client <span class="text-red-500">*</span></label
           >
@@ -136,6 +233,32 @@ import { UndoRedoService } from '../../shared/services/undo-redo.service';
           <p *ngIf="clientError" id="client-error" class="text-red-600 text-xs mt-1" role="alert">
             {{ clientError }}
           </p>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Claimant</label>
+          <input
+            type="text"
+            [(ngModel)]="claimant"
+            class="w-full"
+            placeholder="Enter claimant name"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+            >Beneficiary</label
+          >
+          <input
+            type="text"
+            [(ngModel)]="beneficiary"
+            class="w-full"
+            placeholder="Enter beneficiary name"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+            >Initial Hearing Date</label
+          >
+          <input type="date" [(ngModel)]="initialHearingDate" class="w-full" />
         </div>
       </div>
       <div
@@ -201,6 +324,55 @@ import { UndoRedoService } from '../../shared/services/undo-redo.service';
           </ui-button>
         </div>
       </div>
+    </ui-card>
+
+    <ui-card class="mt-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold">Business Settlement</h3>
+        <ui-button variant="primary" size="sm" (click)="createSettlement()" *ngIf="!settlement">
+          Create Settlement
+        </ui-button>
+        <a
+          *ngIf="settlement"
+          class="text-[rgb(var(--primary))] hover:underline text-sm font-medium"
+          [routerLink]="['/settlements', settlement.id]"
+        >
+          View Settlement
+        </a>
+      </div>
+      <div
+        *ngIf="settlement; else noSettlement"
+        class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm"
+      >
+        <div class="p-3 bg-[rgb(var(--surface-muted))] rounded">
+          <div class="text-[rgb(var(--text-muted))]">Amount of Amicable Agreement</div>
+          <div class="text-lg font-semibold">
+            {{ settlement.amountOfAmicableAgreement | number }} SAR
+          </div>
+        </div>
+        <div class="p-3 bg-[rgb(var(--surface-muted))] rounded">
+          <div class="text-[rgb(var(--text-muted))]">Department Amount</div>
+          <div class="font-semibold">{{ settlement.departmentAmount | number }} SAR</div>
+        </div>
+        <div class="p-3 bg-[rgb(var(--surface-muted))] rounded">
+          <div class="text-[rgb(var(--text-muted))]">Legal Department Amount</div>
+          <div class="font-semibold">{{ settlement.legalDepartmentAmount | number }} SAR</div>
+        </div>
+        <div class="p-3 bg-[rgb(var(--surface-muted))] rounded">
+          <div class="text-[rgb(var(--text-muted))]">Management Amount</div>
+          <div class="font-semibold">{{ settlement.managementAmount | number }} SAR</div>
+        </div>
+        <div class="p-3 bg-[rgb(var(--surface-muted))] rounded">
+          <div class="text-[rgb(var(--text-muted))]">Adversary Amount</div>
+          <div class="font-semibold">{{ settlement.adversaryAmount | number }} SAR</div>
+        </div>
+        <div class="text-xs text-[rgb(var(--text-muted))]">
+          Updated at: {{ settlement.updatedAt | date: 'short' }}
+        </div>
+      </div>
+      <ng-template #noSettlement>
+        <p class="text-[rgb(var(--text-muted))] text-sm">No settlement linked to this case.</p>
+      </ng-template>
     </ui-card>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
@@ -477,14 +649,16 @@ import { UndoRedoService } from '../../shared/services/undo-redo.service';
               <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
                 >Court Type <span class="text-red-500">*</span></label
               >
-              <input
-                type="text"
-                [(ngModel)]="newRuling.courtType"
+              <select
+                [(ngModel)]="selectedCourtTypeId"
                 class="w-full"
                 [class.border-red-300]="rulingCourtTypeError"
                 [class.bg-red-50]="rulingCourtTypeError"
-                placeholder="Enter court type"
-              />
+                (ngModelChange)="onCourtTypeChange()"
+              >
+                <option value="">Select court type</option>
+                <option *ngFor="let ct of courts" [value]="ct.id">{{ ct.name }}</option>
+              </select>
               <p *ngIf="rulingCourtTypeError" class="text-red-600 text-xs mt-1">
                 {{ rulingCourtTypeError }}
               </p>
@@ -493,12 +667,12 @@ import { UndoRedoService } from '../../shared/services/undo-redo.service';
               <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
                 >Court Level</label
               >
-              <input
-                type="text"
-                [(ngModel)]="newRuling.courtLevel"
-                class="w-full"
-                placeholder="Enter court level"
-              />
+              <select [(ngModel)]="newRuling.courtLevel" class="w-full">
+                <option value="">Select level</option>
+                <option *ngFor="let lvl of availableLevels" [value]="lvl">
+                  {{ levelLabel(lvl) }}
+                </option>
+              </select>
             </div>
             <div>
               <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
@@ -926,6 +1100,10 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
   private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly exportService = inject(ExportService);
   private readonly undoRedo = inject(UndoRedoService);
+  private readonly caseTracking = inject(CaseTrackingService);
+  private readonly businessSettlements = inject(BusinessSettlementService);
+  private readonly lawyersService = inject(LawyersService);
+  private readonly courtsService = inject(CourtsService);
   protected caseItem: CaseItem | undefined;
   protected title = '';
   protected client = '';
@@ -942,6 +1120,9 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
   protected rulingFilingDateError = '';
   protected rulingRulingDateError = '';
   protected saving = false;
+  protected claimant = '';
+  protected beneficiary = '';
+  protected initialHearingDate = '';
   protected addingTask = false;
   protected addingDeadline = false;
   protected addingRuling = false;
@@ -951,11 +1132,20 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
   protected addingDevelopment = false;
   protected breadcrumbItems: Array<{ label: string; route?: string | any[] }> = [];
   protected autoSaveStatus: 'saved' | 'saving' | 'unsaved' = 'saved';
+  protected lawyers: Lawyer[] = [];
+  protected companyLawyerId = '';
+  protected courts: CourtType[] = [];
+  protected selectedCourtTypeId = '';
+  protected availableLevels: CourtLevel[] = [];
   private autoSaveSubscription?: Subscription;
-  private lastSavedData: { title: string; client: string; status: string } = {
+  private lastSavedData: LastSavedData = {
     title: '',
     client: '',
     status: '',
+    companyLawyerId: '',
+    claimant: '',
+    beneficiary: '',
+    initialHearingDate: '',
   };
   protected newRuling = {
     stage: 'primary' as Exclude<CaseStage, 'settled'>,
@@ -982,6 +1172,8 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
   };
 
   constructor() {
+    this.lawyers = this.lawyersService.list();
+    this.courts = this.courtsService.list();
     const id = this.route.snapshot.paramMap.get('id');
     if (id && id !== 'new') {
       this.caseItem = this.cases.getById(id);
@@ -989,10 +1181,45 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
         this.title = this.caseItem.title;
         this.client = this.caseItem.client;
         this.status = this.caseItem.status;
+        this.companyLawyerId = this.caseItem.companyLawyerId || '';
+        this.claimant = this.caseItem.claimant || '';
+        this.beneficiary = this.caseItem.beneficiary || '';
+        this.initialHearingDate = this.caseItem.initialHearingDate || '';
         this.breadcrumbItems = [
           { label: 'Cases', route: '/cases' },
           { label: this.caseItem.title },
         ];
+        this.lastSavedData = {
+          title: this.caseItem.title,
+          client: this.caseItem.client,
+          status: this.caseItem.status,
+          companyLawyerId: this.caseItem.companyLawyerId || '',
+          claimant: this.caseItem.claimant || '',
+          beneficiary: this.caseItem.beneficiary || '',
+          initialHearingDate: this.caseItem.initialHearingDate || '',
+        };
+        // Set the current case in tracking service
+        if (this.caseItem.unifiedCaseId) {
+          this.caseTracking.setCurrentCase(this.caseItem.unifiedCaseId);
+          this.caseTracking.linkEntityToCase(this.caseItem.unifiedCaseId, 'case', this.caseItem.id);
+          this.caseTracking.upsertUnifiedCase({
+            unifiedCaseId: this.caseItem.unifiedCaseId,
+            caseId: this.caseItem.id,
+            title: this.caseItem.title,
+            client: this.caseItem.client,
+          });
+        } else {
+          // Generate unified case ID if missing
+          const unifiedCaseId = this.caseTracking.generateUnifiedCaseId();
+          this.caseTracking.setCurrentCase(unifiedCaseId);
+          this.caseTracking.linkEntityToCase(unifiedCaseId, 'case', this.caseItem.id);
+          this.caseTracking.upsertUnifiedCase({
+            unifiedCaseId,
+            caseId: this.caseItem.id,
+            title: this.caseItem.title,
+            client: this.caseItem.client,
+          });
+        }
       }
     } else {
       this.breadcrumbItems = [{ label: 'Cases', route: '/cases' }, { label: 'New Case' }];
@@ -1021,8 +1248,13 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
         title: this.caseItem.title,
         client: this.caseItem.client,
         status: this.caseItem.status,
+        companyLawyerId: this.caseItem.companyLawyerId || '',
+        claimant: this.caseItem.claimant || '',
+        beneficiary: this.caseItem.beneficiary || '',
+        initialHearingDate: this.caseItem.initialHearingDate || '',
       };
     }
+    this.onCourtTypeChange();
     // Auto-save every 30 seconds
     this.autoSaveSubscription = interval(30000).subscribe(() => {
       this.autoSave();
@@ -1039,7 +1271,11 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
     const hasChanges =
       this.title.trim() !== this.lastSavedData.title ||
       this.client.trim() !== this.lastSavedData.client ||
-      this.status !== this.lastSavedData.status;
+      this.status !== this.lastSavedData.status ||
+      this.companyLawyerId !== this.lastSavedData.companyLawyerId ||
+      this.claimant.trim() !== this.lastSavedData.claimant ||
+      this.beneficiary.trim() !== this.lastSavedData.beneficiary ||
+      this.initialHearingDate !== this.lastSavedData.initialHearingDate;
     if (!hasChanges) {
       this.autoSaveStatus = 'saved';
       return;
@@ -1053,10 +1289,16 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
     // Auto-save
     this.autoSaveStatus = 'saving';
     try {
+      const lawyer = this.getSelectedLawyer();
       this.cases.updateMeta(this.caseItem.id, {
         title: this.title.trim(),
         client: this.client.trim(),
         status: (this.status as any) === 'on-hold' ? 'pending' : (this.status as any),
+        companyLawyerId: this.companyLawyerId || undefined,
+        companyLawyerName: lawyer?.name,
+        claimant: this.claimant.trim() || undefined,
+        beneficiary: this.beneficiary.trim() || undefined,
+        initialHearingDate: this.initialHearingDate || undefined,
       });
       this.caseItem = this.cases.getById(this.caseItem.id);
       if (this.caseItem) {
@@ -1064,6 +1306,10 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
           title: this.caseItem.title,
           client: this.caseItem.client,
           status: this.caseItem.status,
+          companyLawyerId: this.caseItem.companyLawyerId || '',
+          claimant: this.caseItem.claimant || '',
+          beneficiary: this.caseItem.beneficiary || '',
+          initialHearingDate: this.caseItem.initialHearingDate || '',
         };
       }
       this.autoSaveStatus = 'saved';
@@ -1104,11 +1350,17 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
 
     this.saving = true;
     try {
+      const lawyer = this.getSelectedLawyer();
       if (!this.caseItem) {
         // Create new case
         const newCase = this.cases.create({
           title: this.title.trim(),
           client: this.client.trim(),
+          claimant: this.claimant.trim() || undefined,
+          beneficiary: this.beneficiary.trim() || undefined,
+          initialHearingDate: this.initialHearingDate || undefined,
+          companyLawyerId: this.companyLawyerId || undefined,
+          companyLawyerName: lawyer?.name,
         });
         // Update status if not default
         if (this.status !== 'open') {
@@ -1124,6 +1376,7 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
           this.title = this.caseItem.title;
           this.client = this.caseItem.client;
           this.status = this.caseItem.status;
+          this.companyLawyerId = this.caseItem.companyLawyerId || '';
         }
       } else {
         // Update existing case
@@ -1131,6 +1384,11 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
           title: this.title.trim(),
           client: this.client.trim(),
           status: (this.status as any) === 'on-hold' ? 'pending' : (this.status as any),
+          companyLawyerId: this.companyLawyerId || undefined,
+          companyLawyerName: lawyer?.name,
+          claimant: this.claimant.trim() || undefined,
+          beneficiary: this.beneficiary.trim() || undefined,
+          initialHearingDate: this.initialHearingDate || undefined,
         });
         const oldData = {
           title: this.caseItem.title,
@@ -1149,6 +1407,10 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
             title: this.caseItem.title,
             client: this.caseItem.client,
             status: this.caseItem.status,
+            companyLawyerId: this.caseItem.companyLawyerId || '',
+            claimant: this.caseItem.claimant || '',
+            beneficiary: this.caseItem.beneficiary || '',
+            initialHearingDate: this.caseItem.initialHearingDate || '',
           };
           // Record undo action
           this.undoRedo.record({
@@ -1188,6 +1450,83 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
     }
   }
 
+  getLegalStatusValue(): number {
+    return this.caseItem?.legalStatus ?? 1; // Default to 1 (To Legal Department)
+  }
+
+  getLegalStatusLabel(): string {
+    const status = this.getLegalStatusValue();
+    switch (status) {
+      case 0:
+        return 'Normal';
+      case 1:
+        return 'To Legal Department';
+      case 3:
+        return 'In Execution';
+      case 4:
+        return 'Settled';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  private getSelectedLawyer(): Lawyer | undefined {
+    return this.lawyers.find((l) => l.id === this.companyLawyerId);
+  }
+
+  getCompanyLawyerName(): string {
+    const found = this.getSelectedLawyer();
+    return found ? found.name : '';
+  }
+
+  getCompanyLawyerDisplay(): string {
+    const found = this.getSelectedLawyer();
+    return found ? `${found.lawyerNumber} - ${found.name}` : '';
+  }
+
+  onCourtTypeChange(): void {
+    const ct = this.courts.find((c) => c.id === this.selectedCourtTypeId);
+    this.availableLevels = ct ? [...ct.levels] : [];
+    this.newRuling.courtType = ct ? ct.name : '';
+    // Reset level if not in available levels
+    if (!this.availableLevels.includes(this.newRuling.courtLevel as CourtLevel)) {
+      this.newRuling.courtLevel = this.availableLevels[0] || '';
+    }
+  }
+
+  levelLabel(level: CourtLevel): string {
+    switch (level) {
+      case 'primary':
+        return 'Primary Court';
+      case 'appeal':
+        return 'Appeal Court';
+      case 'cassation':
+        return 'Cassation Court';
+      case 'execution':
+        return 'Execution Court';
+      default:
+        return level;
+    }
+  }
+
+  get settlement(): BusinessSettlement | undefined {
+    return this.caseItem ? this.businessSettlements.getByCaseId(this.caseItem.id) : undefined;
+  }
+
+  createSettlement(): void {
+    if (!this.caseItem) return;
+    const created = this.businessSettlements.create({
+      departmentAmount: 0,
+      legalDepartmentAmount: 0,
+      managementAmount: 0,
+      adversaryAmount: 0,
+      amountOfAmicableAgreement: 0,
+      linkedCaseId: this.caseItem.id,
+    });
+    this.toast.success('Settlement created');
+    this.router.navigate(['/settlements', created.id]);
+  }
+
   nextStage(): void {
     if (!this.caseItem) return;
     try {
@@ -1200,12 +1539,26 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
     }
   }
 
+  settle(): void {
+    if (!this.caseItem) return;
+    try {
+      const currentStage = this.caseItem.stage || 'primary';
+      this.cases.settleCase(this.caseItem.id, currentStage as CaseStage);
+      this.caseItem = this.cases.getById(this.caseItem.id);
+      this.toast.success('Case settled successfully');
+    } catch (error) {
+      this.toast.error('Failed to settle case');
+      console.error('Error settling case:', error);
+    }
+  }
+
   execute(): void {
     if (!this.caseItem) return;
     try {
+      // Execute case moves to execution stage and creates execution case record
       this.cases.executeCase(this.caseItem.id);
       this.caseItem = this.cases.getById(this.caseItem.id);
-      this.toast.success('Case executed successfully');
+      this.toast.success('Case moved to execution stage');
     } catch (error) {
       this.toast.error('Failed to execute case');
       console.error('Error executing case:', error);
@@ -1366,6 +1719,19 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
     this.rulingCourtTypeError = '';
     this.rulingFilingDateError = '';
     this.rulingRulingDateError = '';
+
+    if (!this.newRuling.caseNo) {
+      this.newRuling.caseNo = this.caseItem?.caseNumber || this.caseItem?.baseCaseNumber || '';
+    }
+    if (this.selectedCourtTypeId && !this.newRuling.courtType) {
+      const ct = this.courts.find((c) => c.id === this.selectedCourtTypeId);
+      if (ct) {
+        this.newRuling.courtType = ct.name;
+      }
+    }
+    if (!this.newRuling.courtLevel && this.availableLevels.length > 0) {
+      this.newRuling.courtLevel = this.availableLevels[0];
+    }
 
     if (!this.newRuling.caseNo.trim()) {
       this.rulingCaseNoError = 'Case number is required';

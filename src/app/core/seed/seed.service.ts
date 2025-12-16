@@ -33,15 +33,6 @@ export class SeedService {
           legalFlag: 0,
           details: 'Minor collision on highway 1',
         },
-        {
-          id: crypto.randomUUID?.() ?? String(Math.random()),
-          kind: 'motor',
-          reference: 'MTR-2025-014',
-          claimant: 'Blue Logistics LLC',
-          date: mkDate(10),
-          legalFlag: 0,
-          details: 'Truck rear-end incident',
-        },
       ];
       this.storage.set(claimsKey, claims);
     }
@@ -50,7 +41,6 @@ export class SeedService {
     if (this.courts.list().length === 0) {
       this.courts.create('Civil');
       this.courts.create('Criminal', ['primary', 'appeal', 'cassation']);
-      this.courts.create('Execution', ['execution']);
     }
 
     // Seed cases
@@ -58,33 +48,13 @@ export class SeedService {
       const c1 = this.cases.create({
         title: 'Traffic accident claim',
         client: 'John Doe',
-        tags: ['motor', 'injury'],
-      });
-      const c2 = this.cases.create({
-        title: 'Appeal of ruling 1234',
-        client: 'Acme Co.',
-        tags: ['appeal'],
-      });
-      const c3 = this.cases.create({
-        title: 'Execution order issuance',
-        client: 'Jane Smith',
-        tags: ['execution'],
+        tags: ['motor'],
       });
       this.cases.addTask(c1.id, 'Collect medical reports');
-      this.cases.addTask(
-        c1.id,
-        'Contact witness',
-        new Date(Date.now() + 86400000).toISOString().slice(0, 10),
-      );
       this.cases.addDeadline(
         c1.id,
         'First hearing',
         new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
-      );
-      this.cases.addDeadline(
-        c2.id,
-        'Appeal submission',
-        new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10),
       );
     }
 

@@ -12,6 +12,7 @@ import {
   OppositionRepresentative,
   ArbitrationHearing,
 } from '../../shared/services/arbitrations.service';
+import { LawyersService, Lawyer } from '../../shared/services/lawyers.service';
 
 @Component({
   standalone: true,
@@ -76,12 +77,17 @@ import {
       <h3 class="font-semibold mb-4">Company Representative</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Lawyer Name</label>
-          <input
-            type="text"
+          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Select Lawyer</label>
+          <select
             [(ngModel)]="arbitration.companyRepresentative.lawyerName"
             class="w-full"
-          />
+            (ngModelChange)="onSelectLawyer($event, 'company')"
+          >
+            <option value="">-- Select Lawyer --</option>
+            <option *ngFor="let l of lawyers" [value]="l.name">
+              {{ l.lawyerNumber }} - {{ l.name }}
+            </option>
+          </select>
         </div>
         <div>
           <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Position</label>
@@ -177,13 +183,16 @@ export class ArbitrationDetailComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly arbitrationsService = inject(ArbitrationsService);
+  private readonly lawyersService = inject(LawyersService);
 
   protected arbitration: Arbitration;
   protected fillingDate: string = '';
   protected newHearingDate: string = '';
   protected newHearingRemarks: string = '';
+  protected lawyers: Lawyer[] = [];
 
   constructor() {
+    this.lawyers = this.lawyersService.list();
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       const existing = this.arbitrationsService.getById(id);
@@ -232,6 +241,14 @@ export class ArbitrationDetailComponent {
         oppositionRepresentative: this.arbitration.oppositionRepresentative,
       });
       this.router.navigate(['/arbitrations', created.id]);
+    }
+  }
+
+  onSelectLawyer(lawyerName: string, side: 'company' | 'opposition'): void {
+    if (side === 'company') {
+      this.arbitration.companyRepresentative.lawyerName = lawyerName;
+    } else {
+      this.arbitration.oppositionRepresentative.lawyerName = lawyerName;
     }
   }
 

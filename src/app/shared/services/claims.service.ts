@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { MockStorageService } from './mock-storage.service';
 import { CasesService } from './cases.service';
 import { MotorLiabilityService } from './motor-liability.service';
+import { CaseTrackingService } from './case-tracking.service';
 
 export interface Claim {
   id: string;
@@ -11,6 +12,7 @@ export interface Claim {
   date: string; // ISO
   legalFlag: 0 | 1;
   linkedCaseId?: string;
+  unifiedCaseId?: string; // Unified identifier that links this claim across all entities
   details?: string;
 }
 
@@ -21,6 +23,7 @@ export class ClaimsService {
   private readonly storage = inject(MockStorageService);
   private readonly cases = inject(CasesService);
   private readonly motorLiabilityService = inject(MotorLiabilityService);
+  private readonly caseTracking = inject(CaseTrackingService);
 
   private generateId(): string {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -50,6 +53,7 @@ export class ClaimsService {
         date: new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000).toISOString(),
         legalFlag: 1,
         linkedCaseId: 'case-1',
+        unifiedCaseId: 'uc-1', // Links to case-1, ml-1
         details: 'Traffic accident on King Fahd Road',
       },
       {
@@ -59,98 +63,8 @@ export class ClaimsService {
         claimant: 'Sara Al-Otaibi',
         date: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString(),
         legalFlag: 0,
+        unifiedCaseId: 'uc-2', // Links to ml-2 (can be converted to legal)
         details: 'Vehicle collision at intersection',
-      },
-      {
-        id: 'claim-3',
-        kind: 'motor',
-        reference: 'MOT-2025-003',
-        claimant: 'Khalid Al-Ghamdi',
-        date: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000).toISOString(),
-        legalFlag: 0,
-        details: 'Rear-end collision',
-      },
-      {
-        id: 'claim-4',
-        kind: 'motor',
-        reference: 'MOT-2024-156',
-        claimant: 'Fatima Al-Zahra',
-        date: new Date(now.getTime() - 120 * 24 * 60 * 60 * 1000).toISOString(),
-        legalFlag: 1,
-        linkedCaseId: 'case-4',
-        details: 'Highway accident case',
-      },
-      {
-        id: 'claim-5',
-        kind: 'motor',
-        reference: 'MOT-2025-004',
-        claimant: 'Omar Al-Shammari',
-        date: new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-        legalFlag: 0,
-        details: 'Side impact collision at traffic light',
-      },
-      {
-        id: 'claim-6',
-        kind: 'motor',
-        reference: 'MOT-2025-005',
-        claimant: 'Noura Al-Mutairi',
-        date: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-        legalFlag: 0,
-        details: 'Parking lot accident',
-      },
-      {
-        id: 'claim-7',
-        kind: 'motor',
-        reference: 'MOT-2024-201',
-        claimant: 'Yusuf Al-Qahtani',
-        date: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString(),
-        legalFlag: 1,
-        details: 'Multi-vehicle accident on highway',
-      },
-      {
-        id: 'claim-8',
-        kind: 'motor',
-        reference: 'MOT-2025-006',
-        claimant: 'Layla Al-Ghamdi',
-        date: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-        legalFlag: 0,
-        details: 'Hit and run incident',
-      },
-      {
-        id: 'claim-9',
-        kind: 'motor',
-        reference: 'MOT-2025-007',
-        claimant: 'Hassan Al-Rashid',
-        date: new Date(now.getTime() - 25 * 24 * 60 * 60 * 1000).toISOString(),
-        legalFlag: 0,
-        details: 'Vehicle damage from falling object',
-      },
-      {
-        id: 'claim-10',
-        kind: 'motor',
-        reference: 'MOT-2024-278',
-        claimant: 'Maha Al-Sheikh',
-        date: new Date(now.getTime() - 75 * 24 * 60 * 60 * 1000).toISOString(),
-        legalFlag: 1,
-        details: 'Head-on collision on rural road',
-      },
-      {
-        id: 'claim-11',
-        kind: 'motor',
-        reference: 'MOT-2025-008',
-        claimant: 'Fahad Al-Dosari',
-        date: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-        legalFlag: 0,
-        details: 'Minor fender bender',
-      },
-      {
-        id: 'claim-12',
-        kind: 'motor',
-        reference: 'MOT-2025-009',
-        claimant: 'Reem Al-Otaibi',
-        date: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-        legalFlag: 0,
-        details: 'Vehicle theft and damage claim',
       },
     ];
     this.storage.set(STORAGE_KEY, claims);
@@ -169,21 +83,52 @@ export class ClaimsService {
   }
 
   markToLegal(claimId: string): Claim | undefined {
+    let createdCaseId: string | undefined;
     let createdMotorLiabilityCaseId: string | undefined;
     const claim = this.list().find((c) => c.id === claimId);
 
     if (!claim) return undefined;
+
+    // Get or create unified case ID
+    let unifiedCaseId = claim.unifiedCaseId;
+    if (!unifiedCaseId) {
+      unifiedCaseId = this.caseTracking.generateUnifiedCaseId();
+    }
 
     this.storage.update<Claim[]>(
       STORAGE_KEY,
       (current) =>
         (current ?? []).map((c) => {
           if (c.id !== claimId) return c;
-          // create a motor liability case if not linked
-          if (!c.linkedCaseId && c.kind === 'motor') {
+
+          // Create a Case (CaseItem) from the claim data if not already linked
+          if (!c.linkedCaseId) {
+            const createdCase = this.cases.create({
+              title: `Claim ${c.reference} - ${c.details || 'Legal Case'}`,
+              client: c.claimant,
+              tags: ['motor', 'claim'],
+            });
+            createdCaseId = createdCase.id;
+
+            // Set unifiedCaseId on the case directly
+            this.cases.updateMeta(createdCase.id, { unifiedCaseId: unifiedCaseId });
+
+            // Link the case to the unified case
+            this.caseTracking.linkEntityToCase(unifiedCaseId, 'case', createdCase.id);
+          } else {
+            // If case already exists, use it
+            createdCaseId = c.linkedCaseId;
+          }
+
+          // Create a motor liability case if motor claim and not already linked
+          if (c.kind === 'motor' && !createdMotorLiabilityCaseId) {
             const now = new Date().toISOString();
+            // Use legal case number for motor liability to keep numbering consistent
+            const legalCase = createdCaseId ? this.cases.getById(createdCaseId) : undefined;
+            const legalCaseNumber =
+              legalCase?.caseNumber || legalCase?.baseCaseNumber || `ML-${c.reference}`;
             const created = this.motorLiabilityService.create({
-              caseNo: `ML-${c.reference}`,
+              caseNo: legalCaseNumber,
               courtType: '',
               courtLevel: '',
               courtCity: '',
@@ -206,17 +151,44 @@ export class ClaimsService {
               courtRoom: '',
               rulingDate: '',
               linkedClaimId: claimId,
+              unifiedCaseId: unifiedCaseId,
             });
             createdMotorLiabilityCaseId = created.id;
+
+            // Link entities to unified case
+            this.caseTracking.linkEntityToCase(unifiedCaseId, 'motorLiability', created.id);
           }
+
+          // Update unified case tracking with all linked entities
+          this.caseTracking.linkEntityToCase(unifiedCaseId, 'claim', claimId);
+          if (createdCaseId) {
+            this.caseTracking.linkEntityToCase(unifiedCaseId, 'case', createdCaseId);
+          }
+          this.caseTracking.upsertUnifiedCase({
+            unifiedCaseId,
+            claimId: claimId,
+            caseId: createdCaseId,
+            motorLiabilityCaseId: createdMotorLiabilityCaseId,
+            title: `Claim ${c.reference}`,
+            client: c.claimant,
+            reference: c.reference,
+          });
+
           return {
             ...c,
             legalFlag: 1,
-            linkedCaseId: createdMotorLiabilityCaseId ?? c.linkedCaseId,
+            linkedCaseId: createdCaseId ?? c.linkedCaseId,
+            unifiedCaseId: unifiedCaseId,
           };
         }),
       [],
     );
+
+    // Update the unified case tracking
+    if (unifiedCaseId) {
+      this.caseTracking.setCurrentCase(unifiedCaseId);
+    }
+
     return this.list().find((x) => x.id === claimId);
   }
 }

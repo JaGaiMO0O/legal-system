@@ -52,6 +52,13 @@ import {
             {{ executionCase.executionCaseNo || 'No case number' }}
           </h3>
           <div class="flex items-center gap-2 mb-2">
+            <span
+              *ngIf="executionCase.unifiedCaseId"
+              class="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs font-mono"
+              title="Unified Case ID"
+            >
+              UC: {{ executionCase.unifiedCaseId }}
+            </span>
             <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
               {{ executionCase.courtRoom }}
             </span>
@@ -64,6 +71,10 @@ import {
           <div class="flex items-center justify-between">
             <span>File No:</span>
             <span class="font-mono text-xs">{{ executionCase.fileNo || '-' }}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span>Linked Case:</span>
+            <span class="font-mono text-xs">{{ executionCase.linkedCaseId || '-' }}</span>
           </div>
           <div class="flex items-center justify-between">
             <span>File Date:</span>

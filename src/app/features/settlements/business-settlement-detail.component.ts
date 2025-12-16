@@ -144,6 +144,7 @@ export class BusinessSettlementDetailComponent {
         adversaryAmount: this.settlement.adversaryAmount,
         amountOfAmicableAgreement: this.settlement.amountOfAmicableAgreement,
         linkedClaimId: this.settlement.linkedClaimId,
+        linkedCaseId: this.settlement.linkedCaseId,
       });
       this.router.navigate(['/settlements', created.id]);
     }
