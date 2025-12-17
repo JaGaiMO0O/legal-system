@@ -1,5 +1,5 @@
-import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, Input } from '@angular/core';
 import { RouterModule } from '@angular/router';
 
 export interface BreadcrumbItem {
@@ -14,7 +14,7 @@ export interface BreadcrumbItem {
   template: `
     <nav class="flex items-center space-x-2 text-sm mb-6" aria-label="Breadcrumb">
       <a
-        routerLink="/cases"
+        routerLink="/legal/dashboard"
         class="text-[rgb(var(--text-muted))] hover:text-[rgb(var(--primary))] transition-colors"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

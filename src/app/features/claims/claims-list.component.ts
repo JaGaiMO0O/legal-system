@@ -81,7 +81,7 @@ import { ToastService } from '../../shared/services/toast.service';
                 <a
                   *ngIf="c.linkedCaseId"
                   class="btn btn-primary btn-xs"
-                  [routerLink]="['/cases', c.linkedCaseId]"
+                  [routerLink]="['/legal/case', c.linkedCaseId]"
                   (click)="viewClaim(c)"
                 >
                   View Case

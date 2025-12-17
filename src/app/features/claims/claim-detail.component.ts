@@ -1,12 +1,12 @@
+import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { CommonModule } from '@angular/common';
 import { UIButtonComponent } from '../../shared/components/ui/button.component';
 import { UICardComponent } from '../../shared/components/ui/card.component';
-import { ClaimsService, Claim } from '../../shared/services/claims.service';
-import { ToastService } from '../../shared/services/toast.service';
-import { CaseTrackingService } from '../../shared/services/case-tracking.service';
 import { BusinessSettlementService } from '../../shared/services/business-settlement.service';
+import { CaseTrackingService } from '../../shared/services/case-tracking.service';
+import { Claim, ClaimsService } from '../../shared/services/claims.service';
+import { ToastService } from '../../shared/services/toast.service';
 
 @Component({
   standalone: true,
@@ -74,7 +74,7 @@ import { BusinessSettlementService } from '../../shared/services/business-settle
               <a
                 *ngIf="claim.linkedCaseId"
                 class="text-[rgb(var(--primary))] hover:underline font-medium"
-                [routerLink]="['/cases', claim.linkedCaseId]"
+                [routerLink]="['/legal/case', claim.linkedCaseId]"
               >
                 View Case
               </a>

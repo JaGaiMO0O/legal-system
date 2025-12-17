@@ -1,18 +1,15 @@
-import { Component, inject } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { UIButtonComponent } from '../../shared/components/ui/button.component';
 import { UICardComponent } from '../../shared/components/ui/card.component';
-import {
-  MotorLiabilityService,
-  MotorLiabilityCase,
-  Gender,
-  MaritalStatus,
-  DamageType,
-} from '../../shared/services/motor-liability.service';
 import { CasesService } from '../../shared/services/cases.service';
+import {
+  MotorLiabilityCase,
+  MotorLiabilityService,
+} from '../../shared/services/motor-liability.service';
 
 @Component({
   standalone: true,
@@ -304,6 +301,6 @@ export class MotorLiabilityCaseDetailComponent {
   }
 
   cancel(): void {
-    this.router.navigate(['/cases']);
+    this.router.navigate(['/legal/dashboard']);
   }
 }

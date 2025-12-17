@@ -22,6 +22,9 @@ import {
   CasesService,
   CaseStage,
   CaseType,
+  ClaimantDemographics,
+  DamageType,
+  DisabilityMetrics,
   RulingInFavorOf,
 } from '../../shared/services/cases.service';
 import { ConfirmDialogService } from '../../shared/services/confirm-dialog.service';
@@ -259,6 +262,134 @@ type LastSavedData = {
             >Initial Hearing Date</label
           >
           <input type="date" [(ngModel)]="initialHearingDate" class="w-full" />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+            >Damage Type</label
+          >
+          <select [(ngModel)]="damageType" class="w-full">
+            <option value="">Select damage type</option>
+            <option value="Fatal">Fatal</option>
+            <option value="Disability">Disability</option>
+          </select>
+        </div>
+        <div *ngIf="damageType === 'Disability'">
+          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+            >Moral Percent (%)</label
+          >
+          <input
+            type="number"
+            [(ngModel)]="disabilityMetrics.moralPercent"
+            min="0"
+            max="100"
+            class="w-full"
+            placeholder="0"
+          />
+        </div>
+        <div *ngIf="damageType === 'Disability'">
+          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+            >Physical Percent (%)</label
+          >
+          <input
+            type="number"
+            [(ngModel)]="disabilityMetrics.physicalPercent"
+            min="0"
+            max="100"
+            class="w-full"
+            placeholder="0"
+          />
+        </div>
+      </div>
+
+      <!-- Claimant Demographics Section -->
+      <div class="mt-6 pt-6 border-t border-[rgb(var(--border-light))]">
+        <button
+          type="button"
+          class="flex items-center gap-2 text-sm font-semibold text-[rgb(var(--text))] mb-4"
+          (click)="showDemographics = !showDemographics"
+        >
+          <svg
+            class="w-4 h-4 transition-transform"
+            [class.rotate-90]="showDemographics"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+          Claimant Demographics
+        </button>
+        <div *ngIf="showDemographics" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+              >Nationality</label
+            >
+            <input
+              type="text"
+              [(ngModel)]="demographics.nationality"
+              class="w-full"
+              placeholder="Enter nationality"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Sex</label>
+            <select [(ngModel)]="demographics.sex" class="w-full">
+              <option value="">Select</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+              >Marital Status</label
+            >
+            <select [(ngModel)]="demographics.maritalStatus" class="w-full">
+              <option value="">Select</option>
+              <option value="Single">Single</option>
+              <option value="Married">Married</option>
+              <option value="Divorced">Divorced</option>
+              <option value="Widowed">Widowed</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+              >Profession</label
+            >
+            <input
+              type="text"
+              [(ngModel)]="demographics.profession"
+              class="w-full"
+              placeholder="Enter profession"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Age</label>
+            <input
+              type="number"
+              [(ngModel)]="demographics.age"
+              min="0"
+              max="150"
+              class="w-full"
+              placeholder="0"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+              >Dependents</label
+            >
+            <input
+              type="number"
+              [(ngModel)]="demographics.dependents"
+              min="0"
+              class="w-full"
+              placeholder="0"
+            />
+          </div>
         </div>
       </div>
       <div
@@ -892,6 +1023,21 @@ type LastSavedData = {
             </div>
           </div>
 
+          <!-- Total Ruled Out Display -->
+          <div
+            class="mt-6 p-4 bg-[rgb(var(--primary))] bg-opacity-10 rounded-lg border border-[rgb(var(--primary))] border-opacity-20"
+          >
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-semibold text-[rgb(var(--text))]">Total Ruled Out</span>
+              <span class="text-xl font-bold text-[rgb(var(--primary))]"
+                >{{ getTotalRuledOut() | number }} SAR</span
+              >
+            </div>
+            <p class="text-xs text-[rgb(var(--text-muted))] mt-1">
+              Auto-calculated sum of all fees and indemnity
+            </p>
+          </div>
+
           <div class="flex justify-end pt-4 border-t border-[rgb(var(--border))]">
             <ui-button variant="primary" (click)="addRuling()" [disabled]="addingRuling">
               <span *ngIf="!addingRuling">Add Court Ruling</span>
@@ -983,6 +1129,18 @@ type LastSavedData = {
                     <div>
                       Expert Fees: <span class="font-medium">{{ r.expertFees | number }} SAR</span>
                     </div>
+                  </div>
+                </div>
+                <div
+                  class="md:col-span-2 mt-2 p-3 bg-[rgb(var(--primary))] bg-opacity-10 rounded-lg"
+                >
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm font-semibold text-[rgb(var(--text))]"
+                      >Total Ruled Out</span
+                    >
+                    <span class="text-lg font-bold text-[rgb(var(--primary))]"
+                      >{{ getRulingTotal(r) | number }} SAR</span
+                    >
                   </div>
                 </div>
               </div>
@@ -1123,6 +1281,22 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
   protected claimant = '';
   protected beneficiary = '';
   protected initialHearingDate = '';
+  // Claimant demographics
+  protected demographics: ClaimantDemographics = {
+    nationality: '',
+    sex: '',
+    maritalStatus: '',
+    profession: '',
+    age: 0,
+    dependents: 0,
+  };
+  protected showDemographics = false;
+  // Damage type and disability metrics
+  protected damageType: DamageType | '' = '';
+  protected disabilityMetrics: DisabilityMetrics = {
+    moralPercent: 0,
+    physicalPercent: 0,
+  };
   protected addingTask = false;
   protected addingDeadline = false;
   protected addingRuling = false;
@@ -1185,8 +1359,21 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
         this.claimant = this.caseItem.claimant || '';
         this.beneficiary = this.caseItem.beneficiary || '';
         this.initialHearingDate = this.caseItem.initialHearingDate || '';
+        this.demographics = this.caseItem.claimantDemographics || {
+          nationality: '',
+          sex: '',
+          maritalStatus: '',
+          profession: '',
+          age: 0,
+          dependents: 0,
+        };
+        this.damageType = this.caseItem.damageType || '';
+        this.disabilityMetrics = this.caseItem.disabilityMetrics || {
+          moralPercent: 0,
+          physicalPercent: 0,
+        };
         this.breadcrumbItems = [
-          { label: 'Cases', route: '/cases' },
+          { label: 'Cases', route: '/legal/dashboard' },
           { label: this.caseItem.title },
         ];
         this.lastSavedData = {
@@ -1222,7 +1409,7 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
         }
       }
     } else {
-      this.breadcrumbItems = [{ label: 'Cases', route: '/cases' }, { label: 'New Case' }];
+      this.breadcrumbItems = [{ label: 'Cases', route: '/legal/dashboard' }, { label: 'New Case' }];
     }
   }
 
@@ -1320,7 +1507,7 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
   }
 
   goBack(): void {
-    this.router.navigate(['/cases']);
+    this.router.navigate(['/legal/dashboard']);
   }
 
   isFormValid(): boolean {
@@ -1370,7 +1557,7 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
         }
         this.toast.success('Case created successfully');
         // Navigate to the new case detail page
-        this.router.navigate(['/cases', newCase.id]);
+        this.router.navigate(['/legal/case', newCase.id]);
         this.caseItem = this.cases.getById(newCase.id);
         if (this.caseItem) {
           this.title = this.caseItem.title;
@@ -1389,6 +1576,9 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
           claimant: this.claimant.trim() || undefined,
           beneficiary: this.beneficiary.trim() || undefined,
           initialHearingDate: this.initialHearingDate || undefined,
+          claimantDemographics: this.demographics,
+          damageType: this.damageType || undefined,
+          disabilityMetrics: this.damageType === 'Disability' ? this.disabilityMetrics : undefined,
         });
         const oldData = {
           title: this.caseItem.title,
@@ -1509,6 +1699,32 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
     }
   }
 
+  getTotalRuledOut(): number {
+    return (
+      (this.newRuling.courtFees || 0) +
+      (this.newRuling.courtFeesInCash || 0) +
+      (this.newRuling.legalExpenses || 0) +
+      (this.newRuling.expertFees || 0) +
+      (this.newRuling.translationCourtFees || 0) +
+      (this.newRuling.advocacyFees || 0) +
+      (this.newRuling.otherExpenses || 0) +
+      (this.newRuling.indemnityByCourtAmount || 0)
+    );
+  }
+
+  getRulingTotal(ruling: CaseRuling): number {
+    return (
+      (ruling.courtFees || 0) +
+      (ruling.courtFeesInCash || 0) +
+      (ruling.legalExpenses || 0) +
+      (ruling.expertFees || 0) +
+      (ruling.translationCourtFees || 0) +
+      (ruling.advocacyFees || 0) +
+      (ruling.otherExpenses || 0) +
+      (ruling.indemnityByCourtAmount || 0)
+    );
+  }
+
   get settlement(): BusinessSettlement | undefined {
     return this.caseItem ? this.businessSettlements.getByCaseId(this.caseItem.id) : undefined;
   }
@@ -1533,8 +1749,9 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
       this.cases.advanceStage(this.caseItem.id);
       this.caseItem = this.cases.getById(this.caseItem.id);
       this.toast.success('Case stage advanced');
-    } catch (error) {
-      this.toast.error('Failed to advance case stage');
+    } catch (error: any) {
+      const errorMessage = error?.message || 'Failed to advance case stage';
+      this.toast.error(errorMessage);
       console.error('Error advancing stage:', error);
     }
   }

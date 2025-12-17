@@ -48,7 +48,7 @@ import { ToastService } from '../../shared/services/toast.service';
           </svg>
           Export
         </ui-button>
-        <ui-button variant="primary" routerLink="/cases/new">
+        <ui-button variant="primary" routerLink="/legal/case/new">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
@@ -294,7 +294,7 @@ import { ToastService } from '../../shared/services/toast.service';
         <p class="text-sm text-[rgb(var(--text-muted))] mb-6">
           Get started by creating your first case
         </p>
-        <ui-button variant="primary" routerLink="/cases/new">
+        <ui-button variant="primary" routerLink="/legal/case/new">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
@@ -326,7 +326,7 @@ import { ToastService } from '../../shared/services/toast.service';
           />
           <div class="flex-1 relative">
             <a
-              [routerLink]="['/cases', case.id]"
+              [routerLink]="['/legal/case', case.id]"
               class="block"
               (click)="showBulkActions ? $event.preventDefault() : null"
             >

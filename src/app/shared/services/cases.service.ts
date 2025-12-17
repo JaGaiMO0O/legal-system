@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { MockStorageService } from './mock-storage.service';
 import { BusinessSettlementService } from './business-settlement.service';
-import { ExecutionCasesService } from './execution-cases.service';
 import { CaseTrackingService } from './case-tracking.service';
+import { ExecutionCasesService } from './execution-cases.service';
+import { MockStorageService } from './mock-storage.service';
 
 export type CaseStage = 'primary' | 'appeal' | 'cassation' | 'execution' | 'settled';
 export type CaseStatus = 'open' | 'pending' | 'closed';
@@ -62,6 +62,22 @@ export interface CaseRuling {
   date: string;
 }
 
+export interface ClaimantDemographics {
+  nationality: string;
+  sex: string;
+  maritalStatus: string;
+  profession: string;
+  age: number;
+  dependents: number;
+}
+
+export interface DisabilityMetrics {
+  moralPercent: number;
+  physicalPercent: number;
+}
+
+export type DamageType = 'Fatal' | 'Disability';
+
 export interface CaseItem {
   id: string;
   title: string;
@@ -85,6 +101,11 @@ export interface CaseItem {
   rulings: CaseRuling[];
   createdAt: string;
   updatedAt: string;
+  // Claimant demographics from Motor system
+  claimantDemographics?: ClaimantDemographics;
+  // Damage type and disability metrics
+  damageType?: DamageType;
+  disabilityMetrics?: DisabilityMetrics;
 }
 
 const STORAGE_KEY = 'cases';
@@ -268,6 +289,9 @@ export class CasesService {
         | 'claimant'
         | 'beneficiary'
         | 'initialHearingDate'
+        | 'claimantDemographics'
+        | 'damageType'
+        | 'disabilityMetrics'
       >
     >,
   ): void {
@@ -522,6 +546,19 @@ export class CasesService {
 
   moveToNextStage(id: string): void {
     const order: CaseStage[] = ['primary', 'appeal', 'cassation', 'execution', 'settled'];
+    const caseItem = this.getById(id);
+    if (!caseItem) {
+      throw new Error('Case not found');
+    }
+    // Validate ruling exists for current stage before advancing (except from execution)
+    if (caseItem.stage !== 'execution' && caseItem.stage !== 'settled') {
+      const hasRulingForCurrentStage = caseItem.rulings?.some((r) => r.stage === caseItem.stage);
+      if (!hasRulingForCurrentStage) {
+        throw new Error(
+          `Cannot advance: No court ruling recorded for ${caseItem.stage || 'primary'} stage`,
+        );
+      }
+    }
     this.mutate((cases) =>
       cases.map((c) => {
         if (c.id !== id) return c;

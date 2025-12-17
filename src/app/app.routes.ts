@@ -1,12 +1,26 @@
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'cases', pathMatch: 'full' },
+  { path: '', redirectTo: 'legal/dashboard', pathMatch: 'full' },
   {
-    path: 'cases',
+    path: 'legal/dashboard',
     loadComponent: () =>
       import('./features/cases/cases-list.component').then((m) => m.CasesListComponent),
   },
+  {
+    path: 'legal/case/new',
+    loadComponent: () =>
+      import('./features/cases/case-detail.component').then((m) => m.CaseDetailComponent),
+  },
+  {
+    path: 'legal/case/:id',
+    loadComponent: () =>
+      import('./features/cases/case-detail.component').then((m) => m.CaseDetailComponent),
+  },
+  // Legacy routes for backward compatibility
+  { path: 'cases', redirectTo: 'legal/dashboard', pathMatch: 'full' },
+  { path: 'cases/new', redirectTo: 'legal/case/new', pathMatch: 'full' },
+  { path: 'cases/:id', redirectTo: 'legal/case/:id', pathMatch: 'prefix' },
   {
     path: 'claims',
     loadComponent: () =>
@@ -16,16 +30,6 @@ export const routes: Routes = [
     path: 'claims/:id',
     loadComponent: () =>
       import('./features/claims/claim-detail.component').then((m) => m.ClaimDetailComponent),
-  },
-  {
-    path: 'cases/:id',
-    loadComponent: () =>
-      import('./features/cases/case-detail.component').then((m) => m.CaseDetailComponent),
-  },
-  {
-    path: 'cases/new',
-    loadComponent: () =>
-      import('./features/cases/case-detail.component').then((m) => m.CaseDetailComponent),
   },
   {
     path: 'arbitrations',
@@ -127,5 +131,5 @@ export const routes: Routes = [
         (m) => m.MotorLiabilityCaseDetailComponent,
       ),
   },
-  { path: '**', redirectTo: 'cases' },
+  { path: '**', redirectTo: 'legal/dashboard' },
 ];
