@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { MockStorageService } from './mock-storage.service';
-import { CasesService } from './cases.service';
-import { MotorLiabilityService } from './motor-liability.service';
 import { CaseTrackingService } from './case-tracking.service';
+import { CasesService } from './cases.service';
+import { MockStorageService } from './mock-storage.service';
+import { MotorLiabilityService } from './motor-liability.service';
 
 export interface Claim {
   id: string;
@@ -11,6 +11,7 @@ export interface Claim {
   claimant: string;
   date: string; // ISO
   legalFlag: 0 | 1;
+  convertToLegal?: boolean; // Flag from external motor system
   linkedCaseId?: string;
   unifiedCaseId?: string; // Unified identifier that links this claim across all entities
   details?: string;
@@ -52,8 +53,9 @@ export class ClaimsService {
         claimant: 'Ahmed Al-Mansouri',
         date: new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000).toISOString(),
         legalFlag: 1,
+        convertToLegal: true,
         linkedCaseId: 'case-1',
-        unifiedCaseId: 'uc-1', // Links to case-1, ml-1
+        unifiedCaseId: 'uc-1',
         details: 'Traffic accident on King Fahd Road',
       },
       {
@@ -63,11 +65,66 @@ export class ClaimsService {
         claimant: 'Sara Al-Otaibi',
         date: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString(),
         legalFlag: 0,
-        unifiedCaseId: 'uc-2', // Links to ml-2 (can be converted to legal)
+        convertToLegal: false,
+        unifiedCaseId: 'uc-2',
         details: 'Vehicle collision at intersection',
       },
     ];
+
+    // Add more claims to reach 20 total
+    const claimants = [
+      'Mohammed Al-Rashid',
+      'Fatima Al-Zahra',
+      'Khalid Al-Mutairi',
+      'Omar Al-Harbi',
+      'Layla Al-Ghamdi',
+      'Yousef Al-Shehri',
+      'Noura Al-Qahtani',
+      'Faisal Al-Dosari',
+      'Hanan Al-Mazrouei',
+      'Sultan Al-Otaibi',
+      'Reem Al-Shammari',
+      'Bandar Al-Mutlaq',
+      'Maha Al-Fahad',
+      'Nasser Al-Subaie',
+      'Amal Al-Harbi',
+      'Turki Al-Rashid',
+      'Hala Al-Zahrani',
+      'Majed Al-Omari',
+    ];
+    const accidentTypes = [
+      'Traffic accident on highway',
+      'Vehicle collision at intersection',
+      'Rear-end collision',
+      'Side impact collision',
+      'Parking lot accident',
+      'Hit and run incident',
+      'Multi-vehicle pileup',
+      'Pedestrian accident',
+      'Motorcycle accident',
+    ];
+
+    for (let i = 0; i < 18; i++) {
+      const daysAgo = 200 - i * 8;
+      const convertToLegal = i % 3 === 0; // Every 3rd claim is marked for legal
+      claims.push({
+        id: `claim-${3 + i}`,
+        kind: 'motor',
+        reference: `MOT-2025-${String(3 + i).padStart(3, '0')}`,
+        claimant: claimants[i % claimants.length],
+        date: new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000).toISOString(),
+        legalFlag: convertToLegal ? 1 : 0,
+        convertToLegal,
+        unifiedCaseId: convertToLegal ? `uc-claim-${i + 1}` : undefined,
+        details: accidentTypes[i % accidentTypes.length],
+      });
+    }
+
     this.storage.set(STORAGE_KEY, claims);
+  }
+
+  getClaimsForLegalIntake(): Claim[] {
+    return this.list().filter((c) => c.convertToLegal === true || c.legalFlag === 1);
   }
 
   create(

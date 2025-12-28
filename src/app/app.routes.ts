@@ -5,6 +5,11 @@ export const routes: Routes = [
   {
     path: 'legal/dashboard',
     loadComponent: () =>
+      import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
+  },
+  {
+    path: 'legal/cases',
+    loadComponent: () =>
       import('./features/cases/cases-list.component').then((m) => m.CasesListComponent),
   },
   {

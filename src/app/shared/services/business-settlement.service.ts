@@ -47,10 +47,35 @@ export class BusinessSettlementService {
         managementAmount: 20000,
         adversaryAmount: 40000,
         amountOfAmicableAgreement: 100000,
+        linkedCaseId: 'case-5',
         createdAt: new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000).toISOString(),
         updatedAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
       },
     ];
+
+    // Add more settlements to reach 10 total
+    for (let i = 0; i < 9; i++) {
+      const baseAmount = 50000 + i * 10000;
+      const departmentAmount = baseAmount * 0.4;
+      const legalDepartmentAmount = baseAmount * 0.3;
+      const managementAmount = baseAmount * 0.2;
+      const adversaryAmount = baseAmount * 0.5;
+      const amountOfAmicableAgreement = baseAmount * 1.2;
+      const daysAgo = 60 - i * 5;
+
+      settlements.push({
+        id: `settle-${2 + i}`,
+        departmentAmount: Math.round(departmentAmount),
+        legalDepartmentAmount: Math.round(legalDepartmentAmount),
+        managementAmount: Math.round(managementAmount),
+        adversaryAmount: Math.round(adversaryAmount),
+        amountOfAmicableAgreement: Math.round(amountOfAmicableAgreement),
+        linkedCaseId: i < 5 ? `case-${6 + i}` : undefined,
+        createdAt: new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(now.getTime() - (daysAgo - 3) * 24 * 60 * 60 * 1000).toISOString(),
+      });
+    }
+
     this.storage.set(STORAGE_KEY, settlements);
   }
 

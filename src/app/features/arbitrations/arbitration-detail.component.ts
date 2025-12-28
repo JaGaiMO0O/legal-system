@@ -1,18 +1,15 @@
-import { Component, inject } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { UIButtonComponent } from '../../shared/components/ui/button.component';
 import { UICardComponent } from '../../shared/components/ui/card.component';
-import {
-  ArbitrationsService,
-  Arbitration,
-  CompanyRepresentative,
-  OppositionRepresentative,
-  ArbitrationHearing,
-} from '../../shared/services/arbitrations.service';
-import { LawyersService, Lawyer } from '../../shared/services/lawyers.service';
+import { Arbitration, ArbitrationsService } from '../../shared/services/arbitrations.service';
+import { CaseTrackingService } from '../../shared/services/case-tracking.service';
+import { CasesService } from '../../shared/services/cases.service';
+import { Lawyer, LawyersService } from '../../shared/services/lawyers.service';
+import { ToastService } from '../../shared/services/toast.service';
 
 @Component({
   standalone: true,
@@ -174,8 +171,26 @@ import { LawyersService, Lawyer } from '../../shared/services/lawyers.service';
     </ui-card>
 
     <div class="mt-6 flex gap-2">
-      <ui-button variant="primary" (click)="save()">Save</ui-button>
-      <ui-button variant="ghost" (click)="cancel()">Cancel</ui-button>
+      <div class="flex items-center gap-3">
+        <ui-button
+          *ngIf="arbitration.id"
+          variant="primary"
+          (click)="createCase()"
+          class="bg-green-600 hover:bg-green-700"
+        >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+          Create Case
+        </ui-button>
+        <ui-button variant="primary" (click)="save()">Save</ui-button>
+        <ui-button variant="ghost" (click)="cancel()">Cancel</ui-button>
+      </div>
     </div>
   `,
 })
@@ -183,7 +198,10 @@ export class ArbitrationDetailComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly arbitrationsService = inject(ArbitrationsService);
+  private readonly casesService = inject(CasesService);
+  private readonly caseTracking = inject(CaseTrackingService);
   private readonly lawyersService = inject(LawyersService);
+  private readonly toast = inject(ToastService);
 
   protected arbitration: Arbitration;
   protected fillingDate: string = '';
@@ -210,6 +228,7 @@ export class ArbitrationDetailComponent {
   private createEmptyArbitration(): Arbitration {
     return {
       id: '',
+      caseNumber: '',
       appealability: '',
       fillingDate: '',
       caseDescription: '',
@@ -270,5 +289,49 @@ export class ArbitrationDetailComponent {
   removeHearing(hearingId: string): void {
     this.arbitrationsService.removeHearing(this.arbitration.id, hearingId);
     this.arbitration = this.arbitrationsService.getById(this.arbitration.id)!;
+  }
+
+  createCase(): void {
+    if (!this.arbitration.id) {
+      this.toast.warning('Please save the arbitration first');
+      return;
+    }
+
+    try {
+      // Generate unified case ID if not exists
+      let unifiedCaseId = this.arbitration.unifiedCaseId;
+      if (!unifiedCaseId) {
+        unifiedCaseId = this.caseTracking.generateUnifiedCaseId();
+        this.arbitrationsService.update(this.arbitration.id, { unifiedCaseId });
+      }
+
+      // Create case with data from arbitration
+      const newCase = this.casesService.create({
+        title: `Case from Arbitration ${this.arbitration.caseNumber}`,
+        client: this.arbitration.companyRepresentative.lawyerName || 'Unknown Client',
+        tags: ['arbitration'],
+        legalStatus: 1,
+      });
+
+      // Link case to arbitration via unifiedCaseId
+      this.casesService.updateMeta(newCase.id, {
+        unifiedCaseId,
+      });
+      this.caseTracking.linkEntityToCase(unifiedCaseId, 'case', newCase.id);
+      this.caseTracking.linkEntityToCase(unifiedCaseId, 'arbitration', this.arbitration.id);
+      this.caseTracking.upsertUnifiedCase({
+        unifiedCaseId,
+        caseId: newCase.id,
+        arbitrationId: this.arbitration.id,
+        title: newCase.title,
+        client: newCase.client,
+      });
+
+      this.toast.success('Case created successfully from arbitration');
+      this.router.navigate(['/legal/case', newCase.id]);
+    } catch (error: any) {
+      this.toast.error(error?.message || 'Failed to create case');
+      console.error('Error creating case from arbitration:', error);
+    }
   }
 }
