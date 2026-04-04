@@ -1,6 +1,9 @@
-import { ApplicationConfig, APP_INITIALIZER, provideZoneChangeDetection } from '@angular/core';
-import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
+import { APP_INITIALIZER, ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import Aura from '@primeng/themes/aura';
+import { MessageService } from 'primeng/api';
+import { providePrimeNG } from 'primeng/config';
 
 import { routes } from './app.routes';
 import { LanguageService } from './core/i18n/language.service';
@@ -11,6 +14,16 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideHttpClient(),
+    providePrimeNG({
+      theme: {
+        preset: Aura,
+        options: {
+          darkModeSelector: '.dark',
+          cssLayer: false,
+        },
+      },
+    }),
+    MessageService,
     {
       provide: APP_INITIALIZER,
       multi: true,

@@ -1,15 +1,15 @@
-import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { UIButtonComponent } from '../../shared/components/ui/button.component';
-import { UICardComponent } from '../../shared/components/ui/card.component';
-import { ArbitrationsService, Arbitration } from '../../shared/services/arbitrations.service';
+import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { ArbitrationsService } from '../../shared/services/arbitrations.service';
 
 @Component({
   standalone: true,
   selector: 'app-arbitrations-list',
-  imports: [CommonModule, RouterModule, TranslateModule, UIButtonComponent, UICardComponent],
+  imports: [CommonModule, RouterModule, TranslateModule, ButtonModule, CardModule],
   template: `
     <div class="flex items-center justify-between mb-6">
       <div>
@@ -19,7 +19,7 @@ import { ArbitrationsService, Arbitration } from '../../shared/services/arbitrat
           {{ arbitrations.length === 1 ? 'arbitration' : 'arbitrations' }} total
         </p>
       </div>
-      <ui-button variant="primary" routerLink="/arbitrations/new">
+      <p-button severity="primary" routerLink="/arbitrations/new">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
@@ -29,7 +29,7 @@ import { ArbitrationsService, Arbitration } from '../../shared/services/arbitrat
           />
         </svg>
         Add Arbitration
-      </ui-button>
+      </p-button>
     </div>
 
     <div *ngIf="arbitrations.length === 0" class="card p-12 text-center">
@@ -40,7 +40,7 @@ import { ArbitrationsService, Arbitration } from '../../shared/services/arbitrat
       class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
       *ngIf="arbitrations.length > 0"
     >
-      <ui-card
+      <p-card
         *ngFor="let arbitration of arbitrations"
         class="cursor-pointer hover:shadow-lg transition-shadow"
         [routerLink]="['/arbitrations', arbitration.id]"
@@ -93,7 +93,7 @@ import { ArbitrationsService, Arbitration } from '../../shared/services/arbitrat
             Hearings: {{ arbitration.hearings.length }}
           </div>
         </div>
-      </ui-card>
+      </p-card>
     </div>
   `,
 })

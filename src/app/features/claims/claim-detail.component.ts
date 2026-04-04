@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { UIButtonComponent } from '../../shared/components/ui/button.component';
-import { UICardComponent } from '../../shared/components/ui/card.component';
+import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
 import { BusinessSettlementService } from '../../shared/services/business-settlement.service';
 import { CaseTrackingService } from '../../shared/services/case-tracking.service';
 import { Claim, ClaimsService } from '../../shared/services/claims.service';
@@ -11,7 +11,7 @@ import { ToastService } from '../../shared/services/toast.service';
 @Component({
   standalone: true,
   selector: 'app-claim-detail',
-  imports: [CommonModule, RouterLink, UIButtonComponent, UICardComponent],
+  imports: [CommonModule, RouterLink, ButtonModule, CardModule],
   template: `
     <div class="mb-6">
       <button
@@ -36,7 +36,7 @@ import { ToastService } from '../../shared/services/toast.service';
     </div>
 
     <div *ngIf="claim" class="space-y-4">
-      <ui-card>
+      <p-card>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <div>
             <div class="text-[rgb(var(--text-muted))]">Reference</div>
@@ -82,11 +82,15 @@ import { ToastService } from '../../shared/services/toast.service';
             </div>
           </div>
         </div>
-      </ui-card>
+      </p-card>
 
       <div class="flex gap-2">
-        <ui-button variant="primary" (click)="convert()">Convert to Legal</ui-button>
-        <ui-button variant="ghost" (click)="createSettlement()">Business Settlement</ui-button>
+        <p-button severity="primary" (click)="convert()" label="Convert to Legal"></p-button>
+        <p-button
+          [outlined]="true"
+          (click)="createSettlement()"
+          label="Business Settlement"
+        ></p-button>
       </div>
     </div>
   `,

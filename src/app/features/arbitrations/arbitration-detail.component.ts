@@ -3,8 +3,9 @@ import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { UIButtonComponent } from '../../shared/components/ui/button.component';
-import { UICardComponent } from '../../shared/components/ui/card.component';
+import { ButtonModule } from 'primeng/button';
+import { CalendarModule } from 'primeng/calendar';
+import { CardModule } from 'primeng/card';
 import { Arbitration, ArbitrationsService } from '../../shared/services/arbitrations.service';
 import { CaseTrackingService } from '../../shared/services/case-tracking.service';
 import { CasesService } from '../../shared/services/cases.service';
@@ -14,7 +15,7 @@ import { ToastService } from '../../shared/services/toast.service';
 @Component({
   standalone: true,
   selector: 'app-arbitration-detail',
-  imports: [CommonModule, FormsModule, TranslateModule, UIButtonComponent, UICardComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, ButtonModule, CardModule, CalendarModule],
   template: `
     <div class="mb-6">
       <button
@@ -34,7 +35,7 @@ import { ToastService } from '../../shared/services/toast.service';
       <h2 class="text-2xl font-bold">Arbitration</h2>
     </div>
 
-    <ui-card>
+    <p-card>
       <h3 class="font-semibold mb-4">Arbitration Info</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -43,7 +44,12 @@ import { ToastService } from '../../shared/services/toast.service';
         </div>
         <div>
           <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Filling Date</label>
-          <input type="date" [(ngModel)]="fillingDate" class="w-full" />
+          <p-calendar
+            [(ngModel)]="fillingDate"
+            dateFormat="dd/mm/yy"
+            [showIcon]="true"
+            styleClass="w-full"
+          ></p-calendar>
         </div>
         <div class="md:col-span-2">
           <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Case Description</label>
@@ -68,9 +74,9 @@ import { ToastService } from '../../shared/services/toast.service';
           <input type="text" [(ngModel)]="arbitration.maximumPeriod" class="w-full" />
         </div>
       </div>
-    </ui-card>
+    </p-card>
 
-    <ui-card class="mt-6">
+    <p-card class="mt-6">
       <h3 class="font-semibold mb-4">Company Representative</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -103,9 +109,9 @@ import { ToastService } from '../../shared/services/toast.service';
           ></textarea>
         </div>
       </div>
-    </ui-card>
+    </p-card>
 
-    <ui-card class="mt-6">
+    <p-card class="mt-6">
       <h3 class="font-semibold mb-4">Opposition Representative</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -133,17 +139,18 @@ import { ToastService } from '../../shared/services/toast.service';
           ></textarea>
         </div>
       </div>
-    </ui-card>
+    </p-card>
 
-    <ui-card class="mt-6">
+    <p-card class="mt-6">
       <div class="flex items-center justify-between mb-4">
         <h3 class="font-semibold">Hearings</h3>
         <div class="flex gap-2">
-          <input
-            type="date"
+          <p-calendar
             [(ngModel)]="newHearingDate"
-            class="border rounded px-2 py-1 text-sm"
-          />
+            dateFormat="dd/mm/yy"
+            [showIcon]="true"
+            styleClass="text-sm"
+          ></p-calendar>
           <input
             type="text"
             [(ngModel)]="newHearingRemarks"
@@ -168,13 +175,13 @@ import { ToastService } from '../../shared/services/toast.service';
           No hearings scheduled
         </li>
       </ul>
-    </ui-card>
+    </p-card>
 
     <div class="mt-6 flex gap-2">
       <div class="flex items-center gap-3">
-        <ui-button
+        <p-button
           *ngIf="arbitration.id"
-          variant="primary"
+          severity="primary"
           (click)="createCase()"
           class="bg-green-600 hover:bg-green-700"
         >
@@ -187,9 +194,9 @@ import { ToastService } from '../../shared/services/toast.service';
             />
           </svg>
           Create Case
-        </ui-button>
-        <ui-button variant="primary" (click)="save()">Save</ui-button>
-        <ui-button variant="ghost" (click)="cancel()">Cancel</ui-button>
+        </p-button>
+        <p-button severity="primary" (click)="save()" label="Save"></p-button>
+        <p-button [outlined]="true" (click)="cancel()" label="Cancel"></p-button>
       </div>
     </div>
   `,

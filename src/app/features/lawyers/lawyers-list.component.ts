@@ -1,15 +1,15 @@
-import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { UIButtonComponent } from '../../shared/components/ui/button.component';
-import { UICardComponent } from '../../shared/components/ui/card.component';
-import { LawyersService, Lawyer } from '../../shared/services/lawyers.service';
+import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { Lawyer, LawyersService } from '../../shared/services/lawyers.service';
 
 @Component({
   standalone: true,
   selector: 'app-lawyers-list',
-  imports: [CommonModule, RouterModule, TranslateModule, UIButtonComponent, UICardComponent],
+  imports: [CommonModule, RouterModule, TranslateModule, ButtonModule, CardModule],
   template: `
     <div class="flex items-center justify-between mb-6">
       <div>
@@ -18,7 +18,7 @@ import { LawyersService, Lawyer } from '../../shared/services/lawyers.service';
           {{ lawyers.length }} {{ lawyers.length === 1 ? 'lawyer' : 'lawyers' }} total
         </p>
       </div>
-      <ui-button variant="primary" routerLink="/lawyers/new">
+      <p-button severity="primary" routerLink="/lawyers/new">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
@@ -28,7 +28,7 @@ import { LawyersService, Lawyer } from '../../shared/services/lawyers.service';
           />
         </svg>
         Add Lawyer
-      </ui-button>
+      </p-button>
     </div>
 
     <div *ngIf="lawyers.length === 0" class="card p-12 text-center">
@@ -36,7 +36,7 @@ import { LawyersService, Lawyer } from '../../shared/services/lawyers.service';
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" *ngIf="lawyers.length > 0">
-      <ui-card
+      <p-card
         *ngFor="let lawyer of lawyers"
         class="cursor-pointer hover:shadow-lg transition-shadow"
         [routerLink]="['/lawyers', lawyer.id]"
@@ -55,7 +55,7 @@ import { LawyersService, Lawyer } from '../../shared/services/lawyers.service';
             Updated {{ lawyer.updatedAt | date: 'short' }}
           </div>
         </div>
-      </ui-card>
+      </p-card>
     </div>
   `,
 })

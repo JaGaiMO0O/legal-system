@@ -1,11 +1,11 @@
-import { Component, inject } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { UIButtonComponent } from '../../shared/components/ui/button.component';
-import { UICardComponent } from '../../shared/components/ui/card.component';
-import { CourtsService, CourtType, CourtLevel } from '../../shared/services/courts.service';
+import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { CourtLevel, CourtsService, CourtType } from '../../shared/services/courts.service';
 
 const LEVEL_OPTIONS: { value: CourtLevel; label: string }[] = [
   { value: 'primary', label: 'Primary Court' },
@@ -17,7 +17,7 @@ const LEVEL_OPTIONS: { value: CourtLevel; label: string }[] = [
 @Component({
   standalone: true,
   selector: 'app-court-detail',
-  imports: [CommonModule, FormsModule, TranslateModule, UIButtonComponent, UICardComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, ButtonModule, CardModule],
   template: `
     <div class="mb-6">
       <button
@@ -37,7 +37,7 @@ const LEVEL_OPTIONS: { value: CourtLevel; label: string }[] = [
       <h2 class="text-2xl font-bold">{{ court.id ? 'Edit Court Type' : 'New Court Type' }}</h2>
     </div>
 
-    <ui-card>
+    <p-card>
       <div class="grid grid-cols-1 gap-4">
         <div>
           <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Name</label>
@@ -70,14 +70,14 @@ const LEVEL_OPTIONS: { value: CourtLevel; label: string }[] = [
           </p>
         </div>
       </div>
-    </ui-card>
+    </p-card>
 
     <div class="mt-6 flex gap-2">
-      <ui-button variant="primary" (click)="save()">Save</ui-button>
-      <ui-button variant="ghost" (click)="cancel()">Cancel</ui-button>
-      <ui-button *ngIf="court.id" variant="ghost" class="text-red-600" (click)="remove()">
+      <p-button severity="primary" (click)="save()" label="Save"></p-button>
+      <p-button [outlined]="true" (click)="cancel()" label="Cancel"></p-button>
+      <p-button *ngIf="court.id" [outlined]="true" class="text-red-600" (click)="remove()">
         Delete
-      </ui-button>
+      </p-button>
     </div>
   `,
 })

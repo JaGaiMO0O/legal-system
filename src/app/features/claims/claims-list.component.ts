@@ -2,7 +2,9 @@ import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { UIButtonComponent } from '../../shared/components/ui/button.component';
+import { ButtonModule } from 'primeng/button';
+import { TableModule } from 'primeng/table';
+import { TagModule } from 'primeng/tag';
 import { BusinessSettlementService } from '../../shared/services/business-settlement.service';
 import { CaseTrackingService } from '../../shared/services/case-tracking.service';
 import { Claim, ClaimsService } from '../../shared/services/claims.service';
@@ -12,7 +14,7 @@ import { ToastService } from '../../shared/services/toast.service';
 @Component({
   standalone: true,
   selector: 'app-claims-list',
-  imports: [CommonModule, TranslateModule, RouterModule, UIButtonComponent],
+  imports: [CommonModule, TranslateModule, RouterModule, ButtonModule, TableModule, TagModule],
   template: `
     <div class="flex items-center justify-between mb-6">
       <div>
@@ -49,67 +51,78 @@ import { ToastService } from '../../shared/services/toast.service';
       </div>
     </div>
 
-    <div class="card overflow-hidden" *ngIf="claims.length > 0">
-      <div class="overflow-x-auto">
-        <table class="table">
-          <thead>
-            <tr>
-              <th class="w-40">Reference</th>
-              <th class="min-w-56">Claimant</th>
-              <th class="w-40">Date</th>
-              <th class="w-40">Status</th>
-              <th class="w-56">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let c of claims" class="hover:bg-[rgb(var(--surface-muted))]">
-              <td class="font-mono text-xs font-semibold">{{ c.reference }}</td>
-              <td>{{ c.claimant }}</td>
-              <td>{{ c.date | date: 'mediumDate' }}</td>
-              <td>
-                <span
-                  class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium"
-                  [class.bg-emerald-100]="c.legalFlag === 1"
-                  [class.text-emerald-800]="c.legalFlag === 1"
-                  [class.bg-gray-100]="c.legalFlag === 0"
-                  [class.text-gray-800]="c.legalFlag === 0"
-                >
-                  {{ c.legalFlag === 1 ? 'To Legal Dept.' : 'Normal' }}
-                </span>
-              </td>
-              <td class="flex items-end align-end space-x-2 rtl:space-x-reverse">
-                <a
-                  *ngIf="c.linkedCaseId"
-                  class="btn btn-primary btn-xs"
-                  [routerLink]="['/legal/case', c.linkedCaseId]"
-                  (click)="viewClaim(c)"
-                >
-                  View Case
-                </a>
-                <button
-                  *ngIf="c.legalFlag === 0"
-                  class="btn btn-primary btn-xs"
-                  (click)="convert(c)"
-                >
-                  Convert to Legal
-                </button>
-                <a class="btn btn-primary btn-xs" [routerLink]="['/claims', c.id]"> View Claim </a>
-                <button class="btn btn-primary btn-xs" (click)="createSettlement(c)">
-                  Business Settlement
-                </button>
-                <span
-                  *ngIf="c.unifiedCaseId"
-                  class="text-xs text-[rgb(var(--text-muted))] font-mono ml-2"
-                  title="Unified Case ID: {{ c.unifiedCaseId }}"
-                >
-                  UC: {{ c.unifiedCaseId.substring(0, 8) }}...
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <p-table
+      *ngIf="claims.length > 0"
+      [value]="claims"
+      [stripedRows]="true"
+      [size]="'small'"
+      styleClass="p-datatable-striped p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 10rem">Reference</th>
+          <th style="min-width: 14rem">Claimant</th>
+          <th style="width: 10rem">Date</th>
+          <th style="width: 10rem">Status</th>
+          <th style="width: 14rem">Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-c>
+        <tr>
+          <td class="font-mono text-xs font-semibold">{{ c.reference }}</td>
+          <td>{{ c.claimant }}</td>
+          <td>{{ c.date | date: 'mediumDate' }}</td>
+          <td>
+            <p-tag
+              [value]="c.legalFlag === 1 ? 'To Legal Dept.' : 'Normal'"
+              [severity]="c.legalFlag === 1 ? 'success' : undefined"
+            ></p-tag>
+          </td>
+          <td>
+            <div class="flex items-center gap-2 flex-wrap">
+              <p-button
+                *ngIf="c.linkedCaseId"
+                [label]="'View Case'"
+                severity="primary"
+                [size]="'small'"
+                [routerLink]="['/legal/case', c.linkedCaseId]"
+                (click)="viewClaim(c)"
+                styleClass="action-button"
+              ></p-button>
+              <p-button
+                *ngIf="c.legalFlag === 0"
+                [label]="'Convert to Legal'"
+                severity="primary"
+                [size]="'small'"
+                (click)="convert(c)"
+                styleClass="action-button"
+              ></p-button>
+              <p-button
+                [label]="'View Claim'"
+                severity="primary"
+                [size]="'small'"
+                [routerLink]="['/claims', c.id]"
+                styleClass="action-button"
+              ></p-button>
+              <p-button
+                [label]="'Business Settlement'"
+                severity="primary"
+                [size]="'small'"
+                (click)="createSettlement(c)"
+                styleClass="action-button"
+              ></p-button>
+              <span
+                *ngIf="c.unifiedCaseId"
+                class="text-xs text-[rgb(var(--text-muted))] font-mono"
+                title="Unified Case ID: {{ c.unifiedCaseId }}"
+              >
+                UC: {{ c.unifiedCaseId.substring(0, 8) }}...
+              </span>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
   `,
 })
 export class ClaimsListComponent {

@@ -1,50 +1,34 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { UndoRedoService } from '../../services/undo-redo.service';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { ButtonModule } from 'primeng/button';
 import { Subscription } from 'rxjs';
-import { UIButtonComponent } from '../ui/button.component';
 import { ToastService } from '../../services/toast.service';
+import { UndoRedoService } from '../../services/undo-redo.service';
 
 @Component({
   standalone: true,
   selector: 'app-undo-redo',
-  imports: [CommonModule, UIButtonComponent],
+  imports: [CommonModule, ButtonModule],
   template: `
     <div class="flex items-center gap-2" *ngIf="canUndo || canRedo">
-      <ui-button
-        variant="ghost"
+      <p-button
+        [outlined]="true"
         (click)="undo()"
         [disabled]="!canUndo"
-        class="text-sm"
+        [size]="'small'"
         aria-label="Undo last action"
-      >
-        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
-          />
-        </svg>
-        Undo
-      </ui-button>
-      <ui-button
-        variant="ghost"
+        icon="pi pi-undo"
+        label="Undo"
+      ></p-button>
+      <p-button
+        [outlined]="true"
         (click)="redo()"
         [disabled]="!canRedo"
-        class="text-sm"
+        [size]="'small'"
         aria-label="Redo last action"
-      >
-        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6-6m6 6l-6 6"
-          />
-        </svg>
-        Redo
-      </ui-button>
+        icon="pi pi-refresh"
+        label="Redo"
+      ></p-button>
     </div>
   `,
 })

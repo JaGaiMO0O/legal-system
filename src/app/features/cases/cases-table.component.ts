@@ -1,5 +1,7 @@
-import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, Input } from '@angular/core';
+import { TableModule } from 'primeng/table';
+import { TagModule } from 'primeng/tag';
 
 export interface CaseRow {
   id: string;
@@ -12,42 +14,36 @@ export interface CaseRow {
 @Component({
   standalone: true,
   selector: 'app-cases-table',
-  imports: [CommonModule],
+  imports: [CommonModule, TableModule, TagModule],
   template: `
-    <div class="card overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="table">
-          <thead class="sticky top-0">
-            <tr>
-              <th class="w-32">ID</th>
-              <th class="min-w-48">Reference</th>
-              <th class="min-w-64">Title</th>
-              <th class="w-40">Status</th>
-              <th class="w-48">Next hearing</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              *ngFor="let row of rows; trackBy: trackById"
-              class="hover:bg-[rgb(var(--surface-muted))]"
-            >
-              <td class="font-mono text-xs">{{ row.id }}</td>
-              <td>{{ row.reference }}</td>
-              <td class="truncate">{{ row.title }}</td>
-              <td>
-                <span
-                  class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border"
-                  [ngClass]="statusClass(row.status)"
-                >
-                  {{ row.status }}
-                </span>
-              </td>
-              <td>{{ row.nextHearing || '—' }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <p-table
+      [value]="rows"
+      [stripedRows]="true"
+      [size]="'small'"
+      styleClass="p-datatable-striped p-datatable-sm"
+      [trackBy]="trackById"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 8rem">ID</th>
+          <th style="min-width: 12rem">Reference</th>
+          <th style="min-width: 16rem">Title</th>
+          <th style="width: 10rem">Status</th>
+          <th style="width: 12rem">Next hearing</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-row>
+        <tr>
+          <td class="font-mono text-xs">{{ row.id }}</td>
+          <td>{{ row.reference }}</td>
+          <td class="truncate">{{ row.title }}</td>
+          <td>
+            <p-tag [value]="row.status" [severity]="getStatusSeverity(row.status)"></p-tag>
+          </td>
+          <td>{{ row.nextHearing || '—' }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
   `,
 })
 export class CasesTableComponent {
@@ -55,18 +51,18 @@ export class CasesTableComponent {
 
   trackById = (_: number, r: CaseRow) => r.id;
 
-  statusClass(status: string) {
+  getStatusSeverity(status: string): string {
     switch ((status || '').toLowerCase()) {
       case 'open':
-        return 'border-[rgb(var(--border))] text-[rgb(var(--text))] bg-[rgb(var(--surface-muted))]';
+        return 'info';
       case 'hearing':
-        return 'border-transparent text-[rgb(var(--text-inverse))] bg-[rgb(var(--primary))]';
+        return 'primary';
       case 'closed':
-        return 'border-transparent text-white bg-emerald-600';
+        return 'success';
       case 'on hold':
-        return 'border-transparent text-white bg-amber-600';
+        return 'warning';
       default:
-        return 'border-[rgb(var(--border))] text-[rgb(var(--text))]';
+        return '';
     }
   }
 }

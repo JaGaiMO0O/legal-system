@@ -3,12 +3,16 @@ import { Component, HostListener, inject, OnDestroy, OnInit } from '@angular/cor
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
+import { ButtonModule } from 'primeng/button';
+import { CalendarModule } from 'primeng/calendar';
+import { CardModule } from 'primeng/card';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { TabViewModule } from 'primeng/tabview';
+import { TagModule } from 'primeng/tag';
 import { interval, Subscription } from 'rxjs';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
 import { CaseWorkflowComponent } from '../../shared/components/case-workflow/case-workflow.component';
 import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner/loading-spinner.component';
-import { UIButtonComponent } from '../../shared/components/ui/button.component';
-import { UICardComponent } from '../../shared/components/ui/card.component';
 import { DeadlineStatusPipe } from '../../shared/pipes/deadline-status.pipe';
 import { RelativeDatePipe } from '../../shared/pipes/relative-date.pipe';
 import {
@@ -49,8 +53,12 @@ type LastSavedData = {
   selector: 'app-case-detail',
   imports: [
     CommonModule,
-    UIButtonComponent,
-    UICardComponent,
+    ButtonModule,
+    CardModule,
+    InputNumberModule,
+    CalendarModule,
+    TagModule,
+    TabViewModule,
     FormsModule,
     TranslateModule,
     RouterModule,
@@ -71,21 +79,20 @@ type LastSavedData = {
           </p>
         </div>
         <div class="flex items-center gap-3">
-          <span
-            class="inline-flex items-center rounded-full px-3 py-1.5 text-sm font-semibold bg-blue-50 text-blue-700 border border-blue-200"
-          >
-            Stage: {{ caseItem?.stage || 'primary' | titlecase }}
-          </span>
-          <ui-button
-            variant="ghost"
+          <p-tag
+            [value]="'Stage: ' + (caseItem?.stage || 'primary' | titlecase)"
+            severity="info"
+          ></p-tag>
+          <p-button
+            [outlined]="true"
             (click)="nextStage()"
             *ngIf="caseItem?.stage !== 'settled'"
             class="text-sm"
           >
             Next Court
-          </ui-button>
-          <ui-button
-            variant="primary"
+          </p-button>
+          <p-button
+            severity="primary"
             (click)="settle()"
             *ngIf="
               caseItem?.stage && caseItem?.stage !== 'settled' && caseItem?.stage !== 'execution'
@@ -93,16 +100,16 @@ type LastSavedData = {
             class="text-sm"
           >
             Settle Case
-          </ui-button>
-          <ui-button
-            variant="primary"
+          </p-button>
+          <p-button
+            severity="primary"
             (click)="execute()"
             *ngIf="caseItem?.stage === 'execution'"
             class="text-sm"
           >
             Execute Case
-          </ui-button>
-          <ui-button variant="ghost" (click)="exportCase()" *ngIf="caseItem" class="text-sm">
+          </p-button>
+          <p-button [outlined]="true" (click)="exportCase()" *ngIf="caseItem" class="text-sm">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -112,1121 +119,532 @@ type LastSavedData = {
               />
             </svg>
             Export
-          </ui-button>
+          </p-button>
         </div>
       </div>
     </div>
 
     <!-- Case Workflow -->
-    <ui-card *ngIf="caseItem">
+    <p-card *ngIf="caseItem" class="mb-6">
       <app-case-workflow
         [currentStage]="caseItem.stage || 'primary'"
         mode="full"
       ></app-case-workflow>
-    </ui-card>
+    </p-card>
 
-    <ui-card>
-      <h3 class="text-lg font-bold mb-6">Case Information</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-            >Case Number</label
-          >
-          <input
-            type="text"
-            [value]="caseItem?.caseNumber || caseItem?.baseCaseNumber || 'Will be generated'"
-            readonly
-            class="w-full bg-[rgb(var(--surface-muted))] cursor-not-allowed font-mono"
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-            >Legal Status</label
-          >
-          <div class="flex items-center gap-2">
-            <span
-              class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium"
-              [class.bg-gray-100]="getLegalStatusValue() === 0"
-              [class.text-gray-800]="getLegalStatusValue() === 0"
-              [class.bg-blue-100]="getLegalStatusValue() === 1"
-              [class.text-blue-800]="getLegalStatusValue() === 1"
-              [class.bg-yellow-100]="getLegalStatusValue() === 3"
-              [class.text-yellow-800]="getLegalStatusValue() === 3"
-              [class.bg-emerald-100]="getLegalStatusValue() === 4"
-              [class.text-emerald-800]="getLegalStatusValue() === 4"
-            >
-              {{ getLegalStatusLabel() }}
-            </span>
-            <span
-              *ngIf="caseItem?.settledStatus === 2"
-              class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-purple-100 text-purple-800"
-            >
-              Legally Settled
-            </span>
-          </div>
-        </div>
-        <div>
-          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Status</label>
-          <select [(ngModel)]="status" class="w-full">
-            <option value="open">Open</option>
-            <option value="pending">Pending</option>
-            <option value="closed">Closed</option>
-            <option value="on-hold">On Hold</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-            >Company Lawyer</label
-          >
-          <select [(ngModel)]="companyLawyerId" class="w-full">
-            <option value="">Unassigned</option>
-            <option *ngFor="let l of lawyers" [value]="l.id">
-              {{ l.lawyerNumber }} - {{ l.name }}
-            </option>
-          </select>
-          <p class="text-xs text-[rgb(var(--text-muted))] mt-1" *ngIf="companyLawyerId">
-            Assigned: {{ getCompanyLawyerDisplay() }}
-          </p>
-        </div>
-        <div>
-          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Case ID</label>
-          <input
-            type="text"
-            [value]="caseItem?.id || 'Will be generated'"
-            readonly
-            class="w-full bg-[rgb(var(--surface-muted))] cursor-not-allowed text-xs"
-          />
-        </div>
-        <div class="md:col-span-2">
-          <label for="case-title" class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-            >Title <span class="text-red-500">*</span></label
-          >
-          <input
-            id="case-title"
-            type="text"
-            [(ngModel)]="title"
-            class="w-full"
-            [class.border-red-300]="titleError"
-            [class.bg-red-50]="titleError"
-            placeholder="Enter case title"
-            aria-required="true"
-            [attr.aria-invalid]="!!titleError"
-            [attr.aria-describedby]="titleError ? 'title-error' : null"
-          />
-          <p *ngIf="titleError" id="title-error" class="text-red-600 text-xs mt-1" role="alert">
-            {{ titleError }}
-          </p>
-        </div>
-        <div>
-          <label for="case-client" class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-            >Client <span class="text-red-500">*</span></label
-          >
-          <input
-            id="case-client"
-            type="text"
-            [(ngModel)]="client"
-            class="w-full"
-            [class.border-red-300]="clientError"
-            [class.bg-red-50]="clientError"
-            placeholder="Enter client name"
-            aria-required="true"
-            [attr.aria-invalid]="!!clientError"
-            [attr.aria-describedby]="clientError ? 'client-error' : null"
-          />
-          <p *ngIf="clientError" id="client-error" class="text-red-600 text-xs mt-1" role="alert">
-            {{ clientError }}
-          </p>
-        </div>
-        <div>
-          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Claimant</label>
-          <input
-            type="text"
-            [(ngModel)]="claimant"
-            class="w-full"
-            placeholder="Enter claimant name"
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-            >Beneficiary</label
-          >
-          <input
-            type="text"
-            [(ngModel)]="beneficiary"
-            class="w-full"
-            placeholder="Enter beneficiary name"
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-            >Initial Hearing Date</label
-          >
-          <input type="date" [(ngModel)]="initialHearingDate" class="w-full" />
-        </div>
-        <div>
-          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-            >Damage Type</label
-          >
-          <select [(ngModel)]="damageType" class="w-full">
-            <option value="">Select damage type</option>
-            <option value="Fatal">Fatal</option>
-            <option value="Disability">Disability</option>
-          </select>
-        </div>
-        <div *ngIf="damageType === 'Disability'">
-          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-            >Moral Percent (%)</label
-          >
-          <input
-            type="number"
-            [(ngModel)]="disabilityMetrics.moralPercent"
-            min="0"
-            max="100"
-            class="w-full"
-            placeholder="0"
-          />
-        </div>
-        <div *ngIf="damageType === 'Disability'">
-          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-            >Physical Percent (%)</label
-          >
-          <input
-            type="number"
-            [(ngModel)]="disabilityMetrics.physicalPercent"
-            min="0"
-            max="100"
-            class="w-full"
-            placeholder="0"
-          />
-        </div>
-      </div>
-
-      <!-- Claimant Demographics Section -->
-      <div class="mt-6 pt-6 border-t border-[rgb(var(--border-light))]">
-        <button
-          type="button"
-          class="flex items-center gap-2 text-sm font-semibold text-[rgb(var(--text))] mb-4"
-          (click)="showDemographics = !showDemographics"
-        >
-          <svg
-            class="w-4 h-4 transition-transform"
-            [class.rotate-90]="showDemographics"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-          Claimant Demographics
-        </button>
-        <div *ngIf="showDemographics" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-              >Nationality</label
-            >
-            <input
-              type="text"
-              [(ngModel)]="demographics.nationality"
-              class="w-full"
-              placeholder="Enter nationality"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Sex</label>
-            <select [(ngModel)]="demographics.sex" class="w-full">
-              <option value="">Select</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-              >Marital Status</label
-            >
-            <select [(ngModel)]="demographics.maritalStatus" class="w-full">
-              <option value="">Select</option>
-              <option value="Single">Single</option>
-              <option value="Married">Married</option>
-              <option value="Divorced">Divorced</option>
-              <option value="Widowed">Widowed</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-              >Profession</label
-            >
-            <input
-              type="text"
-              [(ngModel)]="demographics.profession"
-              class="w-full"
-              placeholder="Enter profession"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Age</label>
-            <input
-              type="number"
-              [(ngModel)]="demographics.age"
-              min="0"
-              max="150"
-              class="w-full"
-              placeholder="0"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-              >Dependents</label
-            >
-            <input
-              type="number"
-              [(ngModel)]="demographics.dependents"
-              min="0"
-              class="w-full"
-              placeholder="0"
-            />
-          </div>
-        </div>
-      </div>
-      <div
-        class="mt-8 pt-6 border-t border-[rgb(var(--border-light))] flex items-center justify-between"
-      >
-        <div class="flex items-center gap-2 text-sm">
-          <span
-            *ngIf="caseItem && autoSaveStatus === 'saved'"
-            class="flex items-center gap-1.5 text-emerald-600"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-            All changes saved
-          </span>
-          <span
-            *ngIf="caseItem && autoSaveStatus === 'saving'"
-            class="flex items-center gap-1.5 text-amber-600"
-          >
-            <app-loading-spinner size="small" [show]="true"></app-loading-spinner>
-            Saving...
-          </span>
-          <span
-            *ngIf="caseItem && autoSaveStatus === 'unsaved'"
-            class="flex items-center gap-1.5 text-[rgb(var(--text-muted))]"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
-            Unsaved changes
-          </span>
-        </div>
-        <div class="flex gap-3">
-          <ui-button
-            variant="ghost"
-            (click)="goBack()"
-            [disabled]="saving"
-            aria-label="Cancel and go back"
-          >
-            Cancel
-          </ui-button>
-          <ui-button
-            variant="primary"
-            (click)="save()"
-            [disabled]="!isFormValid() || saving"
-            aria-label="Save case"
-          >
-            <span *ngIf="!saving">{{ caseItem ? 'Save Changes' : 'Create Case' }}</span>
-            <span *ngIf="saving" class="flex items-center gap-2">
-              <app-loading-spinner size="small" [show]="true"></app-loading-spinner>
-              Saving...
-            </span>
-          </ui-button>
-        </div>
-      </div>
-    </ui-card>
-
-    <ui-card class="mt-6">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-bold">Business Settlement</h3>
-        <ui-button variant="primary" size="sm" (click)="createSettlement()" *ngIf="!settlement">
-          Create Settlement
-        </ui-button>
-        <a
-          *ngIf="settlement"
-          class="text-[rgb(var(--primary))] hover:underline text-sm font-medium"
-          [routerLink]="['/settlements', settlement.id]"
-        >
-          View Settlement
-        </a>
-      </div>
-      <div
-        *ngIf="settlement; else noSettlement"
-        class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm"
-      >
-        <div class="p-3 bg-[rgb(var(--surface-muted))] rounded">
-          <div class="text-[rgb(var(--text-muted))]">Amount of Amicable Agreement</div>
-          <div class="text-lg font-semibold">
-            {{ settlement.amountOfAmicableAgreement | number }} SAR
-          </div>
-        </div>
-        <div class="p-3 bg-[rgb(var(--surface-muted))] rounded">
-          <div class="text-[rgb(var(--text-muted))]">Department Amount</div>
-          <div class="font-semibold">{{ settlement.departmentAmount | number }} SAR</div>
-        </div>
-        <div class="p-3 bg-[rgb(var(--surface-muted))] rounded">
-          <div class="text-[rgb(var(--text-muted))]">Legal Department Amount</div>
-          <div class="font-semibold">{{ settlement.legalDepartmentAmount | number }} SAR</div>
-        </div>
-        <div class="p-3 bg-[rgb(var(--surface-muted))] rounded">
-          <div class="text-[rgb(var(--text-muted))]">Management Amount</div>
-          <div class="font-semibold">{{ settlement.managementAmount | number }} SAR</div>
-        </div>
-        <div class="p-3 bg-[rgb(var(--surface-muted))] rounded">
-          <div class="text-[rgb(var(--text-muted))]">Adversary Amount</div>
-          <div class="font-semibold">{{ settlement.adversaryAmount | number }} SAR</div>
-        </div>
-        <div class="text-xs text-[rgb(var(--text-muted))]">
-          Updated at: {{ settlement.updatedAt | date: 'short' }}
-        </div>
-      </div>
-      <ng-template #noSettlement>
-        <p class="text-[rgb(var(--text-muted))] text-sm">No settlement linked to this case.</p>
-      </ng-template>
-    </ui-card>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-      <ui-card>
-        <div class="mb-6">
-          <h3 class="text-lg font-bold mb-4">Tasks</h3>
-          <div class="flex gap-2">
-            <input class="flex-1" [(ngModel)]="taskTitle" placeholder="Enter new task" />
-            <ui-button
-              variant="primary"
-              (click)="addTask()"
-              class="whitespace-nowrap"
-              [disabled]="addingTask"
-            >
-              <span *ngIf="!addingTask">Add</span>
-              <span *ngIf="addingTask" class="flex items-center gap-2">
-                <app-loading-spinner size="small" [show]="true"></app-loading-spinner>
-                Adding...
-              </span>
-            </ui-button>
-          </div>
-        </div>
-        <ul class="space-y-3">
-          <li
-            *ngFor="let t of caseItem?.tasks"
-            class="flex items-center justify-between p-3 bg-[rgb(var(--surface-muted))] rounded-lg"
-          >
-            <label class="flex items-center gap-3 flex-1 cursor-pointer">
-              <input
-                type="checkbox"
-                [checked]="t.done"
-                (change)="toggleTask(t.id)"
-                class="w-4 h-4"
-              />
-              <span [class.line-through]="t.done" [class.text-[rgb(var(--text-muted))]]="t.done">{{
-                t.title
-              }}</span>
-            </label>
-            <button
-              class="text-sm text-red-600 hover:text-red-700 font-medium px-2"
-              (click)="removeTask(t.id)"
-            >
-              Remove
-            </button>
-          </li>
-          <li
-            *ngIf="!caseItem?.tasks || caseItem?.tasks?.length === 0"
-            class="text-sm text-[rgb(var(--text-muted))] text-center py-8"
-          >
-            <div class="flex flex-col items-center gap-2">
-              <svg
-                class="w-8 h-8 text-[rgb(var(--text-muted))] opacity-50"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                />
-              </svg>
-              <p>No tasks yet</p>
-              <p class="text-xs opacity-75">Add your first task above</p>
-            </div>
-          </li>
-        </ul>
-      </ui-card>
-      <ui-card>
-        <div class="mb-6">
-          <h3 class="text-lg font-bold mb-4">Deadlines</h3>
-          <div class="space-y-2">
-            <div>
-              <input
-                class="w-full"
-                [(ngModel)]="deadlineTitle"
-                placeholder="Deadline title"
-                [class.border-red-300]="deadlineTitleError"
-                [class.bg-red-50]="deadlineTitleError"
-              />
-              <p *ngIf="deadlineTitleError" class="text-red-600 text-xs mt-1">
-                {{ deadlineTitleError }}
-              </p>
-            </div>
-            <div>
-              <div class="flex gap-2">
-                <input
-                  type="date"
-                  class="flex-1"
-                  [(ngModel)]="deadlineDate"
-                  [class.border-red-300]="deadlineDateError"
-                  [class.bg-red-50]="deadlineDateError"
-                />
-                <ui-button
-                  variant="primary"
-                  (click)="addDeadline()"
-                  class="whitespace-nowrap"
-                  [disabled]="addingDeadline"
-                >
-                  <span *ngIf="!addingDeadline">Add</span>
-                  <span *ngIf="addingDeadline" class="flex items-center gap-2">
-                    <app-loading-spinner size="small" [show]="true"></app-loading-spinner>
-                    Adding...
-                  </span>
-                </ui-button>
-              </div>
-              <p *ngIf="deadlineDateError" class="text-red-600 text-xs mt-1">
-                {{ deadlineDateError }}
-              </p>
-            </div>
-          </div>
-        </div>
-        <ul class="space-y-3">
-          <li
-            *ngFor="let d of caseItem?.deadlines"
-            class="flex items-center justify-between p-3 bg-[rgb(var(--surface-muted))] rounded-lg"
-          >
-            <div class="flex-1">
-              <span class="font-medium">{{ d.title }}</span>
-              <div class="flex items-center gap-2 mt-1">
-                <span
-                  class="text-sm"
-                  [class.text-red-600]="(d.date | deadlineStatus) === 'overdue'"
-                  [class.font-semibold]="(d.date | deadlineStatus) === 'overdue'"
-                  [class.text-amber-600]="(d.date | deadlineStatus) === 'upcoming'"
-                  [class.font-medium]="(d.date | deadlineStatus) === 'upcoming'"
-                  [class.text-[rgb(var(--text-muted))]]="(d.date | deadlineStatus) === 'normal'"
-                >
-                  {{ d.date | date: 'shortDate' }}
-                </span>
-                <span
-                  class="text-xs px-2 py-0.5 rounded-full font-medium"
-                  [class.bg-red-100]="(d.date | deadlineStatus) === 'overdue'"
-                  [class.text-red-800]="(d.date | deadlineStatus) === 'overdue'"
-                  [class.bg-amber-100]="(d.date | deadlineStatus) === 'upcoming'"
-                  [class.text-amber-800]="(d.date | deadlineStatus) === 'upcoming'"
-                  *ngIf="(d.date | deadlineStatus) !== 'normal'"
-                >
-                  {{ (d.date | deadlineStatus) === 'overdue' ? 'Overdue' : 'Upcoming' }}
-                </span>
-                <span class="text-xs text-[rgb(var(--text-muted))]">
-                  ({{ d.date | relativeDate }})
-                </span>
-              </div>
-            </div>
-            <button
-              class="text-sm text-red-600 hover:text-red-700 font-medium px-2"
-              (click)="removeDeadline(d.id)"
-            >
-              Remove
-            </button>
-          </li>
-          <li
-            *ngIf="!caseItem?.deadlines || caseItem?.deadlines?.length === 0"
-            class="text-sm text-[rgb(var(--text-muted))] text-center py-8"
-          >
-            <div class="flex flex-col items-center gap-2">
-              <svg
-                class="w-8 h-8 text-[rgb(var(--text-muted))] opacity-50"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-              <p>No deadlines yet</p>
-              <p class="text-xs opacity-75">Add your first deadline above</p>
-            </div>
-          </li>
-        </ul>
-      </ui-card>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-      <ui-card>
-        <div class="mb-6">
-          <h3 class="text-lg font-bold mb-4">Developments</h3>
-          <div class="space-y-2">
-            <textarea
-              class="w-full"
-              [(ngModel)]="developmentNote"
-              placeholder="Enter development note..."
-              rows="3"
-            ></textarea>
-            <ui-button
-              variant="primary"
-              (click)="addDevelopment()"
-              [disabled]="addingDevelopment"
-              class="w-full"
-            >
-              <span *ngIf="!addingDevelopment">Add Development</span>
-              <span *ngIf="addingDevelopment" class="flex items-center gap-2">
-                <app-loading-spinner size="small" [show]="true"></app-loading-spinner>
-                Adding...
-              </span>
-            </ui-button>
-          </div>
-        </div>
-        <ul class="space-y-3">
-          <li
-            *ngFor="let dev of caseItem?.developments"
-            class="p-3 bg-[rgb(var(--surface-muted))] rounded-lg"
-          >
-            <div class="text-xs text-[rgb(var(--text-muted))] mb-1">
-              {{ dev.date | date: 'short' }} ({{ dev.date | relativeDate }})
-            </div>
-            <div class="text-sm">{{ dev.note }}</div>
-          </li>
-          <li
-            *ngIf="!caseItem?.developments || caseItem?.developments?.length === 0"
-            class="text-sm text-[rgb(var(--text-muted))] text-center py-8"
-          >
-            <div class="flex flex-col items-center gap-2">
-              <svg
-                class="w-8 h-8 text-[rgb(var(--text-muted))] opacity-50"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <p>No developments yet</p>
-              <p class="text-xs opacity-75">Add your first development above</p>
-            </div>
-          </li>
-        </ul>
-      </ui-card>
-      <ui-card>
-        <h3 class="text-lg font-bold mb-6">Court Rulings</h3>
-
-        <!-- Ruling Form -->
-        <div
-          class="border border-[rgb(var(--border))] rounded-xl p-6 mb-6 bg-[rgb(var(--surface-muted))]"
-        >
-          <h4 class="font-bold mb-4 text-[rgb(var(--text))]">Main Info</h4>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    <!-- Tabbed Content -->
+    <p-tabView>
+      <!-- Overview Tab -->
+      <p-tabPanel header="Overview">
+        <div class="p-4">
+          <h3 class="text-lg font-bold mb-6">Case Information</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                >Case No <span class="text-red-500">*</span></label
+                >Case Number</label
               >
               <input
                 type="text"
-                [(ngModel)]="newRuling.caseNo"
-                class="w-full"
-                [class.border-red-300]="rulingCaseNoError"
-                [class.bg-red-50]="rulingCaseNoError"
-                placeholder="Enter case number"
+                [value]="caseItem?.caseNumber || caseItem?.baseCaseNumber || 'Will be generated'"
+                readonly
+                class="w-full bg-[rgb(var(--surface-muted))] cursor-not-allowed font-mono"
               />
-              <p *ngIf="rulingCaseNoError" class="text-red-600 text-xs mt-1">
-                {{ rulingCaseNoError }}
-              </p>
             </div>
             <div>
               <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                >Case Type</label
+                >Legal Status</label
               >
-              <select [(ngModel)]="newRuling.caseType" class="w-full">
-                <option value="Plaintiff">Plaintiff</option>
-                <option value="Defendant">Defendant</option>
+              <div class="flex items-center gap-2">
+                <p-tag
+                  [value]="getLegalStatusLabel()"
+                  [severity]="getLegalStatusSeverity()"
+                ></p-tag>
+                <p-tag
+                  *ngIf="caseItem?.settledStatus === 2"
+                  value="Legally Settled"
+                  severity="success"
+                ></p-tag>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Status</label>
+              <select [(ngModel)]="status" class="w-full">
+                <option value="open">Open</option>
+                <option value="pending">Pending</option>
+                <option value="closed">Closed</option>
+                <option value="on-hold">On Hold</option>
               </select>
             </div>
             <div>
               <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                >Court Type <span class="text-red-500">*</span></label
+                >Company Lawyer</label
               >
-              <select
-                [(ngModel)]="selectedCourtTypeId"
-                class="w-full"
-                [class.border-red-300]="rulingCourtTypeError"
-                [class.bg-red-50]="rulingCourtTypeError"
-                (ngModelChange)="onCourtTypeChange()"
-              >
-                <option value="">Select court type</option>
-                <option *ngFor="let ct of courts" [value]="ct.id">{{ ct.name }}</option>
-              </select>
-              <p *ngIf="rulingCourtTypeError" class="text-red-600 text-xs mt-1">
-                {{ rulingCourtTypeError }}
-              </p>
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                >Court Level</label
-              >
-              <select [(ngModel)]="newRuling.courtLevel" class="w-full">
-                <option value="">Select level</option>
-                <option *ngFor="let lvl of availableLevels" [value]="lvl">
-                  {{ levelLabel(lvl) }}
+              <select [(ngModel)]="companyLawyerId" class="w-full">
+                <option value="">Unassigned</option>
+                <option *ngFor="let l of lawyers" [value]="l.id">
+                  {{ l.lawyerNumber }} - {{ l.name }}
                 </option>
               </select>
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                >Court City</label
-              >
-              <input
-                type="text"
-                [(ngModel)]="newRuling.courtCity"
-                class="w-full"
-                placeholder="Enter court city"
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                >Filing Date</label
-              >
-              <input
-                type="date"
-                [(ngModel)]="newRuling.filingDate"
-                class="w-full"
-                [class.border-red-300]="rulingFilingDateError"
-                [class.bg-red-50]="rulingFilingDateError"
-              />
-              <p *ngIf="rulingFilingDateError" class="text-red-600 text-xs mt-1">
-                {{ rulingFilingDateError }}
+              <p class="text-xs text-[rgb(var(--text-muted))] mt-1" *ngIf="companyLawyerId">
+                Assigned: {{ getCompanyLawyerDisplay() }}
               </p>
             </div>
             <div>
               <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                >Filing No</label
+                >Case ID</label
               >
               <input
                 type="text"
-                [(ngModel)]="newRuling.filingNo"
-                class="w-full"
-                placeholder="Enter filing number"
+                [value]="caseItem?.id || 'Will be generated'"
+                readonly
+                class="w-full bg-[rgb(var(--surface-muted))] cursor-not-allowed text-xs"
               />
             </div>
             <div class="md:col-span-2">
-              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                >Case Details</label
+              <label
+                for="case-title"
+                class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Title <span class="text-red-500">*</span></label
               >
-              <textarea
-                [(ngModel)]="newRuling.caseDetails"
-                rows="3"
+              <input
+                id="case-title"
+                type="text"
+                [(ngModel)]="title"
                 class="w-full"
-                placeholder="Enter case details"
-              ></textarea>
+                [class.border-red-300]="titleError"
+                [class.bg-red-50]="titleError"
+                placeholder="Enter case title"
+                aria-required="true"
+                [attr.aria-invalid]="!!titleError"
+                [attr.aria-describedby]="titleError ? 'title-error' : null"
+              />
+              <p *ngIf="titleError" id="title-error" class="text-red-600 text-xs mt-1" role="alert">
+                {{ titleError }}
+              </p>
+            </div>
+            <div>
+              <label
+                for="case-client"
+                class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Client <span class="text-red-500">*</span></label
+              >
+              <input
+                id="case-client"
+                type="text"
+                [(ngModel)]="client"
+                class="w-full"
+                [class.border-red-300]="clientError"
+                [class.bg-red-50]="clientError"
+                placeholder="Enter client name"
+                aria-required="true"
+                [attr.aria-invalid]="!!clientError"
+                [attr.aria-describedby]="clientError ? 'client-error' : null"
+              />
+              <p
+                *ngIf="clientError"
+                id="client-error"
+                class="text-red-600 text-xs mt-1"
+                role="alert"
+              >
+                {{ clientError }}
+              </p>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Claimant</label
+              >
+              <input
+                type="text"
+                [(ngModel)]="claimant"
+                class="w-full"
+                placeholder="Enter claimant name"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Beneficiary</label
+              >
+              <input
+                type="text"
+                [(ngModel)]="beneficiary"
+                class="w-full"
+                placeholder="Enter beneficiary name"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Initial Hearing Date</label
+              >
+              <p-calendar
+                [(ngModel)]="initialHearingDate"
+                dateFormat="dd/mm/yy"
+                [showIcon]="true"
+                styleClass="w-full"
+              ></p-calendar>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Damage Type</label
+              >
+              <select [(ngModel)]="damageType" class="w-full">
+                <option value="">Select damage type</option>
+                <option value="Fatal">Fatal</option>
+                <option value="Disability">Disability</option>
+              </select>
+            </div>
+            <div *ngIf="damageType === 'Disability'">
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Moral Percent (%)</label
+              >
+              <input
+                type="number"
+                [(ngModel)]="disabilityMetrics.moralPercent"
+                min="0"
+                max="100"
+                class="w-full"
+                placeholder="0"
+              />
+            </div>
+            <div *ngIf="damageType === 'Disability'">
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Physical Percent (%)</label
+              >
+              <input
+                type="number"
+                [(ngModel)]="disabilityMetrics.physicalPercent"
+                min="0"
+                max="100"
+                class="w-full"
+                placeholder="0"
+              />
             </div>
           </div>
 
-          <div class="border-t border-[rgb(var(--border))] pt-6 mt-6">
-            <h4 class="font-bold mb-4 text-[rgb(var(--text))]">Stage Info</h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <div>
-                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                  >Stage</label
-                >
-                <select [(ngModel)]="newRuling.stage" class="w-full">
-                  <option value="primary">Primary</option>
-                  <option value="appeal">Appeal</option>
-                  <option value="cassation">Cassation</option>
-                  <option value="execution">Execution</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                  >Stage No</label
-                >
-                <input type="number" [(ngModel)]="newRuling.stageNo" min="1" class="w-full" />
-              </div>
-              <div>
-                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                  >Ruling in favor of</label
-                >
-                <select [(ngModel)]="newRuling.rulingInFavorOf" class="w-full">
-                  <option value="Company">Company</option>
-                  <option value="Adversary">Adversary</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                  >Ruling Date</label
-                >
-                <input
-                  type="date"
-                  [(ngModel)]="newRuling.rulingDate"
-                  class="w-full"
-                  [class.border-red-300]="rulingRulingDateError"
-                  [class.bg-red-50]="rulingRulingDateError"
+          <!-- Claimant Demographics Section -->
+          <div class="mt-6 pt-6 border-t border-[rgb(var(--border-light))]">
+            <button
+              type="button"
+              class="flex items-center gap-2 text-sm font-semibold text-[rgb(var(--text))] mb-4"
+              (click)="showDemographics = !showDemographics"
+            >
+              <svg
+                class="w-4 h-4 transition-transform"
+                [class.rotate-90]="showDemographics"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
                 />
-                <p *ngIf="rulingRulingDateError" class="text-red-600 text-xs mt-1">
-                  {{ rulingRulingDateError }}
-                </p>
-              </div>
+              </svg>
+              Claimant Demographics
+            </button>
+            <div *ngIf="showDemographics" class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                  >Court Fees</label
-                >
-                <input
-                  type="number"
-                  [(ngModel)]="newRuling.courtFees"
-                  min="0"
-                  step="0.01"
-                  class="w-full"
-                  placeholder="0.00"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                  >Legal Expenses</label
-                >
-                <input
-                  type="number"
-                  [(ngModel)]="newRuling.legalExpenses"
-                  min="0"
-                  step="0.01"
-                  class="w-full"
-                  placeholder="0.00"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                  >Translation Court Fees</label
-                >
-                <input
-                  type="number"
-                  [(ngModel)]="newRuling.translationCourtFees"
-                  min="0"
-                  step="0.01"
-                  class="w-full"
-                  placeholder="0.00"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                  >Court Fees in Cash</label
-                >
-                <input
-                  type="number"
-                  [(ngModel)]="newRuling.courtFeesInCash"
-                  min="0"
-                  step="0.01"
-                  class="w-full"
-                  placeholder="0.00"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                  >Expert Fees</label
-                >
-                <input
-                  type="number"
-                  [(ngModel)]="newRuling.expertFees"
-                  min="0"
-                  step="0.01"
-                  class="w-full"
-                  placeholder="0.00"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                  >Advocacy Fees</label
-                >
-                <input
-                  type="number"
-                  [(ngModel)]="newRuling.advocacyFees"
-                  min="0"
-                  step="0.01"
-                  class="w-full"
-                  placeholder="0.00"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                  >Other Expenses</label
-                >
-                <input
-                  type="number"
-                  [(ngModel)]="newRuling.otherExpenses"
-                  min="0"
-                  step="0.01"
-                  class="w-full"
-                  placeholder="0.00"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div class="border-t border-[rgb(var(--border))] pt-6 mt-6">
-            <h4 class="font-bold mb-4 text-[rgb(var(--text))]">Adversary Info</h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <div>
-                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                  >Adversary Name</label
+                  >Nationality</label
                 >
                 <input
                   type="text"
-                  [(ngModel)]="newRuling.adversaryName"
+                  [(ngModel)]="demographics.nationality"
                   class="w-full"
-                  placeholder="Enter adversary name"
+                  placeholder="Enter nationality"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Sex</label>
+                <select [(ngModel)]="demographics.sex" class="w-full">
+                  <option value="">Select</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Marital Status</label
+                >
+                <select [(ngModel)]="demographics.maritalStatus" class="w-full">
+                  <option value="">Select</option>
+                  <option value="Single">Single</option>
+                  <option value="Married">Married</option>
+                  <option value="Divorced">Divorced</option>
+                  <option value="Widowed">Widowed</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Profession</label
+                >
+                <input
+                  type="text"
+                  [(ngModel)]="demographics.profession"
+                  class="w-full"
+                  placeholder="Enter profession"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Age</label>
+                <input
+                  type="number"
+                  [(ngModel)]="demographics.age"
+                  min="0"
+                  max="150"
+                  class="w-full"
+                  placeholder="0"
                 />
               </div>
               <div>
                 <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                  >Indemnity by Court Amount</label
+                  >Dependents</label
                 >
                 <input
                   type="number"
-                  [(ngModel)]="newRuling.indemnityByCourtAmount"
+                  [(ngModel)]="demographics.dependents"
                   min="0"
-                  step="0.01"
                   class="w-full"
-                  placeholder="0.00"
+                  placeholder="0"
                 />
               </div>
             </div>
           </div>
+        </div>
+      </p-tabPanel>
 
-          <!-- Total Ruled Out Display -->
-          <div
-            class="mt-6 p-4 bg-[rgb(var(--primary))] bg-opacity-10 rounded-lg border border-[rgb(var(--primary))] border-opacity-20"
-          >
-            <div class="flex items-center justify-between">
-              <span class="text-sm font-semibold text-[rgb(var(--text))]">Total Ruled Out</span>
-              <span class="text-xl font-bold text-[rgb(var(--primary))]"
-                >{{ getTotalRuledOut() | number }} SAR</span
-              >
+      <!-- Tasks & Deadlines Tab -->
+      <p-tabPanel header="Tasks & Deadlines">
+        <div class="p-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Tasks Section -->
+            <div>
+              <h3 class="text-lg font-bold mb-4">Tasks</h3>
+              <div class="mb-6">
+                <div class="flex gap-2">
+                  <input class="flex-1" [(ngModel)]="taskTitle" placeholder="Enter new task" />
+                  <p-button
+                    severity="primary"
+                    (click)="addTask()"
+                    class="whitespace-nowrap"
+                    [disabled]="addingTask"
+                  >
+                    <span *ngIf="!addingTask">Add</span>
+                    <span *ngIf="addingTask" class="flex items-center gap-2">
+                      <app-loading-spinner size="small" [show]="true"></app-loading-spinner>
+                      Adding...
+                    </span>
+                  </p-button>
+                </div>
+              </div>
+              <ul class="space-y-3">
+                <li
+                  *ngFor="let t of caseItem?.tasks"
+                  class="flex items-center justify-between p-3 bg-[rgb(var(--surface-muted))] rounded-lg"
+                >
+                  <label class="flex items-center gap-3 flex-1 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      [checked]="t.done"
+                      (change)="toggleTask(t.id)"
+                      class="w-4 h-4"
+                    />
+                    <span
+                      [class.line-through]="t.done"
+                      [class.text-[rgb(var(--text-muted))]]="t.done"
+                      >{{ t.title }}</span
+                    >
+                  </label>
+                  <button
+                    class="text-sm text-red-600 hover:text-red-700 font-medium px-2"
+                    (click)="removeTask(t.id)"
+                  >
+                    Remove
+                  </button>
+                </li>
+                <li
+                  *ngIf="!caseItem?.tasks || caseItem?.tasks?.length === 0"
+                  class="text-sm text-[rgb(var(--text-muted))] text-center py-8"
+                >
+                  <div class="flex flex-col items-center gap-2">
+                    <svg
+                      class="w-8 h-8 text-[rgb(var(--text-muted))] opacity-50"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                      />
+                    </svg>
+                    <p>No tasks yet</p>
+                    <p class="text-xs opacity-75">Add your first task above</p>
+                  </div>
+                </li>
+              </ul>
             </div>
-            <p class="text-xs text-[rgb(var(--text-muted))] mt-1">
-              Auto-calculated sum of all fees and indemnity
-            </p>
-          </div>
-
-          <div class="flex justify-end pt-4 border-t border-[rgb(var(--border))]">
-            <ui-button variant="primary" (click)="addRuling()" [disabled]="addingRuling">
-              <span *ngIf="!addingRuling">Add Court Ruling</span>
-              <span *ngIf="addingRuling" class="flex items-center gap-2">
-                <app-loading-spinner size="small" [show]="true"></app-loading-spinner>
-                Adding...
-              </span>
-            </ui-button>
+            <!-- Deadlines Section -->
+            <div>
+              <h3 class="text-lg font-bold mb-4">Deadlines</h3>
+              <div class="mb-6">
+                <div class="space-y-2">
+                  <div>
+                    <input
+                      class="w-full"
+                      [(ngModel)]="deadlineTitle"
+                      placeholder="Deadline title"
+                      [class.border-red-300]="deadlineTitleError"
+                      [class.bg-red-50]="deadlineTitleError"
+                    />
+                    <p *ngIf="deadlineTitleError" class="text-red-600 text-xs mt-1">
+                      {{ deadlineTitleError }}
+                    </p>
+                  </div>
+                  <div>
+                    <div class="flex gap-2">
+                      <p-calendar
+                        [(ngModel)]="deadlineDate"
+                        dateFormat="dd/mm/yy"
+                        [showIcon]="true"
+                        styleClass="flex-1"
+                        [ngClass]="{ 'p-invalid': deadlineDateError }"
+                      ></p-calendar>
+                      <p-button
+                        severity="primary"
+                        (click)="addDeadline()"
+                        class="whitespace-nowrap"
+                        [disabled]="addingDeadline"
+                      >
+                        <span *ngIf="!addingDeadline">Add</span>
+                        <span *ngIf="addingDeadline" class="flex items-center gap-2">
+                          <app-loading-spinner size="small" [show]="true"></app-loading-spinner>
+                          Adding...
+                        </span>
+                      </p-button>
+                    </div>
+                    <p *ngIf="deadlineDateError" class="text-red-600 text-xs mt-1">
+                      {{ deadlineDateError }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <ul class="space-y-3">
+                <li
+                  *ngFor="let d of caseItem?.deadlines"
+                  class="flex items-center justify-between p-3 bg-[rgb(var(--surface-muted))] rounded-lg"
+                >
+                  <div class="flex-1">
+                    <span class="font-medium">{{ d.title }}</span>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span
+                        class="text-sm"
+                        [class.text-red-600]="(d.date | deadlineStatus) === 'overdue'"
+                        [class.font-semibold]="(d.date | deadlineStatus) === 'overdue'"
+                        [class.text-amber-600]="(d.date | deadlineStatus) === 'upcoming'"
+                        [class.font-medium]="(d.date | deadlineStatus) === 'upcoming'"
+                        [class.text-[rgb(var(--text-muted))]]="
+                          (d.date | deadlineStatus) === 'normal'
+                        "
+                      >
+                        {{ d.date | date: 'shortDate' }}
+                      </span>
+                      <span
+                        class="text-xs px-2 py-0.5 rounded-full font-medium"
+                        [class.bg-red-100]="(d.date | deadlineStatus) === 'overdue'"
+                        [class.text-red-800]="(d.date | deadlineStatus) === 'overdue'"
+                        [class.bg-amber-100]="(d.date | deadlineStatus) === 'upcoming'"
+                        [class.text-amber-800]="(d.date | deadlineStatus) === 'upcoming'"
+                        *ngIf="(d.date | deadlineStatus) !== 'normal'"
+                      >
+                        {{ (d.date | deadlineStatus) === 'overdue' ? 'Overdue' : 'Upcoming' }}
+                      </span>
+                      <span class="text-xs text-[rgb(var(--text-muted))]">
+                        ({{ d.date | relativeDate }})
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    class="text-sm text-red-600 hover:text-red-700 font-medium px-2"
+                    (click)="removeDeadline(d.id)"
+                  >
+                    Remove
+                  </button>
+                </li>
+                <li
+                  *ngIf="!caseItem?.deadlines || caseItem?.deadlines?.length === 0"
+                  class="text-sm text-[rgb(var(--text-muted))] text-center py-8"
+                >
+                  <div class="flex flex-col items-center gap-2">
+                    <svg
+                      class="w-8 h-8 text-[rgb(var(--text-muted))] opacity-50"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    <p>No deadlines yet</p>
+                    <p class="text-xs opacity-75">Add your first deadline above</p>
+                  </div>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
+      </p-tabPanel>
 
-        <!-- Existing Rulings List -->
-        <div class="mt-6">
-          <h4 class="font-bold mb-4 text-[rgb(var(--text))]">Existing Rulings</h4>
-          <ul class="space-y-4">
+      <!-- Developments Tab -->
+      <p-tabPanel header="Developments">
+        <div class="p-4">
+          <div class="mb-6">
+            <h3 class="text-lg font-bold mb-4">Developments</h3>
+            <div class="space-y-2">
+              <textarea
+                class="w-full"
+                [(ngModel)]="developmentNote"
+                placeholder="Enter development note..."
+                rows="3"
+              ></textarea>
+              <p-button
+                severity="primary"
+                (click)="addDevelopment()"
+                [disabled]="addingDevelopment"
+                class="w-full"
+              >
+                <span *ngIf="!addingDevelopment">Add Development</span>
+                <span *ngIf="addingDevelopment" class="flex items-center gap-2">
+                  <app-loading-spinner size="small" [show]="true"></app-loading-spinner>
+                  Adding...
+                </span>
+              </p-button>
+            </div>
+          </div>
+          <ul class="space-y-3">
             <li
-              *ngFor="let r of caseItem?.rulings"
-              class="border border-[rgb(var(--border))] rounded-xl p-5 bg-[rgb(var(--surface-muted))]"
+              *ngFor="let dev of caseItem?.developments"
+              class="p-3 bg-[rgb(var(--surface-muted))] rounded-lg"
             >
-              <div
-                class="flex items-center justify-between mb-4 pb-3 border-b border-[rgb(var(--border-light))]"
-              >
-                <div>
-                  <span class="font-bold text-[rgb(var(--text))]"
-                    >{{ r.stage | titlecase }} - Stage No: {{ r.stageNo }}</span
-                  >
-                  <span class="text-sm text-[rgb(var(--text-muted))] ml-3">{{
-                    r.rulingDate | date: 'short'
-                  }}</span>
-                </div>
-                <div class="flex items-center gap-2" *ngIf="editingRulingId !== r.id">
-                  <button
-                    (click)="startEditRuling(r)"
-                    class="text-sm text-[rgb(var(--primary))] hover:text-[rgb(var(--primary-dark))] font-medium px-2"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    (click)="deleteRuling(r.id)"
-                    class="text-sm text-red-600 hover:text-red-700 font-medium px-2"
-                  >
-                    Delete
-                  </button>
-                </div>
-                <div class="flex items-center gap-2" *ngIf="editingRulingId === r.id">
-                  <ui-button variant="ghost" (click)="cancelEditRuling()" class="text-sm">
-                    Cancel
-                  </ui-button>
-                  <ui-button variant="primary" (click)="saveEditRuling(r.id)" class="text-sm">
-                    Save
-                  </ui-button>
-                </div>
+              <div class="text-xs text-[rgb(var(--text-muted))] mb-1">
+                {{ dev.date | date: 'short' }} ({{ dev.date | relativeDate }})
               </div>
-              <div
-                *ngIf="editingRulingId !== r.id"
-                class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm"
-              >
-                <div>
-                  <strong class="text-[rgb(var(--text))]">Case No:</strong>
-                  <span class="text-[rgb(var(--text-muted))]">{{ r.caseNo }}</span>
-                </div>
-                <div>
-                  <strong class="text-[rgb(var(--text))]">Case Type:</strong>
-                  <span class="text-[rgb(var(--text-muted))]">{{ r.caseType }}</span>
-                </div>
-                <div>
-                  <strong class="text-[rgb(var(--text))]">Ruling in favor of:</strong>
-                  <span class="text-[rgb(var(--text-muted))]">{{ r.rulingInFavorOf }}</span>
-                </div>
-                <div>
-                  <strong class="text-[rgb(var(--text))]">Adversary Name:</strong>
-                  <span class="text-[rgb(var(--text-muted))]">{{ r.adversaryName || '-' }}</span>
-                </div>
-                <div class="md:col-span-2">
-                  <strong class="text-[rgb(var(--text))]">Indemnity by Court Amount:</strong>
-                  <span class="text-[rgb(var(--primary))] font-semibold"
-                    >{{ r.indemnityByCourtAmount | number }} SAR</span
-                  >
-                </div>
-                <div class="md:col-span-2 pt-2 border-t border-[rgb(var(--border-light))]">
-                  <div class="text-xs text-[rgb(var(--text-muted))] space-y-1">
-                    <div>
-                      Court Fees: <span class="font-medium">{{ r.courtFees | number }} SAR</span>
-                    </div>
-                    <div>
-                      Legal Expenses:
-                      <span class="font-medium">{{ r.legalExpenses | number }} SAR</span>
-                    </div>
-                    <div>
-                      Expert Fees: <span class="font-medium">{{ r.expertFees | number }} SAR</span>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  class="md:col-span-2 mt-2 p-3 bg-[rgb(var(--primary))] bg-opacity-10 rounded-lg"
-                >
-                  <div class="flex items-center justify-between">
-                    <span class="text-sm font-semibold text-[rgb(var(--text))]"
-                      >Total Ruled Out</span
-                    >
-                    <span class="text-lg font-bold text-[rgb(var(--primary))]"
-                      >{{ getRulingTotal(r) | number }} SAR</span
-                    >
-                  </div>
-                </div>
-              </div>
-              <!-- Edit Form -->
-              <div *ngIf="editingRulingId === r.id" class="space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Case No</label
-                    >
-                    <input
-                      type="text"
-                      [(ngModel)]="editingRuling.caseNo"
-                      class="w-full"
-                      placeholder="Enter case number"
-                    />
-                  </div>
-                  <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Case Type</label
-                    >
-                    <select [(ngModel)]="editingRuling.caseType" class="w-full">
-                      <option value="Plaintiff">Plaintiff</option>
-                      <option value="Defendant">Defendant</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Court Type</label
-                    >
-                    <input
-                      type="text"
-                      [(ngModel)]="editingRuling.courtType"
-                      class="w-full"
-                      placeholder="Enter court type"
-                    />
-                  </div>
-                  <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Ruling Date</label
-                    >
-                    <input type="date" [(ngModel)]="editingRuling.rulingDate" class="w-full" />
-                  </div>
-                  <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Ruling in favor of</label
-                    >
-                    <select [(ngModel)]="editingRuling.rulingInFavorOf" class="w-full">
-                      <option value="Company">Company</option>
-                      <option value="Adversary">Adversary</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Adversary Name</label
-                    >
-                    <input
-                      type="text"
-                      [(ngModel)]="editingRuling.adversaryName"
-                      class="w-full"
-                      placeholder="Enter adversary name"
-                    />
-                  </div>
-                  <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Indemnity by Court Amount</label
-                    >
-                    <input
-                      type="number"
-                      [(ngModel)]="editingRuling.indemnityByCourtAmount"
-                      min="0"
-                      step="0.01"
-                      class="w-full"
-                      placeholder="0.00"
-                    />
-                  </div>
-                </div>
-              </div>
+              <div class="text-sm">{{ dev.note }}</div>
             </li>
             <li
-              *ngIf="!caseItem?.rulings || caseItem?.rulings?.length === 0"
-              class="text-sm text-[rgb(var(--text-muted))] text-center py-12 bg-[rgb(var(--surface-muted))] rounded-lg"
+              *ngIf="!caseItem?.developments || caseItem?.developments?.length === 0"
+              class="text-sm text-[rgb(var(--text-muted))] text-center py-8"
             >
-              <div class="flex flex-col items-center gap-3">
+              <div class="flex flex-col items-center gap-2">
                 <svg
-                  class="w-12 h-12 text-[rgb(var(--text-muted))] opacity-50"
+                  class="w-8 h-8 text-[rgb(var(--text-muted))] opacity-50"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -1235,18 +653,668 @@ type LastSavedData = {
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <div>
-                  <p class="font-medium mb-1">No rulings yet</p>
-                  <p class="text-xs opacity-75">Add your first court ruling above</p>
-                </div>
+                <p>No developments yet</p>
+                <p class="text-xs opacity-75">Add your first development above</p>
               </div>
             </li>
           </ul>
         </div>
-      </ui-card>
+      </p-tabPanel>
+
+      <!-- Court Rulings Tab -->
+      <p-tabPanel header="Court Rulings">
+        <div class="p-4">
+          <h3 class="text-lg font-bold mb-6">Court Rulings</h3>
+
+          <!-- Ruling Form -->
+          <div
+            class="border border-[rgb(var(--border))] rounded-xl p-6 mb-6 bg-[rgb(var(--surface-muted))]"
+          >
+            <h4 class="font-bold mb-4 text-[rgb(var(--text))]">Main Info</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Case No <span class="text-red-500">*</span></label
+                >
+                <input
+                  type="text"
+                  [(ngModel)]="newRuling.caseNo"
+                  class="w-full"
+                  [class.border-red-300]="rulingCaseNoError"
+                  [class.bg-red-50]="rulingCaseNoError"
+                  placeholder="Enter case number"
+                />
+                <p *ngIf="rulingCaseNoError" class="text-red-600 text-xs mt-1">
+                  {{ rulingCaseNoError }}
+                </p>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Case Type</label
+                >
+                <select [(ngModel)]="newRuling.caseType" class="w-full">
+                  <option value="Plaintiff">Plaintiff</option>
+                  <option value="Defendant">Defendant</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Court Type <span class="text-red-500">*</span></label
+                >
+                <select
+                  [(ngModel)]="selectedCourtTypeId"
+                  class="w-full"
+                  [class.border-red-300]="rulingCourtTypeError"
+                  [class.bg-red-50]="rulingCourtTypeError"
+                  (ngModelChange)="onCourtTypeChange()"
+                >
+                  <option value="">Select court type</option>
+                  <option *ngFor="let ct of courts" [value]="ct.id">{{ ct.name }}</option>
+                </select>
+                <p *ngIf="rulingCourtTypeError" class="text-red-600 text-xs mt-1">
+                  {{ rulingCourtTypeError }}
+                </p>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Court Level</label
+                >
+                <select [(ngModel)]="newRuling.courtLevel" class="w-full">
+                  <option value="">Select level</option>
+                  <option *ngFor="let lvl of availableLevels" [value]="lvl">
+                    {{ levelLabel(lvl) }}
+                  </option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Court City</label
+                >
+                <input
+                  type="text"
+                  [(ngModel)]="newRuling.courtCity"
+                  class="w-full"
+                  placeholder="Enter court city"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Filing Date</label
+                >
+                <p-calendar
+                  [(ngModel)]="newRuling.filingDate"
+                  dateFormat="dd/mm/yy"
+                  [showIcon]="true"
+                  styleClass="w-full"
+                  [ngClass]="{ 'p-invalid': rulingFilingDateError }"
+                ></p-calendar>
+                <p *ngIf="rulingFilingDateError" class="text-red-600 text-xs mt-1">
+                  {{ rulingFilingDateError }}
+                </p>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Filing No</label
+                >
+                <input
+                  type="text"
+                  [(ngModel)]="newRuling.filingNo"
+                  class="w-full"
+                  placeholder="Enter filing number"
+                />
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Case Details</label
+                >
+                <textarea
+                  [(ngModel)]="newRuling.caseDetails"
+                  rows="3"
+                  class="w-full"
+                  placeholder="Enter case details"
+                ></textarea>
+              </div>
+            </div>
+
+            <div class="border-t border-[rgb(var(--border))] pt-6 mt-6">
+              <h4 class="font-bold mb-4 text-[rgb(var(--text))]">Stage Info</h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                    >Stage</label
+                  >
+                  <select [(ngModel)]="newRuling.stage" class="w-full">
+                    <option value="primary">Primary</option>
+                    <option value="appeal">Appeal</option>
+                    <option value="cassation">Cassation</option>
+                    <option value="execution">Execution</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                    >Stage No</label
+                  >
+                  <input type="number" [(ngModel)]="newRuling.stageNo" min="1" class="w-full" />
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                    >Ruling in favor of</label
+                  >
+                  <select [(ngModel)]="newRuling.rulingInFavorOf" class="w-full">
+                    <option value="Company">Company</option>
+                    <option value="Adversary">Adversary</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                    >Ruling Date</label
+                  >
+                  <p-calendar
+                    [(ngModel)]="newRuling.rulingDate"
+                    dateFormat="dd/mm/yy"
+                    [showIcon]="true"
+                    styleClass="w-full"
+                    [ngClass]="{ 'p-invalid': rulingRulingDateError }"
+                  ></p-calendar>
+                  <p *ngIf="rulingRulingDateError" class="text-red-600 text-xs mt-1">
+                    {{ rulingRulingDateError }}
+                  </p>
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                    >Court Fees</label
+                  >
+                  <p-inputNumber
+                    mode="currency"
+                    currency="AED"
+                    [locale]="'en-SA'"
+                    [(ngModel)]="newRuling.courtFees"
+                    [min]="0"
+                    [minFractionDigits]="2"
+                    [maxFractionDigits]="2"
+                    styleClass="w-full"
+                  ></p-inputNumber>
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                    >Legal Expenses</label
+                  >
+                  <p-inputNumber
+                    mode="currency"
+                    currency="AED"
+                    [locale]="'en-SA'"
+                    [(ngModel)]="newRuling.legalExpenses"
+                    [min]="0"
+                    [minFractionDigits]="2"
+                    [maxFractionDigits]="2"
+                    styleClass="w-full"
+                  ></p-inputNumber>
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                    >Translation Court Fees</label
+                  >
+                  <p-inputNumber
+                    mode="currency"
+                    currency="AED"
+                    [locale]="'en-SA'"
+                    [(ngModel)]="newRuling.translationCourtFees"
+                    [min]="0"
+                    [minFractionDigits]="2"
+                    [maxFractionDigits]="2"
+                    styleClass="w-full"
+                  ></p-inputNumber>
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                    >Court Fees in Cash</label
+                  >
+                  <p-inputNumber
+                    mode="currency"
+                    currency="AED"
+                    [locale]="'en-SA'"
+                    [(ngModel)]="newRuling.courtFeesInCash"
+                    [min]="0"
+                    [minFractionDigits]="2"
+                    [maxFractionDigits]="2"
+                    styleClass="w-full"
+                  ></p-inputNumber>
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                    >Expert Fees</label
+                  >
+                  <p-inputNumber
+                    mode="currency"
+                    currency="AED"
+                    [locale]="'en-SA'"
+                    [(ngModel)]="newRuling.expertFees"
+                    [min]="0"
+                    [minFractionDigits]="2"
+                    [maxFractionDigits]="2"
+                    styleClass="w-full"
+                  ></p-inputNumber>
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                    >Advocacy Fees</label
+                  >
+                  <p-inputNumber
+                    mode="currency"
+                    currency="AED"
+                    [locale]="'en-SA'"
+                    [(ngModel)]="newRuling.advocacyFees"
+                    [min]="0"
+                    [minFractionDigits]="2"
+                    [maxFractionDigits]="2"
+                    styleClass="w-full"
+                  ></p-inputNumber>
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                    >Other Expenses</label
+                  >
+                  <p-inputNumber
+                    mode="currency"
+                    currency="AED"
+                    [locale]="'en-SA'"
+                    [(ngModel)]="newRuling.otherExpenses"
+                    [min]="0"
+                    [minFractionDigits]="2"
+                    [maxFractionDigits]="2"
+                    styleClass="w-full"
+                  ></p-inputNumber>
+                </div>
+              </div>
+            </div>
+
+            <div class="border-t border-[rgb(var(--border))] pt-6 mt-6">
+              <h4 class="font-bold mb-4 text-[rgb(var(--text))]">Adversary Info</h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                    >Adversary Name</label
+                  >
+                  <input
+                    type="text"
+                    [(ngModel)]="newRuling.adversaryName"
+                    class="w-full"
+                    placeholder="Enter adversary name"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                    >Indemnity by Court Amount</label
+                  >
+                  <p-inputNumber
+                    mode="currency"
+                    currency="AED"
+                    [locale]="'en-SA'"
+                    [(ngModel)]="newRuling.indemnityByCourtAmount"
+                    [min]="0"
+                    [minFractionDigits]="2"
+                    [maxFractionDigits]="2"
+                    styleClass="w-full"
+                  ></p-inputNumber>
+                </div>
+              </div>
+            </div>
+
+            <!-- Total Ruled Out Display -->
+            <div
+              class="mt-6 p-4 bg-[rgb(var(--primary))] bg-opacity-10 rounded-lg border border-[rgb(var(--primary))] border-opacity-20"
+            >
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-semibold text-[rgb(var(--text))]">Total Ruled Out</span>
+                <span class="text-xl font-bold text-[rgb(var(--primary))]"
+                  >{{ getTotalRuledOut() | number }} SAR</span
+                >
+              </div>
+              <p class="text-xs text-[rgb(var(--text-muted))] mt-1">
+                Auto-calculated sum of all fees and indemnity
+              </p>
+            </div>
+
+            <div class="flex justify-end pt-4 border-t border-[rgb(var(--border))]">
+              <p-button severity="primary" (click)="addRuling()" [disabled]="addingRuling">
+                <span *ngIf="!addingRuling">Add Court Ruling</span>
+                <span *ngIf="addingRuling" class="flex items-center gap-2">
+                  <app-loading-spinner size="small" [show]="true"></app-loading-spinner>
+                  Adding...
+                </span>
+              </p-button>
+            </div>
+          </div>
+
+          <!-- Existing Rulings List -->
+          <div class="mt-6">
+            <h4 class="font-bold mb-4 text-[rgb(var(--text))]">Existing Rulings</h4>
+            <ul class="space-y-4">
+              <li
+                *ngFor="let r of caseItem?.rulings"
+                class="border border-[rgb(var(--border))] rounded-xl p-5 bg-[rgb(var(--surface-muted))]"
+              >
+                <div
+                  class="flex items-center justify-between mb-4 pb-3 border-b border-[rgb(var(--border-light))]"
+                >
+                  <div>
+                    <span class="font-bold text-[rgb(var(--text))]"
+                      >{{ r.stage | titlecase }} - Stage No: {{ r.stageNo }}</span
+                    >
+                    <span class="text-sm text-[rgb(var(--text-muted))] ml-3">{{
+                      r.rulingDate | date: 'short'
+                    }}</span>
+                  </div>
+                  <div class="flex items-center gap-2" *ngIf="editingRulingId !== r.id">
+                    <button
+                      (click)="startEditRuling(r)"
+                      class="text-sm text-[rgb(var(--primary))] hover:text-[rgb(var(--primary-dark))] font-medium px-2"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      (click)="deleteRuling(r.id)"
+                      class="text-sm text-red-600 hover:text-red-700 font-medium px-2"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                  <div class="flex items-center gap-2" *ngIf="editingRulingId === r.id">
+                    <p-button [outlined]="true" (click)="cancelEditRuling()" class="text-sm">
+                      Cancel
+                    </p-button>
+                    <p-button severity="primary" (click)="saveEditRuling(r.id)" class="text-sm">
+                      Save
+                    </p-button>
+                  </div>
+                </div>
+                <div
+                  *ngIf="editingRulingId !== r.id"
+                  class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm"
+                >
+                  <div>
+                    <strong class="text-[rgb(var(--text))]">Case No:</strong>
+                    <span class="text-[rgb(var(--text-muted))]">{{ r.caseNo }}</span>
+                  </div>
+                  <div>
+                    <strong class="text-[rgb(var(--text))]">Case Type:</strong>
+                    <span class="text-[rgb(var(--text-muted))]">{{ r.caseType }}</span>
+                  </div>
+                  <div>
+                    <strong class="text-[rgb(var(--text))]">Ruling in favor of:</strong>
+                    <span class="text-[rgb(var(--text-muted))]">{{ r.rulingInFavorOf }}</span>
+                  </div>
+                  <div>
+                    <strong class="text-[rgb(var(--text))]">Adversary Name:</strong>
+                    <span class="text-[rgb(var(--text-muted))]">{{ r.adversaryName || '-' }}</span>
+                  </div>
+                  <div class="md:col-span-2">
+                    <strong class="text-[rgb(var(--text))]">Indemnity by Court Amount:</strong>
+                    <span class="text-[rgb(var(--primary))] font-semibold"
+                      >{{ r.indemnityByCourtAmount | number }} SAR</span
+                    >
+                  </div>
+                  <div class="md:col-span-2 pt-2 border-t border-[rgb(var(--border-light))]">
+                    <div class="text-xs text-[rgb(var(--text-muted))] space-y-1">
+                      <div>
+                        Court Fees: <span class="font-medium">{{ r.courtFees | number }} SAR</span>
+                      </div>
+                      <div>
+                        Legal Expenses:
+                        <span class="font-medium">{{ r.legalExpenses | number }} SAR</span>
+                      </div>
+                      <div>
+                        Expert Fees:
+                        <span class="font-medium">{{ r.expertFees | number }} SAR</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    class="md:col-span-2 mt-2 p-3 bg-[rgb(var(--primary))] bg-opacity-10 rounded-lg"
+                  >
+                    <div class="flex items-center justify-between">
+                      <span class="text-sm font-semibold text-[rgb(var(--text))]"
+                        >Total Ruled Out</span
+                      >
+                      <span class="text-lg font-bold text-[rgb(var(--primary))]"
+                        >{{ getRulingTotal(r) | number }} SAR</span
+                      >
+                    </div>
+                  </div>
+                </div>
+                <!-- Edit Form -->
+                <div *ngIf="editingRulingId === r.id" class="space-y-4">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                        >Case No</label
+                      >
+                      <input
+                        type="text"
+                        [(ngModel)]="editingRuling.caseNo"
+                        class="w-full"
+                        placeholder="Enter case number"
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                        >Case Type</label
+                      >
+                      <select [(ngModel)]="editingRuling.caseType" class="w-full">
+                        <option value="Plaintiff">Plaintiff</option>
+                        <option value="Defendant">Defendant</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                        >Court Type</label
+                      >
+                      <input
+                        type="text"
+                        [(ngModel)]="editingRuling.courtType"
+                        class="w-full"
+                        placeholder="Enter court type"
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                        >Ruling Date</label
+                      >
+                      <p-calendar
+                        [(ngModel)]="editingRuling.rulingDate"
+                        dateFormat="dd/mm/yy"
+                        [showIcon]="true"
+                        styleClass="w-full"
+                      ></p-calendar>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                        >Ruling in favor of</label
+                      >
+                      <select [(ngModel)]="editingRuling.rulingInFavorOf" class="w-full">
+                        <option value="Company">Company</option>
+                        <option value="Adversary">Adversary</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                        >Adversary Name</label
+                      >
+                      <input
+                        type="text"
+                        [(ngModel)]="editingRuling.adversaryName"
+                        class="w-full"
+                        placeholder="Enter adversary name"
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                        >Indemnity by Court Amount</label
+                      >
+                      <input
+                        type="number"
+                        [(ngModel)]="editingRuling.indemnityByCourtAmount"
+                        min="0"
+                        step="0.01"
+                        class="w-full"
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li
+                *ngIf="!caseItem?.rulings || caseItem?.rulings?.length === 0"
+                class="text-sm text-[rgb(var(--text-muted))] text-center py-12 bg-[rgb(var(--surface-muted))] rounded-lg"
+              >
+                <div class="flex flex-col items-center gap-3">
+                  <svg
+                    class="w-12 h-12 text-[rgb(var(--text-muted))] opacity-50"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                  <div>
+                    <p class="font-medium mb-1">No rulings yet</p>
+                    <p class="text-xs opacity-75">Add your first court ruling above</p>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </p-tabPanel>
+
+      <!-- Business Settlement Tab -->
+      <p-tabPanel header="Business Settlement">
+        <div class="p-4">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold">Business Settlement</h3>
+            <p-button
+              severity="primary"
+              [size]="'small'"
+              (click)="createSettlement()"
+              *ngIf="!settlement"
+              label="Create Settlement"
+            ></p-button>
+            <a
+              *ngIf="settlement"
+              class="text-[rgb(var(--primary))] hover:underline text-sm font-medium"
+              [routerLink]="['/settlements', settlement.id]"
+            >
+              View Settlement
+            </a>
+          </div>
+          <div
+            *ngIf="settlement; else noSettlement"
+            class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm"
+          >
+            <div class="p-3 bg-[rgb(var(--surface-muted))] rounded">
+              <div class="text-[rgb(var(--text-muted))]">Amount of Amicable Agreement</div>
+              <div class="text-lg font-semibold">
+                {{ settlement.amountOfAmicableAgreement | number }} SAR
+              </div>
+            </div>
+            <div class="p-3 bg-[rgb(var(--surface-muted))] rounded">
+              <div class="text-[rgb(var(--text-muted))]">Department Amount</div>
+              <div class="font-semibold">{{ settlement.departmentAmount | number }} SAR</div>
+            </div>
+            <div class="p-3 bg-[rgb(var(--surface-muted))] rounded">
+              <div class="text-[rgb(var(--text-muted))]">Legal Department Amount</div>
+              <div class="font-semibold">{{ settlement.legalDepartmentAmount | number }} SAR</div>
+            </div>
+            <div class="p-3 bg-[rgb(var(--surface-muted))] rounded">
+              <div class="text-[rgb(var(--text-muted))]">Management Amount</div>
+              <div class="font-semibold">{{ settlement.managementAmount | number }} SAR</div>
+            </div>
+            <div class="p-3 bg-[rgb(var(--surface-muted))] rounded">
+              <div class="text-[rgb(var(--text-muted))]">Adversary Amount</div>
+              <div class="font-semibold">{{ settlement.adversaryAmount | number }} SAR</div>
+            </div>
+            <div class="text-xs text-[rgb(var(--text-muted))]">
+              Updated at: {{ settlement.updatedAt | date: 'short' }}
+            </div>
+          </div>
+          <ng-template #noSettlement>
+            <p class="text-[rgb(var(--text-muted))] text-sm">No settlement linked to this case.</p>
+          </ng-template>
+        </div>
+      </p-tabPanel>
+    </p-tabView>
+
+    <!-- Save/Cancel Actions - Always visible at bottom -->
+    <div
+      class="mt-6 pt-6 border-t border-[rgb(var(--border-light))] flex items-center justify-between"
+    >
+      <div class="flex items-center gap-2 text-sm">
+        <span
+          *ngIf="caseItem && autoSaveStatus === 'saved'"
+          class="flex items-center gap-1.5 text-emerald-600"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+          All changes saved
+        </span>
+        <span
+          *ngIf="caseItem && autoSaveStatus === 'saving'"
+          class="flex items-center gap-1.5 text-amber-600"
+        >
+          <app-loading-spinner size="small" [show]="true"></app-loading-spinner>
+          Saving...
+        </span>
+        <span
+          *ngIf="caseItem && autoSaveStatus === 'unsaved'"
+          class="flex items-center gap-1.5 text-[rgb(var(--text-muted))]"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+          Unsaved changes
+        </span>
+      </div>
+      <div class="flex gap-3">
+        <p-button
+          [outlined]="true"
+          (click)="goBack()"
+          [disabled]="saving"
+          aria-label="Cancel and go back"
+        >
+          Cancel
+        </p-button>
+        <p-button
+          severity="primary"
+          (click)="save()"
+          [disabled]="!isFormValid() || saving"
+          aria-label="Save case"
+        >
+          <span *ngIf="!saving">{{ caseItem ? 'Save Changes' : 'Create Case' }}</span>
+          <span *ngIf="saving" class="flex items-center gap-2">
+            <app-loading-spinner size="small" [show]="true"></app-loading-spinner>
+            Saving...
+          </span>
+        </p-button>
+      </div>
     </div>
   `,
 })
@@ -1657,6 +1725,29 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
         return 'Settled';
       default:
         return 'Unknown';
+    }
+  }
+
+  getLegalStatusSeverity():
+    | 'success'
+    | 'info'
+    | 'warn'
+    | 'danger'
+    | 'secondary'
+    | 'contrast'
+    | undefined {
+    const status = this.getLegalStatusValue();
+    switch (status) {
+      case 0:
+        return undefined;
+      case 1:
+        return 'info';
+      case 3:
+        return 'warn';
+      case 4:
+        return 'success';
+      default:
+        return undefined;
     }
   }
 

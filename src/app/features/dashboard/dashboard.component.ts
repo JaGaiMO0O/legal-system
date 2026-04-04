@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { UIButtonComponent } from '../../shared/components/ui/button.component';
-import { UICardComponent } from '../../shared/components/ui/card.component';
+import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { TagModule } from 'primeng/tag';
 import { RelativeDatePipe } from '../../shared/pipes/relative-date.pipe';
 import { ArbitrationsService } from '../../shared/services/arbitrations.service';
 import { CaseItem, CasesService } from '../../shared/services/cases.service';
@@ -11,7 +12,7 @@ import { NotificationsService } from '../../shared/services/notifications.servic
 @Component({
   standalone: true,
   selector: 'app-dashboard',
-  imports: [CommonModule, RouterModule, UIButtonComponent, UICardComponent, RelativeDatePipe],
+  imports: [CommonModule, RouterModule, ButtonModule, CardModule, TagModule, RelativeDatePipe],
   template: `
     <div class="mb-8">
       <h2 class="text-3xl font-bold text-[rgb(var(--text))] mb-2">Dashboard</h2>
@@ -22,7 +23,7 @@ import { NotificationsService } from '../../shared/services/notifications.servic
 
     <!-- Statistics Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-      <ui-card>
+      <p-card>
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-[rgb(var(--text-muted))] mb-1">Total Active Cases</p>
@@ -44,9 +45,9 @@ import { NotificationsService } from '../../shared/services/notifications.servic
             </svg>
           </div>
         </div>
-      </ui-card>
+      </p-card>
 
-      <ui-card>
+      <p-card>
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-[rgb(var(--text-muted))] mb-1">Cases Pending Ruling</p>
@@ -68,9 +69,9 @@ import { NotificationsService } from '../../shared/services/notifications.servic
             </svg>
           </div>
         </div>
-      </ui-card>
+      </p-card>
 
-      <ui-card>
+      <p-card>
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-[rgb(var(--text-muted))] mb-1">Cases in Execution</p>
@@ -92,9 +93,9 @@ import { NotificationsService } from '../../shared/services/notifications.servic
             </svg>
           </div>
         </div>
-      </ui-card>
+      </p-card>
 
-      <ui-card>
+      <p-card>
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-[rgb(var(--text-muted))] mb-1">Settled This Month</p>
@@ -116,9 +117,9 @@ import { NotificationsService } from '../../shared/services/notifications.servic
             </svg>
           </div>
         </div>
-      </ui-card>
+      </p-card>
 
-      <ui-card>
+      <p-card>
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-[rgb(var(--text-muted))] mb-1">Upcoming Deadlines</p>
@@ -135,9 +136,9 @@ import { NotificationsService } from '../../shared/services/notifications.servic
             </svg>
           </div>
         </div>
-      </ui-card>
+      </p-card>
 
-      <ui-card>
+      <p-card>
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-[rgb(var(--text-muted))] mb-1">Active Arbitrations</p>
@@ -159,16 +160,21 @@ import { NotificationsService } from '../../shared/services/notifications.servic
             </svg>
           </div>
         </div>
-      </ui-card>
+      </p-card>
     </div>
 
     <!-- Recent Activity -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
       <!-- Recent Cases -->
-      <ui-card>
+      <p-card>
         <div class="flex items-center justify-between mb-6">
           <h3 class="text-lg font-bold text-[rgb(var(--text))]">Recent Cases</h3>
-          <ui-button variant="ghost" size="sm" routerLink="/legal/dashboard">View All</ui-button>
+          <p-button
+            label="View All"
+            [outlined]="true"
+            [size]="'small'"
+            routerLink="/legal/dashboard"
+          ></p-button>
         </div>
         <div class="space-y-4">
           <div
@@ -181,21 +187,10 @@ import { NotificationsService } from '../../shared/services/notifications.servic
                 <h4 class="font-semibold text-[rgb(var(--text))] mb-1">{{ case.title }}</h4>
                 <p class="text-sm text-[rgb(var(--text-muted))] mb-2">Client: {{ case.client }}</p>
                 <div class="flex items-center gap-2">
-                  <span
-                    class="px-2 py-1 rounded text-xs font-medium"
-                    [class.bg-blue-100]="case.stage === 'primary'"
-                    [class.text-blue-800]="case.stage === 'primary'"
-                    [class.bg-purple-100]="case.stage === 'appeal'"
-                    [class.text-purple-800]="case.stage === 'appeal'"
-                    [class.bg-indigo-100]="case.stage === 'cassation'"
-                    [class.text-indigo-800]="case.stage === 'cassation'"
-                    [class.bg-amber-100]="case.stage === 'execution'"
-                    [class.text-amber-800]="case.stage === 'execution'"
-                    [class.bg-emerald-100]="case.stage === 'settled'"
-                    [class.text-emerald-800]="case.stage === 'settled'"
-                  >
-                    {{ case.stage | titlecase }}
-                  </span>
+                  <p-tag
+                    [value]="case.stage | titlecase"
+                    [severity]="getStageSeverity(case.stage)"
+                  ></p-tag>
                   <span class="text-xs text-[rgb(var(--text-muted))] font-mono">
                     #{{ case.caseNumber }}
                   </span>
@@ -213,13 +208,18 @@ import { NotificationsService } from '../../shared/services/notifications.servic
             No recent cases
           </div>
         </div>
-      </ui-card>
+      </p-card>
 
       <!-- Upcoming Deadlines -->
-      <ui-card>
+      <p-card>
         <div class="flex items-center justify-between mb-6">
           <h3 class="text-lg font-bold text-[rgb(var(--text))]">Upcoming Deadlines</h3>
-          <ui-button variant="ghost" size="sm" routerLink="/legal/dashboard">View All</ui-button>
+          <p-button
+            label="View All"
+            [outlined]="true"
+            [size]="'small'"
+            routerLink="/legal/dashboard"
+          ></p-button>
         </div>
         <div class="space-y-4">
           <div
@@ -255,9 +255,12 @@ import { NotificationsService } from '../../shared/services/notifications.servic
                   </span>
                 </div>
               </div>
-              <ui-button variant="ghost" size="sm" [routerLink]="['/legal/case', deadline.caseId]">
-                View
-              </ui-button>
+              <p-button
+                label="View"
+                [outlined]="true"
+                [size]="'small'"
+                [routerLink]="['/legal/case', deadline.caseId]"
+              ></p-button>
             </div>
           </div>
           <div
@@ -267,11 +270,11 @@ import { NotificationsService } from '../../shared/services/notifications.servic
             No upcoming deadlines
           </div>
         </div>
-      </ui-card>
+      </p-card>
     </div>
 
     <!-- Pending Actions -->
-    <ui-card>
+    <p-card>
       <div class="flex items-center justify-between mb-6">
         <h3 class="text-lg font-bold text-[rgb(var(--text))]">Pending Actions</h3>
       </div>
@@ -287,9 +290,12 @@ import { NotificationsService } from '../../shared/services/notifications.servic
               Case #{{ action.caseNumber }}
             </span>
           </div>
-          <ui-button variant="primary" size="sm" [routerLink]="action.link">
-            {{ action.actionText }}
-          </ui-button>
+          <p-button
+            [label]="action.actionText"
+            severity="primary"
+            [size]="'small'"
+            [routerLink]="action.link"
+          ></p-button>
         </div>
         <div
           *ngIf="pendingActions.length === 0"
@@ -298,7 +304,7 @@ import { NotificationsService } from '../../shared/services/notifications.servic
           No pending actions
         </div>
       </div>
-    </ui-card>
+    </p-card>
   `,
 })
 export class DashboardComponent implements OnInit {
@@ -432,5 +438,24 @@ export class DashboardComponent implements OnInit {
     });
 
     this.pendingActions = actions.slice(0, 5);
+  }
+
+  getStageSeverity(
+    stage: string,
+  ): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' | undefined {
+    switch (stage) {
+      case 'primary':
+        return 'info';
+      case 'appeal':
+        return undefined;
+      case 'cassation':
+        return undefined;
+      case 'execution':
+        return 'warn';
+      case 'settled':
+        return 'success';
+      default:
+        return undefined;
+    }
   }
 }

@@ -1,18 +1,15 @@
-import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { UIButtonComponent } from '../../shared/components/ui/button.component';
-import { UICardComponent } from '../../shared/components/ui/card.component';
-import {
-  ExecutionCasesService,
-  ExecutionCase,
-} from '../../shared/services/execution-cases.service';
+import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { ExecutionCasesService } from '../../shared/services/execution-cases.service';
 
 @Component({
   standalone: true,
   selector: 'app-execution-cases-list',
-  imports: [CommonModule, RouterModule, TranslateModule, UIButtonComponent, UICardComponent],
+  imports: [CommonModule, RouterModule, TranslateModule, ButtonModule, CardModule],
   template: `
     <div class="flex items-center justify-between mb-6">
       <div>
@@ -21,7 +18,7 @@ import {
           {{ executionCases.length }} {{ executionCases.length === 1 ? 'case' : 'cases' }} total
         </p>
       </div>
-      <ui-button variant="primary" routerLink="/execution/new">
+      <p-button severity="primary" routerLink="/execution/new">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
@@ -31,7 +28,7 @@ import {
           />
         </svg>
         Add Execution Case
-      </ui-button>
+      </p-button>
     </div>
 
     <div *ngIf="executionCases.length === 0" class="card p-12 text-center">
@@ -42,7 +39,7 @@ import {
       class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
       *ngIf="executionCases.length > 0"
     >
-      <ui-card
+      <p-card
         *ngFor="let executionCase of executionCases"
         class="cursor-pointer hover:shadow-lg transition-shadow"
         [routerLink]="['/execution', executionCase.id]"
@@ -97,7 +94,7 @@ import {
             </div>
           </div>
         </div>
-      </ui-card>
+      </p-card>
     </div>
   `,
 })

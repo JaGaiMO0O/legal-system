@@ -1,13 +1,13 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ConfirmDialogService, ConfirmDialogData } from '../../services/confirm-dialog.service';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { ButtonModule } from 'primeng/button';
 import { Subscription } from 'rxjs';
-import { UIButtonComponent } from '../ui/button.component';
+import { ConfirmDialogData, ConfirmDialogService } from '../../services/confirm-dialog.service';
 
 @Component({
   standalone: true,
   selector: 'app-confirm-dialog',
-  imports: [CommonModule, UIButtonComponent],
+  imports: [CommonModule, ButtonModule],
   template: `
     <div
       *ngIf="dialogData"
@@ -79,17 +79,16 @@ import { UIButtonComponent } from '../ui/button.component';
           </div>
         </div>
         <div class="flex gap-3 justify-end">
-          <ui-button variant="ghost" (click)="cancel()">
-            {{ dialogData.cancelText || 'Cancel' }}
-          </ui-button>
-          <ui-button
-            [variant]="dialogData.type === 'danger' ? 'primary' : 'primary'"
+          <p-button
+            [outlined]="true"
+            (click)="cancel()"
+            [label]="dialogData.cancelText || 'Cancel'"
+          ></p-button>
+          <p-button
+            [severity]="dialogData.type === 'danger' ? 'danger' : 'primary'"
             (click)="confirm()"
-            [class.bg-red-600]="dialogData.type === 'danger'"
-            [class.hover:bg-red-700]="dialogData.type === 'danger'"
-          >
-            {{ dialogData.confirmText || 'Confirm' }}
-          </ui-button>
+            [label]="dialogData.confirmText || 'Confirm'"
+          ></p-button>
         </div>
       </div>
     </div>

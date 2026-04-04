@@ -1,16 +1,16 @@
-import { Component, inject } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { UIButtonComponent } from '../../shared/components/ui/button.component';
-import { UICardComponent } from '../../shared/components/ui/card.component';
-import { LawyersService, Lawyer } from '../../shared/services/lawyers.service';
+import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { Lawyer, LawyersService } from '../../shared/services/lawyers.service';
 
 @Component({
   standalone: true,
   selector: 'app-lawyer-detail',
-  imports: [CommonModule, FormsModule, TranslateModule, UIButtonComponent, UICardComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, ButtonModule, CardModule],
   template: `
     <div class="mb-6">
       <button
@@ -30,7 +30,7 @@ import { LawyersService, Lawyer } from '../../shared/services/lawyers.service';
       <h2 class="text-2xl font-bold">{{ lawyer.id ? 'Edit Lawyer' : 'New Lawyer' }}</h2>
     </div>
 
-    <ui-card>
+    <p-card>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Name</label>
@@ -58,11 +58,11 @@ import { LawyersService, Lawyer } from '../../shared/services/lawyers.service';
           />
         </div>
       </div>
-    </ui-card>
+    </p-card>
 
     <div class="mt-6 flex gap-2">
-      <ui-button variant="primary" (click)="save()">Save</ui-button>
-      <ui-button variant="ghost" (click)="cancel()">Cancel</ui-button>
+      <p-button severity="primary" (click)="save()" label="Save"></p-button>
+      <p-button [outlined]="true" (click)="cancel()" label="Cancel"></p-button>
     </div>
   `,
 })

@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
-import { RouterOutlet, RouterModule } from '@angular/router';
+import { RouterModule, RouterOutlet } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { ThemeToggleComponent } from './shared/components/theme-toggle.component';
-import { ToastComponent } from './shared/components/toast/toast.component';
+import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogComponent } from './shared/components/confirm-dialog/confirm-dialog.component';
+import { ThemeToggleComponent } from './shared/components/theme-toggle.component';
 import { UndoRedoComponent } from './shared/components/undo-redo/undo-redo.component';
 
 @Component({
@@ -13,8 +13,8 @@ import { UndoRedoComponent } from './shared/components/undo-redo/undo-redo.compo
     RouterOutlet,
     RouterModule,
     TranslateModule,
+    ToastModule,
     ThemeToggleComponent,
-    ToastComponent,
     ConfirmDialogComponent,
     UndoRedoComponent,
   ],

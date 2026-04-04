@@ -3,8 +3,9 @@ import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { UIButtonComponent } from '../../shared/components/ui/button.component';
-import { UICardComponent } from '../../shared/components/ui/card.component';
+import { ButtonModule } from 'primeng/button';
+import { CalendarModule } from 'primeng/calendar';
+import { TabViewModule } from 'primeng/tabview';
 import { CasesService } from '../../shared/services/cases.service';
 import {
   MotorLiabilityCase,
@@ -14,7 +15,14 @@ import {
 @Component({
   standalone: true,
   selector: 'app-motor-liability-case-detail',
-  imports: [CommonModule, FormsModule, TranslateModule, UIButtonComponent, UICardComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TranslateModule,
+    ButtonModule,
+    TabViewModule,
+    CalendarModule,
+  ],
   template: `
     <div class="mb-6">
       <button
@@ -34,158 +42,227 @@ import {
       <h2 class="text-2xl font-bold">Motor Liability Case</h2>
     </div>
 
-    <ui-card>
-      <h3 class="font-semibold mb-4">Case</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Case No</label>
-          <input type="text" [(ngModel)]="caseData.caseNo" class="w-full" />
+    <!-- Tabbed Content -->
+    <p-tabView>
+      <!-- Overview Tab -->
+      <p-tabPanel header="Overview">
+        <div class="p-4">
+          <h3 class="text-lg font-bold mb-6">Case Information</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Case No</label
+              >
+              <input type="text" [(ngModel)]="caseData.caseNo" class="w-full" />
+            </div>
+            <div *ngIf="linkedLegalCaseNumber">
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Linked Legal Case No</label
+              >
+              <input
+                type="text"
+                [value]="linkedLegalCaseNumber"
+                readonly
+                class="w-full font-mono bg-[rgb(var(--surface-muted))] cursor-not-allowed"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Court Type</label
+              >
+              <input type="text" [(ngModel)]="caseData.courtType" class="w-full" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Court Level</label
+              >
+              <input type="text" [(ngModel)]="caseData.courtLevel" class="w-full" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Court City</label
+              >
+              <input type="text" [(ngModel)]="caseData.courtCity" class="w-full" />
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Case Description</label
+              >
+              <textarea [(ngModel)]="caseData.caseDescription" rows="3" class="w-full"></textarea>
+            </div>
+          </div>
         </div>
-        <div *ngIf="linkedLegalCaseNumber">
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1"
-            >Linked Legal Case No</label
-          >
-          <input
-            type="text"
-            [value]="linkedLegalCaseNumber"
-            readonly
-            class="w-full font-mono bg-[rgb(var(--surface-muted))]"
-          />
-        </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Court Type</label>
-          <input type="text" [(ngModel)]="caseData.courtType" class="w-full" />
-        </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Court Level</label>
-          <input type="text" [(ngModel)]="caseData.courtLevel" class="w-full" />
-        </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Court City</label>
-          <input type="text" [(ngModel)]="caseData.courtCity" class="w-full" />
-        </div>
-        <div class="md:col-span-2">
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Case Description</label>
-          <textarea [(ngModel)]="caseData.caseDescription" rows="3" class="w-full"></textarea>
-        </div>
-      </div>
-    </ui-card>
+      </p-tabPanel>
 
-    <ui-card class="mt-6">
-      <h3 class="font-semibold mb-4">Claimant Info</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Claimant Name</label>
-          <input type="text" [(ngModel)]="caseData.claimantName" class="w-full" />
+      <!-- Claimant Info Tab -->
+      <p-tabPanel header="Claimant Info">
+        <div class="p-4">
+          <h3 class="text-lg font-bold mb-6">Claimant Information</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Claimant Name</label
+              >
+              <input type="text" [(ngModel)]="caseData.claimantName" class="w-full" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Nationality</label
+              >
+              <input type="text" [(ngModel)]="caseData.nationality" class="w-full" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Gender</label>
+              <select [(ngModel)]="caseData.gender" class="w-full">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Age</label>
+              <input type="number" [(ngModel)]="caseData.age" min="0" class="w-full" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Marital Status</label
+              >
+              <select [(ngModel)]="caseData.maritalStatus" class="w-full">
+                <option value="Single">Single</option>
+                <option value="Married">Married</option>
+                <option value="Divorced">Divorced</option>
+                <option value="Widowed">Widowed</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Profession</label
+              >
+              <input type="text" [(ngModel)]="caseData.profession" class="w-full" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Damage Type</label
+              >
+              <select [(ngModel)]="caseData.damageType" class="w-full">
+                <option value="Fatal">Fatal</option>
+                <option value="Disability">Disability</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Percent of (Moral, Physical)</label
+              >
+              <input
+                type="text"
+                [(ngModel)]="caseData.percentMoralPhysical"
+                placeholder="e.g., 50% Moral, 30% Physical"
+                class="w-full"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Total Claimed Amount</label
+              >
+              <input
+                type="number"
+                [(ngModel)]="caseData.totalClaimedAmount"
+                min="0"
+                step="0.01"
+                class="w-full"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Total Paid Amount</label
+              >
+              <input
+                type="number"
+                [(ngModel)]="caseData.totalPaidAmount"
+                min="0"
+                step="0.01"
+                class="w-full"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Date of Insertion</label
+              >
+              <p-calendar
+                [(ngModel)]="dateOfInsertion"
+                dateFormat="dd/mm/yy"
+                [showIcon]="true"
+                styleClass="w-full"
+              ></p-calendar>
+            </div>
+          </div>
         </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Nationality</label>
-          <input type="text" [(ngModel)]="caseData.nationality" class="w-full" />
-        </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Gender</label>
-          <select [(ngModel)]="caseData.gender" class="w-full">
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Age</label>
-          <input type="number" [(ngModel)]="caseData.age" min="0" class="w-full" />
-        </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Marital Status</label>
-          <select [(ngModel)]="caseData.maritalStatus" class="w-full">
-            <option value="Single">Single</option>
-            <option value="Married">Married</option>
-            <option value="Divorced">Divorced</option>
-            <option value="Widowed">Widowed</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Profession</label>
-          <input type="text" [(ngModel)]="caseData.profession" class="w-full" />
-        </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Damage Type</label>
-          <select [(ngModel)]="caseData.damageType" class="w-full">
-            <option value="Fatal">Fatal</option>
-            <option value="Disability">Disability</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1"
-            >Percent of (Moral, Physical)</label
-          >
-          <input
-            type="text"
-            [(ngModel)]="caseData.percentMoralPhysical"
-            placeholder="e.g., 50% Moral, 30% Physical"
-            class="w-full"
-          />
-        </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1"
-            >Total Claimed Amount</label
-          >
-          <input
-            type="number"
-            [(ngModel)]="caseData.totalClaimedAmount"
-            min="0"
-            step="0.01"
-            class="w-full"
-          />
-        </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Total Paid Amount</label>
-          <input
-            type="number"
-            [(ngModel)]="caseData.totalPaidAmount"
-            min="0"
-            step="0.01"
-            class="w-full"
-          />
-        </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Date of Insertion</label>
-          <input type="date" [(ngModel)]="dateOfInsertion" class="w-full" />
-        </div>
-      </div>
-    </ui-card>
+      </p-tabPanel>
 
-    <ui-card class="mt-6">
-      <h3 class="font-semibold mb-4">Hearings and Case Development</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Period (From)</label>
-          <input type="date" [(ngModel)]="periodFrom" class="w-full" />
+      <!-- Hearings & Development Tab -->
+      <p-tabPanel header="Hearings & Development">
+        <div class="p-4">
+          <h3 class="text-lg font-bold mb-6">Hearings and Case Development</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Period (From)</label
+              >
+              <p-calendar
+                [(ngModel)]="periodFrom"
+                dateFormat="dd/mm/yy"
+                [showIcon]="true"
+                styleClass="w-full"
+              ></p-calendar>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Period (To)</label
+              >
+              <p-calendar
+                [(ngModel)]="periodTo"
+                dateFormat="dd/mm/yy"
+                [showIcon]="true"
+                styleClass="w-full"
+              ></p-calendar>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Court Type</label
+              >
+              <input type="text" [(ngModel)]="caseData.hearingsCourtType" class="w-full" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Court Level</label
+              >
+              <input type="text" [(ngModel)]="caseData.hearingsCourtLevel" class="w-full" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Court Room</label
+              >
+              <input type="text" [(ngModel)]="caseData.courtRoom" class="w-full" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Ruling Date</label
+              >
+              <p-calendar
+                [(ngModel)]="rulingDate"
+                dateFormat="dd/mm/yy"
+                [showIcon]="true"
+                styleClass="w-full"
+              ></p-calendar>
+            </div>
+          </div>
         </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Period (To)</label>
-          <input type="date" [(ngModel)]="periodTo" class="w-full" />
-        </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Court Type</label>
-          <input type="text" [(ngModel)]="caseData.hearingsCourtType" class="w-full" />
-        </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Court Level</label>
-          <input type="text" [(ngModel)]="caseData.hearingsCourtLevel" class="w-full" />
-        </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Court Room</label>
-          <input type="text" [(ngModel)]="caseData.courtRoom" class="w-full" />
-        </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Ruling Date</label>
-          <input type="date" [(ngModel)]="rulingDate" class="w-full" />
-        </div>
-      </div>
-    </ui-card>
+      </p-tabPanel>
+    </p-tabView>
 
-    <div class="mt-6 flex gap-2">
-      <ui-button variant="primary" (click)="save()">Save</ui-button>
-      <ui-button variant="ghost" (click)="cancel()">Cancel</ui-button>
+    <!-- Save/Cancel Actions -->
+    <div class="mt-6 pt-6 border-t border-[rgb(var(--border-light))] flex gap-2">
+      <p-button severity="primary" (click)="save()" label="Save"></p-button>
+      <p-button [outlined]="true" (click)="cancel()" label="Cancel"></p-button>
     </div>
   `,
 })

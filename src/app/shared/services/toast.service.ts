@@ -1,67 +1,91 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { MessageService } from 'primeng/api';
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
 
-export interface Toast {
-  id: string;
-  message: string;
-  type: ToastType;
-  duration?: number;
-}
-
+/**
+ * ToastService - Wrapper around PrimeNG MessageService for backward compatibility
+ * All existing toast calls will continue to work, but now use PrimeNG toasts
+ */
 @Injectable({ providedIn: 'root' })
 export class ToastService {
-  private toasts$ = new BehaviorSubject<Toast[]>([]);
-
-  getToasts(): Observable<Toast[]> {
-    return this.toasts$.asObservable();
-  }
+  private readonly messageService = inject(MessageService);
 
   show(message: string, type: ToastType = 'info', duration: number = 3000): void {
-    const toast: Toast = {
-      id: this.generateId(),
-      message,
-      type,
-      duration,
-    };
-    const current = this.toasts$.value;
-    this.toasts$.next([...current, toast]);
+    const severity =
+      type === 'error'
+        ? 'error'
+        : type === 'warning'
+          ? 'warn'
+          : type === 'success'
+            ? 'success'
+            : 'info';
+    const life = duration > 0 ? duration : undefined;
 
-    // Auto remove after duration
-    if (duration > 0) {
-      setTimeout(() => {
-        this.remove(toast.id);
-      }, duration);
-    }
+    this.messageService.add({
+      severity,
+      summary: this.getSummary(type),
+      detail: message,
+      life,
+    });
   }
 
   success(message: string, duration?: number): void {
-    this.show(message, 'success', duration);
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: message,
+      life: duration,
+    });
   }
 
   error(message: string, duration?: number): void {
-    this.show(message, 'error', duration || 5000);
+    this.messageService.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: message,
+      life: duration || 5000,
+    });
   }
 
   info(message: string, duration?: number): void {
-    this.show(message, 'info', duration);
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Information',
+      detail: message,
+      life: duration,
+    });
   }
 
   warning(message: string, duration?: number): void {
-    this.show(message, 'warning', duration);
+    this.messageService.add({
+      severity: 'warn',
+      summary: 'Warning',
+      detail: message,
+      life: duration,
+    });
   }
 
+  // Legacy methods for backward compatibility (no-op since PrimeNG handles removal automatically)
   remove(id: string): void {
-    const current = this.toasts$.value;
-    this.toasts$.next(current.filter((t) => t.id !== id));
+    // PrimeNG handles toast removal automatically
   }
 
   clear(): void {
-    this.toasts$.next([]);
+    this.messageService.clear();
   }
 
-  private generateId(): string {
-    return `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  private getSummary(type: ToastType): string {
+    switch (type) {
+      case 'success':
+        return 'Success';
+      case 'error':
+        return 'Error';
+      case 'warning':
+        return 'Warning';
+      case 'info':
+      default:
+        return 'Information';
+    }
   }
 }

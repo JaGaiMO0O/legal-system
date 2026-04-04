@@ -1,3 +1,6 @@
+/* PrimeNG Icons */
+@import 'primeicons/primeicons.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -165,46 +168,38 @@ h4 {
   }
 }
 
-/* Buttons */
-.btn {
-  @apply inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold border border-[rgb(var(--border))] bg-[rgb(var(--surface))] text-[rgb(var(--text))] transition-all duration-200;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+/* Buttons - Consistent sizing for action buttons */
+.p-button {
+  min-height: 2.5rem;
 }
 
-.btn-xs {
-  @apply text-xs px-2 py-1;
+.p-button-sm,
+.p-button.p-button-sm {
+  min-height: 2rem;
+  height: 2rem;
 }
 
-.btn:hover {
-  @apply bg-[rgb(var(--surface-muted))];
-  box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  transform: translateY(-1px);
+/* Action buttons in tables/lists should have consistent min-width */
+.action-button,
+.p-button.action-button {
+  min-width: 100px;
 }
 
-.btn-primary {
-  background: var(--gradient-primary);
-  @apply text-[rgb(var(--text-inverse))] border-transparent;
-  box-shadow: 0 4px 14px 0 rgba(14, 116, 144, 0.3);
+/* Ensure PrimeNG buttons maintain consistent height */
+.p-button:not(.p-button-icon-only) {
+  min-height: 2.5rem;
 }
 
-.btn-primary:hover {
-  background: var(--gradient-accent);
-  box-shadow: 0 6px 20px 0 rgba(14, 116, 144, 0.4);
-  transform: translateY(-2px);
+.p-button-sm:not(.p-button-icon-only) {
+  min-height: 2rem;
 }
 
-.btn-ghost {
-  @apply bg-transparent border-transparent text-[rgb(var(--text))];
+/* Consistent button widths in action columns */
+.p-button[styleClass*='min-w'] {
+  min-width: 100px;
 }
 
-.btn-ghost:hover {
-  @apply bg-[rgb(var(--surface-muted))];
-  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.05);
-}
-
-/* Inputs / selects */
+/* Inputs / selects - Consistent heights */
 input[type='text'],
 input[type='email'],
 input[type='date'],
@@ -214,6 +209,13 @@ select,
 textarea {
   @apply rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--surface))] text-[rgb(var(--text))] px-4 py-2.5 transition-all duration-200;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  min-height: 2.5rem;
+  height: 2.5rem;
+}
+
+textarea {
+  min-height: auto;
+  height: auto;
 }
 
 /* Select elements need extra right padding for dropdown arrow */

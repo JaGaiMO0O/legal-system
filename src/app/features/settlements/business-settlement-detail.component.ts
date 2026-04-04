@@ -1,19 +1,27 @@
-import { Component, inject } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { UIButtonComponent } from '../../shared/components/ui/button.component';
-import { UICardComponent } from '../../shared/components/ui/card.component';
+import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { InputNumberModule } from 'primeng/inputnumber';
 import {
-  BusinessSettlementService,
   BusinessSettlement,
+  BusinessSettlementService,
 } from '../../shared/services/business-settlement.service';
 
 @Component({
   standalone: true,
   selector: 'app-business-settlement-detail',
-  imports: [CommonModule, FormsModule, TranslateModule, UIButtonComponent, UICardComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TranslateModule,
+    ButtonModule,
+    CardModule,
+    InputNumberModule,
+  ],
   template: `
     <div class="mb-6">
       <button
@@ -33,69 +41,84 @@ import {
       <h2 class="text-2xl font-bold">Business Settlement</h2>
     </div>
 
-    <ui-card>
+    <p-card>
       <h3 class="font-semibold mb-4">Suggested Amounts</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Department Amount</label>
-          <input
-            type="number"
+          <p-inputNumber
+            mode="currency"
+            currency="AED"
+            [locale]="'en-SA'"
             [(ngModel)]="settlement.departmentAmount"
-            min="0"
-            step="0.01"
-            class="w-full"
-          />
+            [min]="0"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="2"
+            styleClass="w-full"
+          ></p-inputNumber>
         </div>
         <div>
           <label class="block text-sm text-[rgb(var(--text-muted))] mb-1"
             >Legal Department Amount</label
           >
-          <input
-            type="number"
+          <p-inputNumber
+            mode="currency"
+            currency="AED"
+            [locale]="'en-SA'"
             [(ngModel)]="settlement.legalDepartmentAmount"
-            min="0"
-            step="0.01"
-            class="w-full"
-          />
+            [min]="0"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="2"
+            styleClass="w-full"
+          ></p-inputNumber>
         </div>
         <div>
           <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Management Amount</label>
-          <input
-            type="number"
+          <p-inputNumber
+            mode="currency"
+            currency="AED"
+            [locale]="'en-SA'"
             [(ngModel)]="settlement.managementAmount"
-            min="0"
-            step="0.01"
-            class="w-full"
-          />
+            [min]="0"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="2"
+            styleClass="w-full"
+          ></p-inputNumber>
         </div>
         <div>
           <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Adversary Amount</label>
-          <input
-            type="number"
+          <p-inputNumber
+            mode="currency"
+            currency="AED"
+            [locale]="'en-SA'"
             [(ngModel)]="settlement.adversaryAmount"
-            min="0"
-            step="0.01"
-            class="w-full"
-          />
+            [min]="0"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="2"
+            styleClass="w-full"
+          ></p-inputNumber>
         </div>
         <div>
           <label class="block text-sm text-[rgb(var(--text-muted))] mb-1"
             >Amount of Amicable Agreement</label
           >
-          <input
-            type="number"
+          <p-inputNumber
+            mode="currency"
+            currency="AED"
+            [locale]="'en-SA'"
             [(ngModel)]="settlement.amountOfAmicableAgreement"
-            min="0"
-            step="0.01"
-            class="w-full"
-          />
+            [min]="0"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="2"
+            styleClass="w-full"
+          ></p-inputNumber>
         </div>
       </div>
-    </ui-card>
+    </p-card>
 
     <div class="mt-6 flex gap-2">
-      <ui-button variant="primary" (click)="save()">Save</ui-button>
-      <ui-button variant="ghost" (click)="cancel()">Cancel</ui-button>
+      <p-button severity="primary" (click)="save()" label="Save"></p-button>
+      <p-button [outlined]="true" (click)="cancel()" label="Cancel"></p-button>
     </div>
   `,
 })

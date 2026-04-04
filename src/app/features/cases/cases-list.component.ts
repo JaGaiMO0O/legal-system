@@ -3,10 +3,11 @@ import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
+import { ButtonModule } from 'primeng/button';
+import { TagModule } from 'primeng/tag';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { CaseWorkflowComponent } from '../../shared/components/case-workflow/case-workflow.component';
-import { UIButtonComponent } from '../../shared/components/ui/button.component';
 import { RelativeDatePipe } from '../../shared/pipes/relative-date.pipe';
 import { CaseItem, CasesService } from '../../shared/services/cases.service';
 import { ConfirmDialogService } from '../../shared/services/confirm-dialog.service';
@@ -20,7 +21,8 @@ import { ToastService } from '../../shared/services/toast.service';
     RouterModule,
     CommonModule,
     TranslateModule,
-    UIButtonComponent,
+    ButtonModule,
+    TagModule,
     FormsModule,
     RelativeDatePipe,
     CaseWorkflowComponent,
@@ -37,7 +39,7 @@ import { ToastService } from '../../shared/services/toast.service';
         </p>
       </div>
       <div class="flex items-center gap-3">
-        <ui-button variant="ghost" (click)="exportCases()">
+        <p-button [outlined]="true" (click)="exportCases()">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
@@ -47,8 +49,8 @@ import { ToastService } from '../../shared/services/toast.service';
             />
           </svg>
           Export
-        </ui-button>
-        <ui-button variant="primary" routerLink="/legal/case/new">
+        </p-button>
+        <p-button severity="primary" routerLink="/legal/case/new">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
@@ -58,7 +60,7 @@ import { ToastService } from '../../shared/services/toast.service';
             />
           </svg>
           New Case
-        </ui-button>
+        </p-button>
       </div>
     </div>
 
@@ -81,15 +83,18 @@ import { ToastService } from '../../shared/services/toast.service';
             <option value="pending">Set to Pending</option>
             <option value="closed">Set to Closed</option>
           </select>
-          <ui-button variant="primary" (click)="applyBulkStatus()" class="text-sm">
+          <p-button severity="primary" (click)="applyBulkStatus()" class="text-sm">
             Apply
-          </ui-button>
-          <ui-button variant="ghost" (click)="bulkExport()" class="text-sm"
-            >Export Selected</ui-button
-          >
-          <ui-button variant="ghost" (click)="bulkDelete()" class="text-sm text-red-600">
+          </p-button>
+          <p-button
+            [outlined]="true"
+            (click)="bulkExport()"
+            class="text-sm"
+            label="Export Selected"
+          ></p-button>
+          <p-button [outlined]="true" (click)="bulkDelete()" class="text-sm text-red-600">
             Delete Selected
-          </ui-button>
+          </p-button>
         </div>
       </div>
       <button
@@ -268,7 +273,7 @@ import { ToastService } from '../../shared/services/toast.service';
         No cases match your filters
       </h3>
       <p class="text-sm text-[rgb(var(--text-muted))] mb-6">Try adjusting your search or filters</p>
-      <ui-button variant="ghost" (click)="clearAllFilters()">Clear Filters</ui-button>
+      <p-button [outlined]="true" (click)="clearAllFilters()" label="Clear Filters"></p-button>
     </div>
 
     <div *ngIf="allCases.length === 0" class="card p-16 text-center">
@@ -294,7 +299,7 @@ import { ToastService } from '../../shared/services/toast.service';
         <p class="text-sm text-[rgb(var(--text-muted))] mb-6">
           Get started by creating your first case
         </p>
-        <ui-button variant="primary" routerLink="/legal/case/new">
+        <p-button severity="primary" routerLink="/legal/case/new">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
@@ -304,7 +309,7 @@ import { ToastService } from '../../shared/services/toast.service';
             />
           </svg>
           Create First Case
-        </ui-button>
+        </p-button>
       </div>
     </div>
 
@@ -478,13 +483,13 @@ import { ToastService } from '../../shared/services/toast.service';
         {{ filteredCases.length }} cases
       </div>
       <div class="flex items-center gap-2">
-        <ui-button
-          variant="ghost"
+        <p-button
+          [outlined]="true"
           (click)="goToPage(currentPage - 1)"
           [disabled]="currentPage === 1"
         >
           Previous
-        </ui-button>
+        </p-button>
         <div class="flex items-center gap-1">
           <button
             *ngFor="let page of getPageNumbers()"
@@ -498,13 +503,13 @@ import { ToastService } from '../../shared/services/toast.service';
             {{ page }}
           </button>
         </div>
-        <ui-button
-          variant="ghost"
+        <p-button
+          [outlined]="true"
           (click)="goToPage(currentPage + 1)"
           [disabled]="currentPage === totalPages"
         >
           Next
-        </ui-button>
+        </p-button>
       </div>
     </div>
   `,

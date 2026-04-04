@@ -1,15 +1,15 @@
-import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { CourtsService, CourtType, CourtLevel } from '../../shared/services/courts.service';
-import { UIButtonComponent } from '../../shared/components/ui/button.component';
-import { UICardComponent } from '../../shared/components/ui/card.component';
+import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { CourtLevel, CourtsService, CourtType } from '../../shared/services/courts.service';
 
 @Component({
   standalone: true,
   selector: 'app-courts-list',
-  imports: [CommonModule, RouterModule, TranslateModule, UIButtonComponent, UICardComponent],
+  imports: [CommonModule, RouterModule, TranslateModule, ButtonModule, CardModule],
   template: `
     <div class="flex items-center justify-between mb-6">
       <div>
@@ -18,7 +18,7 @@ import { UICardComponent } from '../../shared/components/ui/card.component';
           {{ courts.length }} {{ courts.length === 1 ? 'court type' : 'court types' }} total
         </p>
       </div>
-      <ui-button variant="primary" routerLink="/courts/new">
+      <p-button severity="primary" routerLink="/courts/new">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
@@ -28,7 +28,7 @@ import { UICardComponent } from '../../shared/components/ui/card.component';
           />
         </svg>
         Add Court Type
-      </ui-button>
+      </p-button>
     </div>
 
     <div *ngIf="courts.length === 0" class="card p-12 text-center">
@@ -36,7 +36,7 @@ import { UICardComponent } from '../../shared/components/ui/card.component';
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" *ngIf="courts.length > 0">
-      <ui-card
+      <p-card
         *ngFor="let court of courts"
         class="cursor-pointer hover:shadow-lg transition-shadow"
         [routerLink]="['/courts', court.id]"
@@ -60,7 +60,7 @@ import { UICardComponent } from '../../shared/components/ui/card.component';
             Updated {{ court.updatedAt | date: 'short' }}
           </div>
         </div>
-      </ui-card>
+      </p-card>
     </div>
   `,
 })
