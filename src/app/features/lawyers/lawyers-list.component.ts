@@ -37,13 +37,15 @@ import { Lawyer, LawyersService } from '../../shared/services/lawyers.service';
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" *ngIf="lawyers.length > 0">
       <p-card
-        *ngFor="let lawyer of lawyers"
+        *ngFor="let lawyer of lawyers; trackBy: trackByLawyerId"
         class="cursor-pointer hover:shadow-lg transition-shadow"
         [routerLink]="['/lawyers', lawyer.id]"
       >
         <div class="flex items-center justify-between mb-2">
           <h3 class="font-semibold text-lg">{{ lawyer.name }}</h3>
-          <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs font-mono">
+          <span
+            class="px-2 py-1 bg-[rgb(var(--surface-muted))] text-[rgb(var(--text))] border border-[rgb(var(--border-light))] rounded text-xs font-mono"
+          >
             {{ lawyer.lawyerNumber }}
           </span>
         </div>
@@ -62,4 +64,8 @@ import { Lawyer, LawyersService } from '../../shared/services/lawyers.service';
 export class LawyersListComponent {
   private readonly lawyersService = inject(LawyersService);
   protected lawyers: Lawyer[] = this.lawyersService.list();
+
+  trackByLawyerId(_index: number, lawyer: Lawyer): string {
+    return lawyer.id;
+  }
 }

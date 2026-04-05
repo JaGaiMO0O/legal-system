@@ -5,6 +5,33 @@ module.exports = {
 	theme: {
 		extend: {
 			colors: {
+				info: {
+					DEFAULT: "rgb(var(--border-info) / <alpha-value>)",
+					muted: "rgb(var(--surface-info) / <alpha-value>)",
+					fg: "rgb(var(--text-info) / <alpha-value>)",
+				},
+				tint: {
+					success: {
+						bg: "rgb(var(--tint-success-bg) / <alpha-value>)",
+						fg: "rgb(var(--tint-success-fg) / <alpha-value>)",
+					},
+					warning: {
+						bg: "rgb(var(--tint-warning-bg) / <alpha-value>)",
+						fg: "rgb(var(--tint-warning-fg) / <alpha-value>)",
+					},
+					accent: {
+						bg: "rgb(var(--tint-accent-bg) / <alpha-value>)",
+						fg: "rgb(var(--tint-accent-fg) / <alpha-value>)",
+					},
+					neutral: {
+						bg: "rgb(var(--tint-neutral-bg) / <alpha-value>)",
+						fg: "rgb(var(--tint-neutral-fg) / <alpha-value>)",
+					},
+					danger: {
+						bg: "rgb(var(--tint-danger-bg) / <alpha-value>)",
+						fg: "rgb(var(--tint-danger-fg) / <alpha-value>)",
+					},
+				},
 				brand: {
 					/* Align with Salama tones: deep teal primary and light teal accent */
 					50: "#edf7f7",
@@ -36,6 +63,11 @@ module.exports = {
 			},
 			boxShadow: {
 				card: "0 1px 2px rgba(0,0,0,0.06), 0 1px 1px rgba(0,0,0,0.04)"
+			},
+			borderRadius: {
+				card: "var(--radius-card)",
+				table: "var(--radius-table)",
+				input: "var(--radius-input)",
 			}
 		},
 	},

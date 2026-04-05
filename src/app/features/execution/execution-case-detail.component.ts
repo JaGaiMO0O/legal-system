@@ -45,155 +45,155 @@ import { ToastService } from '../../shared/services/toast.service';
       <h2 class="text-2xl font-bold">Execution Case</h2>
     </div>
 
-    <!-- Tabbed Content -->
-    <p-tabView>
-      <!-- Overview Tab -->
-      <p-tabPanel header="Overview">
-        <div class="p-4">
-          <h3 class="text-lg font-bold mb-6">Case Information</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                >Execution Case No</label
-              >
-              <input type="text" [(ngModel)]="executionCase.executionCaseNo" class="w-full" />
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                >File No</label
-              >
-              <input type="text" [(ngModel)]="executionCase.fileNo" class="w-full" />
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                >Linked Case ID</label
-              >
-              <input
-                type="text"
-                [(ngModel)]="executionCase.linkedCaseId"
-                class="w-full font-mono bg-[rgb(var(--surface-muted))] cursor-not-allowed"
-                readonly
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                >Unified Case ID</label
-              >
-              <input
-                type="text"
-                [(ngModel)]="executionCase.unifiedCaseId"
-                class="w-full font-mono bg-[rgb(var(--surface-muted))] cursor-not-allowed"
-                readonly
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                >File Date</label
-              >
-              <p-calendar
-                [(ngModel)]="fileDate"
-                dateFormat="dd/mm/yy"
-                [showIcon]="true"
-                styleClass="w-full"
-              ></p-calendar>
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                >Court Room</label
-              >
-              <input type="text" [(ngModel)]="executionCase.courtRoom" class="w-full" />
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                >Company Lawyer</label
-              >
-              <input type="text" [(ngModel)]="executionCase.companyLawyer" class="w-full" />
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                >Last Court Type</label
-              >
-              <input type="text" [(ngModel)]="executionCase.lastCourtType" class="w-full" />
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                >Last Court Level</label
-              >
-              <input type="text" [(ngModel)]="executionCase.lastCourtLevel" class="w-full" />
+    <div class="flex flex-col gap-8">
+      <!-- Tabbed Content -->
+      <p-tabView>
+        <!-- Overview Tab -->
+        <p-tabPanel header="Overview">
+          <div class="p-4">
+            <h3 class="text-lg font-bold mb-6">Case Information</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Execution Case No</label
+                >
+                <input type="text" [(ngModel)]="executionCase.executionCaseNo" class="w-full" />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >File No</label
+                >
+                <input type="text" [(ngModel)]="executionCase.fileNo" class="w-full" />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Linked Case ID</label
+                >
+                <input
+                  type="text"
+                  [(ngModel)]="executionCase.linkedCaseId"
+                  class="w-full font-mono bg-[rgb(var(--surface-muted))] cursor-not-allowed"
+                  readonly
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Unified Case ID</label
+                >
+                <input
+                  type="text"
+                  [(ngModel)]="executionCase.unifiedCaseId"
+                  class="w-full font-mono bg-[rgb(var(--surface-muted))] cursor-not-allowed"
+                  readonly
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >File Date</label
+                >
+                <p-calendar
+                  [(ngModel)]="fileDate"
+                  dateFormat="dd/mm/yy"
+                  [showIcon]="true"
+                  styleClass="w-full"
+                ></p-calendar>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Court Room</label
+                >
+                <input type="text" [(ngModel)]="executionCase.courtRoom" class="w-full" />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Company Lawyer</label
+                >
+                <input type="text" [(ngModel)]="executionCase.companyLawyer" class="w-full" />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Last Court Type</label
+                >
+                <input type="text" [(ngModel)]="executionCase.lastCourtType" class="w-full" />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Last Court Level</label
+                >
+                <input type="text" [(ngModel)]="executionCase.lastCourtLevel" class="w-full" />
+              </div>
             </div>
           </div>
-        </div>
-      </p-tabPanel>
+        </p-tabPanel>
 
-      <!-- Financial Info Tab -->
-      <p-tabPanel header="Financial Info">
-        <div class="p-4">
-          <h3 class="text-lg font-bold mb-6">Financial Information</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                >Amount Ruled</label
-              >
-              <p-inputNumber
-                mode="currency"
-                currency="AED"
-                [locale]="'en-SA'"
-                [(ngModel)]="executionCase.amountRuled"
-                [min]="0"
-                [minFractionDigits]="2"
-                [maxFractionDigits]="2"
-                styleClass="w-full"
-              ></p-inputNumber>
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                >Amount Paid</label
-              >
-              <p-inputNumber
-                mode="currency"
-                currency="AED"
-                [locale]="'en-SA'"
-                [(ngModel)]="executionCase.amountPaid"
-                [min]="0"
-                [minFractionDigits]="2"
-                [maxFractionDigits]="2"
-                styleClass="w-full"
-              ></p-inputNumber>
-            </div>
-            <div class="md:col-span-2">
-              <div
-                class="p-4 bg-[rgb(var(--primary))] bg-opacity-10 rounded-lg border border-[rgb(var(--primary))] border-opacity-20"
-              >
-                <div class="flex items-center justify-between">
-                  <span class="text-sm font-semibold text-[rgb(var(--text))]"
-                    >Remaining Amount</span
-                  >
-                  <span class="text-xl font-bold text-[rgb(var(--primary))]">
-                    {{
-                      (executionCase.amountRuled || 0) - (executionCase.amountPaid || 0) | number
-                    }}
-                    AED
-                  </span>
+        <!-- Financial Info Tab -->
+        <p-tabPanel header="Financial Info">
+          <div class="p-4">
+            <h3 class="text-lg font-bold mb-6">Financial Information</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Amount Ruled</label
+                >
+                <p-inputNumber
+                  mode="currency"
+                  currency="AED"
+                  [locale]="'en-SA'"
+                  [(ngModel)]="executionCase.amountRuled"
+                  [min]="0"
+                  [minFractionDigits]="2"
+                  [maxFractionDigits]="2"
+                  styleClass="w-full"
+                ></p-inputNumber>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                  >Amount Paid</label
+                >
+                <p-inputNumber
+                  mode="currency"
+                  currency="AED"
+                  [locale]="'en-SA'"
+                  [(ngModel)]="executionCase.amountPaid"
+                  [min]="0"
+                  [minFractionDigits]="2"
+                  [maxFractionDigits]="2"
+                  styleClass="w-full"
+                ></p-inputNumber>
+              </div>
+              <div class="md:col-span-2">
+                <div class="p-4 rounded-lg border border-info bg-info-muted">
+                  <div class="flex items-center justify-between gap-3">
+                    <span class="text-sm font-semibold text-[rgb(var(--text))]"
+                      >Remaining Amount</span
+                    >
+                    <span class="text-xl font-bold text-[rgb(var(--primary))] tabular-nums">
+                      {{
+                        (executionCase.amountRuled || 0) - (executionCase.amountPaid || 0) | number
+                      }}
+                      AED
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </p-tabPanel>
-    </p-tabView>
+        </p-tabPanel>
+      </p-tabView>
 
-    <!-- Save/Cancel Actions -->
-    <div class="mt-6 pt-6 border-t border-[rgb(var(--border-light))] flex gap-2">
-      <p-button severity="primary" (click)="save()" label="Save"></p-button>
-      <p-button [outlined]="true" (click)="cancel()" label="Cancel"></p-button>
-      <p-button
-        *ngIf="executionCase.linkedCaseId"
-        [outlined]="true"
-        class="text-emerald-700"
-        (click)="finalizeAndSettle()"
-      >
-        Finalize & Settle Case
-      </p-button>
+      <!-- Save/Cancel Actions -->
+      <div class="pt-6 border-t border-[rgb(var(--border-light))] flex gap-2">
+        <p-button severity="primary" (click)="save()" label="Save"></p-button>
+        <p-button [outlined]="true" (click)="cancel()" label="Cancel"></p-button>
+        <p-button
+          *ngIf="executionCase.linkedCaseId"
+          [outlined]="true"
+          class="text-emerald-700"
+          (click)="finalizeAndSettle()"
+        >
+          Finalize & Settle Case
+        </p-button>
+      </div>
     </div>
   `,
 })

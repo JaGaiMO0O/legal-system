@@ -41,84 +41,90 @@ import {
       <h2 class="text-2xl font-bold">Business Settlement</h2>
     </div>
 
-    <p-card>
-      <h3 class="font-semibold mb-4">Suggested Amounts</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Department Amount</label>
-          <p-inputNumber
-            mode="currency"
-            currency="AED"
-            [locale]="'en-SA'"
-            [(ngModel)]="settlement.departmentAmount"
-            [min]="0"
-            [minFractionDigits]="2"
-            [maxFractionDigits]="2"
-            styleClass="w-full"
-          ></p-inputNumber>
+    <div class="flex flex-col gap-8">
+      <p-card>
+        <h3 class="font-semibold mb-4">Suggested Amounts</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1"
+              >Department Amount</label
+            >
+            <p-inputNumber
+              mode="currency"
+              currency="AED"
+              [locale]="'en-SA'"
+              [(ngModel)]="settlement.departmentAmount"
+              [min]="0"
+              [minFractionDigits]="2"
+              [maxFractionDigits]="2"
+              styleClass="w-full"
+            ></p-inputNumber>
+          </div>
+          <div>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1"
+              >Legal Department Amount</label
+            >
+            <p-inputNumber
+              mode="currency"
+              currency="AED"
+              [locale]="'en-SA'"
+              [(ngModel)]="settlement.legalDepartmentAmount"
+              [min]="0"
+              [minFractionDigits]="2"
+              [maxFractionDigits]="2"
+              styleClass="w-full"
+            ></p-inputNumber>
+          </div>
+          <div>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1"
+              >Management Amount</label
+            >
+            <p-inputNumber
+              mode="currency"
+              currency="AED"
+              [locale]="'en-SA'"
+              [(ngModel)]="settlement.managementAmount"
+              [min]="0"
+              [minFractionDigits]="2"
+              [maxFractionDigits]="2"
+              styleClass="w-full"
+            ></p-inputNumber>
+          </div>
+          <div>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Adversary Amount</label>
+            <p-inputNumber
+              mode="currency"
+              currency="AED"
+              [locale]="'en-SA'"
+              [(ngModel)]="settlement.adversaryAmount"
+              [min]="0"
+              [minFractionDigits]="2"
+              [maxFractionDigits]="2"
+              styleClass="w-full"
+            ></p-inputNumber>
+          </div>
+          <div>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1"
+              >Amount of Amicable Agreement</label
+            >
+            <p-inputNumber
+              mode="currency"
+              currency="AED"
+              [locale]="'en-SA'"
+              [(ngModel)]="settlement.amountOfAmicableAgreement"
+              [min]="0"
+              [minFractionDigits]="2"
+              [maxFractionDigits]="2"
+              styleClass="w-full"
+            ></p-inputNumber>
+          </div>
         </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1"
-            >Legal Department Amount</label
-          >
-          <p-inputNumber
-            mode="currency"
-            currency="AED"
-            [locale]="'en-SA'"
-            [(ngModel)]="settlement.legalDepartmentAmount"
-            [min]="0"
-            [minFractionDigits]="2"
-            [maxFractionDigits]="2"
-            styleClass="w-full"
-          ></p-inputNumber>
-        </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Management Amount</label>
-          <p-inputNumber
-            mode="currency"
-            currency="AED"
-            [locale]="'en-SA'"
-            [(ngModel)]="settlement.managementAmount"
-            [min]="0"
-            [minFractionDigits]="2"
-            [maxFractionDigits]="2"
-            styleClass="w-full"
-          ></p-inputNumber>
-        </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Adversary Amount</label>
-          <p-inputNumber
-            mode="currency"
-            currency="AED"
-            [locale]="'en-SA'"
-            [(ngModel)]="settlement.adversaryAmount"
-            [min]="0"
-            [minFractionDigits]="2"
-            [maxFractionDigits]="2"
-            styleClass="w-full"
-          ></p-inputNumber>
-        </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1"
-            >Amount of Amicable Agreement</label
-          >
-          <p-inputNumber
-            mode="currency"
-            currency="AED"
-            [locale]="'en-SA'"
-            [(ngModel)]="settlement.amountOfAmicableAgreement"
-            [min]="0"
-            [minFractionDigits]="2"
-            [maxFractionDigits]="2"
-            styleClass="w-full"
-          ></p-inputNumber>
-        </div>
-      </div>
-    </p-card>
+      </p-card>
 
-    <div class="mt-6 flex gap-2">
-      <p-button severity="primary" (click)="save()" label="Save"></p-button>
-      <p-button [outlined]="true" (click)="cancel()" label="Cancel"></p-button>
+      <div class="flex gap-2">
+        <p-button severity="primary" (click)="save()" label="Save"></p-button>
+        <p-button [outlined]="true" (click)="cancel()" label="Cancel"></p-button>
+      </div>
     </div>
   `,
 })

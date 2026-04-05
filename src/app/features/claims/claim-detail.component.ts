@@ -35,7 +35,7 @@ import { ToastService } from '../../shared/services/toast.service';
       <p class="text-[rgb(var(--text-muted))]">Claim not found</p>
     </div>
 
-    <div *ngIf="claim" class="space-y-4">
+    <div *ngIf="claim" class="flex flex-col gap-8">
       <p-card>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <div>
@@ -55,10 +55,10 @@ import { ToastService } from '../../shared/services/toast.service';
             <div>
               <span
                 class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium"
-                [class.bg-emerald-100]="claim.legalFlag === 1"
-                [class.text-emerald-800]="claim.legalFlag === 1"
-                [class.bg-gray-100]="claim.legalFlag === 0"
-                [class.text-gray-800]="claim.legalFlag === 0"
+                [class.bg-[rgb(var(--tint-success-bg))]]="claim.legalFlag === 1"
+                [class.text-[rgb(var(--tint-success-fg))]]="claim.legalFlag === 1"
+                [class.bg-[rgb(var(--tint-neutral-bg))]]="claim.legalFlag === 0"
+                [class.text-[rgb(var(--tint-neutral-fg))]]="claim.legalFlag === 0"
               >
                 {{ claim.legalFlag === 1 ? 'To Legal Dept.' : 'Normal' }}
               </span>

@@ -37,47 +37,49 @@ const LEVEL_OPTIONS: { value: CourtLevel; label: string }[] = [
       <h2 class="text-2xl font-bold">{{ court.id ? 'Edit Court Type' : 'New Court Type' }}</h2>
     </div>
 
-    <p-card>
-      <div class="grid grid-cols-1 gap-4">
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Name</label>
-          <input
-            type="text"
-            [(ngModel)]="court.name"
-            class="w-full"
-            placeholder="e.g., Civil Court"
-          />
-        </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-2"
-            >Levels (order matters)</label
-          >
-          <div class="space-y-2">
-            <label
-              *ngFor="let opt of levelOptions"
-              class="flex items-center gap-2 px-3 py-2 border rounded-lg hover:bg-[rgb(var(--surface-muted))]"
-            >
-              <input
-                type="checkbox"
-                [checked]="isLevelSelected(opt.value)"
-                (change)="toggleLevel(opt.value, $event)"
-              />
-              <span class="text-sm font-medium">{{ opt.label }}</span>
-            </label>
+    <div class="flex flex-col gap-8">
+      <p-card>
+        <div class="grid grid-cols-1 gap-4">
+          <div>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Name</label>
+            <input
+              type="text"
+              [(ngModel)]="court.name"
+              class="w-full"
+              placeholder="e.g., Civil Court"
+            />
           </div>
-          <p class="text-xs text-[rgb(var(--text-muted))] mt-2">
-            Selected in order of escalation: {{ court.levels.join(' → ') || 'None' }}
-          </p>
+          <div>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-2"
+              >Levels (order matters)</label
+            >
+            <div class="space-y-2">
+              <label
+                *ngFor="let opt of levelOptions"
+                class="flex items-center gap-2 px-3 py-2 border rounded-lg hover:bg-[rgb(var(--surface-muted))]"
+              >
+                <input
+                  type="checkbox"
+                  [checked]="isLevelSelected(opt.value)"
+                  (change)="toggleLevel(opt.value, $event)"
+                />
+                <span class="text-sm font-medium">{{ opt.label }}</span>
+              </label>
+            </div>
+            <p class="text-xs text-[rgb(var(--text-muted))] mt-2">
+              Selected in order of escalation: {{ court.levels.join(' → ') || 'None' }}
+            </p>
+          </div>
         </div>
-      </div>
-    </p-card>
+      </p-card>
 
-    <div class="mt-6 flex gap-2">
-      <p-button severity="primary" (click)="save()" label="Save"></p-button>
-      <p-button [outlined]="true" (click)="cancel()" label="Cancel"></p-button>
-      <p-button *ngIf="court.id" [outlined]="true" class="text-red-600" (click)="remove()">
-        Delete
-      </p-button>
+      <div class="flex gap-2">
+        <p-button severity="primary" (click)="save()" label="Save"></p-button>
+        <p-button [outlined]="true" (click)="cancel()" label="Cancel"></p-button>
+        <p-button *ngIf="court.id" [outlined]="true" class="text-red-600" (click)="remove()">
+          Delete
+        </p-button>
+      </div>
     </div>
   `,
 })

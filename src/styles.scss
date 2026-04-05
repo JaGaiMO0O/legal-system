@@ -53,6 +53,27 @@ body {
   /* #EF4444 */
   --gradient-primary: linear-gradient(135deg, rgb(14, 116, 144) 0%, rgb(8, 78, 97) 100%);
   --gradient-accent: linear-gradient(135deg, rgb(110, 180, 170) 0%, rgb(14, 116, 144) 100%);
+  /* Info / selection surfaces (replaces raw blue-* in bulk bars, alerts) */
+  --surface-info: 238 250 252;
+  --border-info: 165 213 208;
+  --text-info: 8 78 97;
+  /* Stat and accent tints (icon wells, soft highlights) */
+  --tint-success-bg: 236 253 245;
+  --tint-success-fg: 5 122 85;
+  --tint-warning-bg: 255 251 235;
+  --tint-warning-fg: 180 83 9;
+  --tint-accent-bg: 224 242 241;
+  --tint-accent-fg: 14 116 144;
+  --tint-neutral-bg: 241 245 249;
+  --tint-neutral-fg: 71 85 105;
+  --tint-danger-bg: 254 242 242;
+  --tint-danger-fg: 185 28 28;
+  /* Radius scale */
+  --radius-card: 0.75rem;
+  --radius-table: 0.5rem;
+  --radius-input: 0.5rem;
+  /* Focus ring (follows primary; alpha in box-shadow) */
+  --focus-ring: 14 116 144;
 }
 
 .dark {
@@ -86,6 +107,23 @@ body {
   /* #EF4444 */
   --gradient-primary: linear-gradient(135deg, rgb(56, 189, 248) 0%, rgb(14, 116, 144) 100%);
   --gradient-accent: linear-gradient(135deg, rgb(110, 180, 170) 0%, rgb(56, 189, 248) 100%);
+  --surface-info: 24 40 48;
+  --border-info: 55 100 110;
+  --text-info: 204 251 241;
+  --tint-success-bg: 6 78 59;
+  --tint-success-fg: 110 231 183;
+  --tint-warning-bg: 69 46 12;
+  --tint-warning-fg: 252 211 77;
+  --tint-accent-bg: 19 47 56;
+  --tint-accent-fg: 125 211 252;
+  --tint-neutral-bg: 51 65 85;
+  --tint-neutral-fg: 203 213 225;
+  --tint-danger-bg: 69 26 26;
+  --tint-danger-fg: 252 165 165;
+  --radius-card: 0.75rem;
+  --radius-table: 0.5rem;
+  --radius-input: 0.5rem;
+  --focus-ring: 56 189 248;
 }
 
 /* Base surface and text colors */
@@ -97,11 +135,12 @@ body {
 .card {
   display: block;
   width: 100%;
-  @apply bg-[rgb(var(--surface))] text-[rgb(var(--text))] rounded-xl border border-[rgb(var(--border-light))];
-  box-shadow:
-    0 1px 3px 0 rgba(0, 0, 0, 0.05),
-    0 1px 2px 0 rgba(0, 0, 0, 0.03);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: var(--radius-card);
+  @apply bg-[rgb(var(--surface))] text-[rgb(var(--text))] border border-[rgb(var(--border-light))];
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 /* Mobile responsive tables */
@@ -127,10 +166,7 @@ body {
 }
 
 .card:hover {
-  box-shadow:
-    0 10px 25px -5px rgba(0, 0, 0, 0.1),
-    0 8px 10px -6px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
+  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.06);
   border-color: rgb(var(--border));
 }
 
@@ -185,6 +221,15 @@ h4 {
   min-width: 100px;
 }
 
+/* Claims list — equal width for row actions, centered label */
+.p-button.claims-list-action-btn {
+  width: 13rem;
+  min-width: 13rem;
+  max-width: 13rem;
+  justify-content: center;
+  text-align: center;
+}
+
 /* Ensure PrimeNG buttons maintain consistent height */
 .p-button:not(.p-button-icon-only) {
   min-height: 2.5rem;
@@ -199,18 +244,22 @@ h4 {
   min-width: 100px;
 }
 
-/* Inputs / selects - Consistent heights */
+/* Inputs & textarea — min-height only; fixed height + padding skews vertical centering */
 input[type='text'],
 input[type='email'],
 input[type='date'],
 input[type='number'],
 input[type='search'],
-select,
 textarea {
-  @apply rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--surface))] text-[rgb(var(--text))] px-4 py-2.5 transition-all duration-200;
+  border-radius: var(--radius-input);
+  @apply border border-[rgb(var(--border))] bg-[rgb(var(--surface))] text-[rgb(var(--text))] px-4 transition-all duration-200;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   min-height: 2.5rem;
-  height: 2.5rem;
+  height: auto;
+  line-height: 1.5;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  box-sizing: border-box;
 }
 
 textarea {
@@ -218,9 +267,16 @@ textarea {
   height: auto;
 }
 
-/* Select elements need extra right padding for dropdown arrow */
+/* Native selects — same metrics; symmetric vertical padding + custom arrow */
 select {
-  padding-right: 2.5rem;
+  border-radius: var(--radius-input);
+  @apply border border-[rgb(var(--border))] bg-[rgb(var(--surface))] text-[rgb(var(--text))] transition-all duration-200;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  min-height: 2.5rem;
+  height: auto;
+  line-height: 1.5;
+  padding: 0.5rem 2.5rem 0.5rem 1rem;
+  box-sizing: border-box;
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
   background-position: right 0.75rem center;
@@ -233,18 +289,59 @@ select:focus,
 textarea:focus {
   @apply outline-none border-[rgb(var(--primary))];
   box-shadow:
-    0 0 0 3px rgba(14, 116, 144, 0.1),
+    0 0 0 3px rgb(var(--focus-ring) / 0.18),
     0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* PrimeNG — vertically center closed value with dropdown chevron / icons */
+.p-datepicker.p-component {
+  align-items: center;
+}
+
+.p-select.p-component,
+.p-multiselect.p-component,
+.p-cascadeselect.p-component {
+  align-items: center;
+}
+
+.p-select .p-select-label {
+  display: flex;
+  align-items: center;
+  line-height: 1.45;
+}
+
+.p-multiselect .p-multiselect-label-container {
+  display: flex;
+  align-items: center;
+  min-height: 0;
+}
+
+.p-multiselect .p-multiselect-label {
+  align-items: center;
+}
+
+/* p-inputtext / inputnumber: theme + our rules — keep line-height consistent */
+input.p-inputtext,
+input.p-inputnumber-input {
+  line-height: 1.5;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  height: auto;
+  min-height: 2.5rem;
+  box-sizing: border-box;
 }
 
 /* Tables */
 .table {
-  @apply w-full text-left border border-[rgb(var(--border-light))] rounded-xl overflow-hidden;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  width: 100%;
+  text-align: left;
+  border-radius: var(--radius-table);
+  @apply border border-[rgb(var(--border-light))] overflow-hidden;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
 }
 
 .table thead th {
-  @apply bg-gradient-to-r from-[rgb(var(--surface-muted))] to-[rgb(var(--surface))] text-[rgb(var(--text))] px-6 py-3 border-b border-[rgb(var(--border))] text-sm font-bold uppercase tracking-wider;
+  @apply bg-[rgb(var(--surface-muted))] text-[rgb(var(--text))] px-6 py-3 border-b border-[rgb(var(--border))] text-sm font-semibold uppercase tracking-wider;
 }
 
 .table tbody td {
@@ -257,8 +354,7 @@ textarea:focus {
 
 .table tbody tr:hover {
   @apply bg-[rgb(var(--surface-muted))];
-  transform: scale(1.01);
-  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: inset 3px 0 0 0 rgb(var(--primary));
 }
 
 /* Claims actions cell layout */
@@ -314,4 +410,72 @@ td.space-x-2 .btn {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgb(var(--text-muted));
+}
+
+/* PrimeNG — align Aura chrome with app surface tokens */
+.p-card {
+  border-radius: var(--radius-card);
+  border: 1px solid rgb(var(--border-light));
+  background: rgb(var(--surface));
+  color: rgb(var(--text));
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+}
+
+.p-card .p-card-body,
+.p-card .p-card-content {
+  padding: 1.25rem 1.5rem;
+}
+
+.p-dialog {
+  border-radius: var(--radius-card);
+  border: 1px solid rgb(var(--border-light));
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.08),
+    0 2px 4px -2px rgba(0, 0, 0, 0.06);
+}
+
+.p-dialog-header {
+  border-bottom: 1px solid rgb(var(--border-light));
+  padding: 1rem 1.25rem;
+}
+
+.p-dialog-content {
+  padding: 1.25rem;
+  background: rgb(var(--surface));
+  color: rgb(var(--text));
+}
+
+.p-toast .p-toast-message {
+  border-radius: var(--radius-input);
+  border: 1px solid rgb(var(--border-light));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.p-steps {
+  background: transparent;
+}
+
+.p-steps .p-step-header {
+  gap: 0.5rem;
+}
+
+.p-steps .p-step-title {
+  color: rgb(var(--text-muted));
+  font-weight: 500;
+  font-size: 0.8125rem;
+}
+
+.p-steps .p-step.p-step-active .p-step-title {
+  color: rgb(var(--text));
+  font-weight: 600;
+}
+
+.p-button.p-button-primary {
+  background: rgb(var(--primary));
+  border-color: rgb(var(--primary));
+}
+
+.p-button.p-button-primary:not(:disabled):hover {
+  background: rgb(var(--primary-dark));
+  border-color: rgb(var(--primary-dark));
 }

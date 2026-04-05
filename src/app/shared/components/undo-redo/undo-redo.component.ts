@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ButtonModule } from 'primeng/button';
-import { Subscription } from 'rxjs';
 import { ToastService } from '../../services/toast.service';
 import { UndoRedoService } from '../../services/undo-redo.service';
 
@@ -10,11 +10,11 @@ import { UndoRedoService } from '../../services/undo-redo.service';
   selector: 'app-undo-redo',
   imports: [CommonModule, ButtonModule],
   template: `
-    <div class="flex items-center gap-2" *ngIf="canUndo || canRedo">
+    <div class="flex items-center gap-2" *ngIf="visible()">
       <p-button
         [outlined]="true"
         (click)="undo()"
-        [disabled]="!canUndo"
+        [disabled]="!canUndo()"
         [size]="'small'"
         aria-label="Undo last action"
         icon="pi pi-undo"
@@ -23,7 +23,7 @@ import { UndoRedoService } from '../../services/undo-redo.service';
       <p-button
         [outlined]="true"
         (click)="redo()"
-        [disabled]="!canRedo"
+        [disabled]="!canRedo()"
         [size]="'small'"
         aria-label="Redo last action"
         icon="pi pi-refresh"
@@ -31,24 +31,19 @@ import { UndoRedoService } from '../../services/undo-redo.service';
       ></p-button>
     </div>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class UndoRedoComponent implements OnInit, OnDestroy {
+export class UndoRedoComponent {
   private readonly undoRedoService = inject(UndoRedoService);
   private readonly toast = inject(ToastService);
-  protected canUndo = false;
-  protected canRedo = false;
-  private subscription?: Subscription;
 
-  ngOnInit(): void {
-    this.subscription = this.undoRedoService.getActions().subscribe((state) => {
-      this.canUndo = state.canUndo;
-      this.canRedo = state.canRedo;
-    });
-  }
+  private readonly actions = toSignal(this.undoRedoService.getActions(), {
+    initialValue: { canUndo: false, canRedo: false },
+  });
 
-  ngOnDestroy(): void {
-    this.subscription?.unsubscribe();
-  }
+  readonly canUndo = computed(() => this.actions().canUndo);
+  readonly canRedo = computed(() => this.actions().canRedo);
+  readonly visible = computed(() => this.canUndo() || this.canRedo());
 
   undo(): void {
     const action = this.undoRedoService.undo();

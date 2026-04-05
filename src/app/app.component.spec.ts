@@ -20,10 +20,10 @@ describe('AppComponent', () => {
     expect(app.title).toEqual('legal-system');
   });
 
-  it('should render title', () => {
+  it('should render app title', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, legal-system');
+    expect(compiled.querySelector('h1')?.textContent).toContain('Legal System');
   });
 });

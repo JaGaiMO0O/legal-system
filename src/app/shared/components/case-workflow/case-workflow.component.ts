@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, computed } from '@angular/core';
 import { StepsModule } from 'primeng/steps';
 import { CaseStage } from '../../services/cases.service';
 
@@ -12,7 +12,14 @@ interface MenuItem {
   selector: 'app-case-workflow',
   standalone: true,
   imports: [CommonModule, StepsModule],
-  template: ` <p-steps [model]="steps" [activeIndex]="activeIndex()" [readonly]="true"></p-steps> `,
+  template: `
+    <div
+      class="case-workflow rounded-lg border border-[rgb(var(--border-light))] bg-[rgb(var(--surface))] p-4"
+    >
+      <p-steps [model]="steps" [activeIndex]="activeIndex()" [readonly]="true"></p-steps>
+    </div>
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CaseWorkflowComponent {
   @Input() currentStage: CaseStage = 'primary';

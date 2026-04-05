@@ -30,39 +30,41 @@ import { Lawyer, LawyersService } from '../../shared/services/lawyers.service';
       <h2 class="text-2xl font-bold">{{ lawyer.id ? 'Edit Lawyer' : 'New Lawyer' }}</h2>
     </div>
 
-    <p-card>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Name</label>
-          <input type="text" [(ngModel)]="lawyer.name" class="w-full" />
+    <div class="flex flex-col gap-8">
+      <p-card>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Name</label>
+            <input type="text" [(ngModel)]="lawyer.name" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Phone</label>
+            <input type="text" [(ngModel)]="lawyer.phone" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Email</label>
+            <input type="email" [(ngModel)]="lawyer.email" class="w-full" />
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Address</label>
+            <textarea [(ngModel)]="lawyer.address" rows="2" class="w-full"></textarea>
+          </div>
+          <div class="md:col-span-2" *ngIf="lawyer.id">
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Lawyer Number</label>
+            <input
+              type="text"
+              [value]="lawyer.lawyerNumber"
+              readonly
+              class="w-full font-mono bg-[rgb(var(--surface-muted))]"
+            />
+          </div>
         </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Phone</label>
-          <input type="text" [(ngModel)]="lawyer.phone" class="w-full" />
-        </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Email</label>
-          <input type="email" [(ngModel)]="lawyer.email" class="w-full" />
-        </div>
-        <div class="md:col-span-2">
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Address</label>
-          <textarea [(ngModel)]="lawyer.address" rows="2" class="w-full"></textarea>
-        </div>
-        <div class="md:col-span-2" *ngIf="lawyer.id">
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Lawyer Number</label>
-          <input
-            type="text"
-            [value]="lawyer.lawyerNumber"
-            readonly
-            class="w-full font-mono bg-[rgb(var(--surface-muted))]"
-          />
-        </div>
-      </div>
-    </p-card>
+      </p-card>
 
-    <div class="mt-6 flex gap-2">
-      <p-button severity="primary" (click)="save()" label="Save"></p-button>
-      <p-button [outlined]="true" (click)="cancel()" label="Cancel"></p-button>
+      <div class="flex gap-2">
+        <p-button severity="primary" (click)="save()" label="Save"></p-button>
+        <p-button [outlined]="true" (click)="cancel()" label="Cancel"></p-button>
+      </div>
     </div>
   `,
 })

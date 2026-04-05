@@ -35,168 +35,174 @@ import { ToastService } from '../../shared/services/toast.service';
       <h2 class="text-2xl font-bold">Arbitration</h2>
     </div>
 
-    <p-card>
-      <h3 class="font-semibold mb-4">Arbitration Info</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Appealability</label>
-          <input type="text" [(ngModel)]="arbitration.appealability" class="w-full" />
-        </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Filling Date</label>
-          <p-calendar
-            [(ngModel)]="fillingDate"
-            dateFormat="dd/mm/yy"
-            [showIcon]="true"
-            styleClass="w-full"
-          ></p-calendar>
-        </div>
-        <div class="md:col-span-2">
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Case Description</label>
-          <textarea [(ngModel)]="arbitration.caseDescription" rows="3" class="w-full"></textarea>
-        </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Arbitration Room</label>
-          <input type="text" [(ngModel)]="arbitration.arbitrationRoom" class="w-full" />
-        </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Arbitration Fees</label>
-          <input
-            type="number"
-            [(ngModel)]="arbitration.arbitrationFees"
-            min="0"
-            step="0.01"
-            class="w-full"
-          />
-        </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Maximum Period</label>
-          <input type="text" [(ngModel)]="arbitration.maximumPeriod" class="w-full" />
-        </div>
-      </div>
-    </p-card>
-
-    <p-card class="mt-6">
-      <h3 class="font-semibold mb-4">Company Representative</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Select Lawyer</label>
-          <select
-            [(ngModel)]="arbitration.companyRepresentative.lawyerName"
-            class="w-full"
-            (ngModelChange)="onSelectLawyer($event, 'company')"
-          >
-            <option value="">-- Select Lawyer --</option>
-            <option *ngFor="let l of lawyers" [value]="l.name">
-              {{ l.lawyerNumber }} - {{ l.name }}
-            </option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Position</label>
-          <input
-            type="text"
-            [(ngModel)]="arbitration.companyRepresentative.position"
-            class="w-full"
-          />
-        </div>
-        <div class="md:col-span-2">
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Address</label>
-          <textarea
-            [(ngModel)]="arbitration.companyRepresentative.address"
-            rows="2"
-            class="w-full"
-          ></textarea>
-        </div>
-      </div>
-    </p-card>
-
-    <p-card class="mt-6">
-      <h3 class="font-semibold mb-4">Opposition Representative</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Lawyer Name</label>
-          <input
-            type="text"
-            [(ngModel)]="arbitration.oppositionRepresentative.lawyerName"
-            class="w-full"
-          />
-        </div>
-        <div>
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Position</label>
-          <input
-            type="text"
-            [(ngModel)]="arbitration.oppositionRepresentative.position"
-            class="w-full"
-          />
-        </div>
-        <div class="md:col-span-2">
-          <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Address</label>
-          <textarea
-            [(ngModel)]="arbitration.oppositionRepresentative.address"
-            rows="2"
-            class="w-full"
-          ></textarea>
-        </div>
-      </div>
-    </p-card>
-
-    <p-card class="mt-6">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="font-semibold">Hearings</h3>
-        <div class="flex gap-2">
-          <p-calendar
-            [(ngModel)]="newHearingDate"
-            dateFormat="dd/mm/yy"
-            [showIcon]="true"
-            styleClass="text-sm"
-          ></p-calendar>
-          <input
-            type="text"
-            [(ngModel)]="newHearingRemarks"
-            placeholder="Remarks"
-            class="border rounded px-2 py-1 text-sm"
-          />
-          <button class="px-2 py-1 border rounded text-sm" (click)="addHearing()">Add</button>
-        </div>
-      </div>
-      <ul class="space-y-2">
-        <li
-          *ngFor="let hearing of arbitration.hearings"
-          class="flex items-center justify-between border-b pb-2"
-        >
+    <div class="flex flex-col gap-8">
+      <p-card>
+        <h3 class="font-semibold mb-4">Arbitration Info</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <span class="font-medium">{{ hearing.date | date: 'short' }}</span>
-            <span class="ml-2 text-sm text-[rgb(var(--text-muted))]">{{ hearing.remarks }}</span>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Appealability</label>
+            <input type="text" [(ngModel)]="arbitration.appealability" class="w-full" />
           </div>
-          <button class="text-xs text-red-600" (click)="removeHearing(hearing.id)">Remove</button>
-        </li>
-        <li *ngIf="arbitration.hearings.length === 0" class="text-sm text-[rgb(var(--text-muted))]">
-          No hearings scheduled
-        </li>
-      </ul>
-    </p-card>
-
-    <div class="mt-6 flex gap-2">
-      <div class="flex items-center gap-3">
-        <p-button
-          *ngIf="arbitration.id"
-          severity="primary"
-          (click)="createCase()"
-          class="bg-green-600 hover:bg-green-700"
-        >
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 4v16m8-8H4"
+          <div>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Filling Date</label>
+            <p-calendar
+              [(ngModel)]="fillingDate"
+              dateFormat="dd/mm/yy"
+              [showIcon]="true"
+              styleClass="w-full"
+            ></p-calendar>
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Case Description</label>
+            <textarea [(ngModel)]="arbitration.caseDescription" rows="3" class="w-full"></textarea>
+          </div>
+          <div>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Arbitration Room</label>
+            <input type="text" [(ngModel)]="arbitration.arbitrationRoom" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Arbitration Fees</label>
+            <input
+              type="number"
+              [(ngModel)]="arbitration.arbitrationFees"
+              min="0"
+              step="0.01"
+              class="w-full"
             />
-          </svg>
-          Create Case
-        </p-button>
-        <p-button severity="primary" (click)="save()" label="Save"></p-button>
-        <p-button [outlined]="true" (click)="cancel()" label="Cancel"></p-button>
+          </div>
+          <div>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Maximum Period</label>
+            <input type="text" [(ngModel)]="arbitration.maximumPeriod" class="w-full" />
+          </div>
+        </div>
+      </p-card>
+
+      <p-card>
+        <h3 class="font-semibold mb-4">Company Representative</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Select Lawyer</label>
+            <select
+              [(ngModel)]="arbitration.companyRepresentative.lawyerName"
+              class="w-full"
+              (ngModelChange)="onSelectLawyer($event, 'company')"
+            >
+              <option value="">-- Select Lawyer --</option>
+              <option *ngFor="let l of lawyers" [value]="l.name">
+                {{ l.lawyerNumber }} - {{ l.name }}
+              </option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Position</label>
+            <input
+              type="text"
+              [(ngModel)]="arbitration.companyRepresentative.position"
+              class="w-full"
+            />
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Address</label>
+            <textarea
+              [(ngModel)]="arbitration.companyRepresentative.address"
+              rows="2"
+              class="w-full"
+            ></textarea>
+          </div>
+        </div>
+      </p-card>
+
+      <p-card>
+        <h3 class="font-semibold mb-4">Opposition Representative</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Lawyer Name</label>
+            <input
+              type="text"
+              [(ngModel)]="arbitration.oppositionRepresentative.lawyerName"
+              class="w-full"
+            />
+          </div>
+          <div>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Position</label>
+            <input
+              type="text"
+              [(ngModel)]="arbitration.oppositionRepresentative.position"
+              class="w-full"
+            />
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Address</label>
+            <textarea
+              [(ngModel)]="arbitration.oppositionRepresentative.address"
+              rows="2"
+              class="w-full"
+            ></textarea>
+          </div>
+        </div>
+      </p-card>
+
+      <p-card>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold">Hearings</h3>
+          <div class="flex gap-2">
+            <p-calendar
+              [(ngModel)]="newHearingDate"
+              dateFormat="dd/mm/yy"
+              [showIcon]="true"
+              styleClass="text-sm"
+            ></p-calendar>
+            <input
+              type="text"
+              [(ngModel)]="newHearingRemarks"
+              placeholder="Remarks"
+              class="border rounded px-2 py-1 text-sm"
+            />
+            <button class="px-2 py-1 border rounded text-sm" (click)="addHearing()">Add</button>
+          </div>
+        </div>
+        <ul class="space-y-2">
+          <li
+            *ngFor="let hearing of arbitration.hearings; trackBy: trackByHearingId"
+            class="flex items-center justify-between border-b pb-2"
+          >
+            <div>
+              <span class="font-medium">{{ hearing.date | date: 'short' }}</span>
+              <span class="ml-2 text-sm text-[rgb(var(--text-muted))]">{{ hearing.remarks }}</span>
+            </div>
+            <button
+              type="button"
+              class="text-xs text-danger hover:underline"
+              (click)="removeHearing(hearing.id)"
+            >
+              Remove
+            </button>
+          </li>
+          <li
+            *ngIf="arbitration.hearings.length === 0"
+            class="text-sm text-[rgb(var(--text-muted))]"
+          >
+            No hearings scheduled
+          </li>
+        </ul>
+      </p-card>
+
+      <div class="flex gap-2">
+        <div class="flex items-center gap-3">
+          <p-button *ngIf="arbitration.id" severity="success" (click)="createCase()">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Create Case
+          </p-button>
+          <p-button severity="primary" (click)="save()" label="Save"></p-button>
+          <p-button [outlined]="true" (click)="cancel()" label="Cancel"></p-button>
+        </div>
       </div>
     </div>
   `,
@@ -291,6 +297,10 @@ export class ArbitrationDetailComponent {
     this.arbitration = this.arbitrationsService.getById(this.arbitration.id)!;
     this.newHearingDate = '';
     this.newHearingRemarks = '';
+  }
+
+  trackByHearingId(_index: number, hearing: { id: string }): string {
+    return hearing.id;
   }
 
   removeHearing(hearingId: string): void {

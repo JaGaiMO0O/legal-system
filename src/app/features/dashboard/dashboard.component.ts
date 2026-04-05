@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -7,7 +7,6 @@ import { TagModule } from 'primeng/tag';
 import { RelativeDatePipe } from '../../shared/pipes/relative-date.pipe';
 import { ArbitrationsService } from '../../shared/services/arbitrations.service';
 import { CaseItem, CasesService } from '../../shared/services/cases.service';
-import { NotificationsService } from '../../shared/services/notifications.service';
 
 @Component({
   standalone: true,
@@ -15,8 +14,10 @@ import { NotificationsService } from '../../shared/services/notifications.servic
   imports: [CommonModule, RouterModule, ButtonModule, CardModule, TagModule, RelativeDatePipe],
   template: `
     <div class="mb-8">
-      <h2 class="text-3xl font-bold text-[rgb(var(--text))] mb-2">Dashboard</h2>
-      <p class="text-sm text-[rgb(var(--text-muted))]">
+      <h2 class="text-2xl md:text-3xl font-semibold text-[rgb(var(--text))] mb-2 tracking-tight">
+        Dashboard
+      </h2>
+      <p class="text-sm text-[rgb(var(--text-muted))] leading-relaxed">
         Overview of your legal cases and activities
       </p>
     </div>
@@ -29,9 +30,11 @@ import { NotificationsService } from '../../shared/services/notifications.servic
             <p class="text-sm text-[rgb(var(--text-muted))] mb-1">Total Active Cases</p>
             <p class="text-3xl font-bold text-[rgb(var(--text))]">{{ stats.totalActiveCases }}</p>
           </div>
-          <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+          <div
+            class="w-12 h-12 rounded-full flex items-center justify-center bg-[rgb(var(--tint-accent-bg))]"
+          >
             <svg
-              class="w-6 h-6 text-blue-600"
+              class="w-6 h-6 text-[rgb(var(--tint-accent-fg))]"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -53,9 +56,11 @@ import { NotificationsService } from '../../shared/services/notifications.servic
             <p class="text-sm text-[rgb(var(--text-muted))] mb-1">Cases Pending Ruling</p>
             <p class="text-3xl font-bold text-[rgb(var(--text))]">{{ stats.casesPendingRuling }}</p>
           </div>
-          <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+          <div
+            class="w-12 h-12 rounded-full flex items-center justify-center bg-[rgb(var(--tint-warning-bg))]"
+          >
             <svg
-              class="w-6 h-6 text-amber-600"
+              class="w-6 h-6 text-[rgb(var(--tint-warning-fg))]"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -77,9 +82,11 @@ import { NotificationsService } from '../../shared/services/notifications.servic
             <p class="text-sm text-[rgb(var(--text-muted))] mb-1">Cases in Execution</p>
             <p class="text-3xl font-bold text-[rgb(var(--text))]">{{ stats.casesInExecution }}</p>
           </div>
-          <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+          <div
+            class="w-12 h-12 rounded-full flex items-center justify-center bg-[rgb(var(--tint-neutral-bg))]"
+          >
             <svg
-              class="w-6 h-6 text-purple-600"
+              class="w-6 h-6 text-[rgb(var(--tint-neutral-fg))]"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -101,9 +108,11 @@ import { NotificationsService } from '../../shared/services/notifications.servic
             <p class="text-sm text-[rgb(var(--text-muted))] mb-1">Settled This Month</p>
             <p class="text-3xl font-bold text-[rgb(var(--text))]">{{ stats.settledThisMonth }}</p>
           </div>
-          <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+          <div
+            class="w-12 h-12 rounded-full flex items-center justify-center bg-[rgb(var(--tint-success-bg))]"
+          >
             <svg
-              class="w-6 h-6 text-emerald-600"
+              class="w-6 h-6 text-[rgb(var(--tint-success-fg))]"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -125,8 +134,15 @@ import { NotificationsService } from '../../shared/services/notifications.servic
             <p class="text-sm text-[rgb(var(--text-muted))] mb-1">Upcoming Deadlines</p>
             <p class="text-3xl font-bold text-[rgb(var(--text))]">{{ stats.upcomingDeadlines }}</p>
           </div>
-          <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div
+            class="w-12 h-12 rounded-full flex items-center justify-center bg-[rgb(var(--tint-danger-bg))]"
+          >
+            <svg
+              class="w-6 h-6 text-[rgb(var(--tint-danger-fg))]"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -144,9 +160,11 @@ import { NotificationsService } from '../../shared/services/notifications.servic
             <p class="text-sm text-[rgb(var(--text-muted))] mb-1">Active Arbitrations</p>
             <p class="text-3xl font-bold text-[rgb(var(--text))]">{{ stats.activeArbitrations }}</p>
           </div>
-          <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+          <div
+            class="w-12 h-12 rounded-full flex items-center justify-center bg-[rgb(var(--surface-info))]"
+          >
             <svg
-              class="w-6 h-6 text-indigo-600"
+              class="w-6 h-6 text-[rgb(var(--primary))]"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -168,7 +186,7 @@ import { NotificationsService } from '../../shared/services/notifications.servic
       <!-- Recent Cases -->
       <p-card>
         <div class="flex items-center justify-between mb-6">
-          <h3 class="text-lg font-bold text-[rgb(var(--text))]">Recent Cases</h3>
+          <h3 class="text-lg font-semibold text-[rgb(var(--text))]">Recent Cases</h3>
           <p-button
             label="View All"
             [outlined]="true"
@@ -178,7 +196,7 @@ import { NotificationsService } from '../../shared/services/notifications.servic
         </div>
         <div class="space-y-4">
           <div
-            *ngFor="let case of recentCases"
+            *ngFor="let case of recentCases; trackBy: trackByCaseId"
             class="p-4 bg-[rgb(var(--surface-muted))] rounded-lg hover:bg-[rgb(var(--surface))] transition-colors cursor-pointer"
             [routerLink]="['/legal/case', case.id]"
           >
@@ -213,7 +231,7 @@ import { NotificationsService } from '../../shared/services/notifications.servic
       <!-- Upcoming Deadlines -->
       <p-card>
         <div class="flex items-center justify-between mb-6">
-          <h3 class="text-lg font-bold text-[rgb(var(--text))]">Upcoming Deadlines</h3>
+          <h3 class="text-lg font-semibold text-[rgb(var(--text))]">Upcoming Deadlines</h3>
           <p-button
             label="View All"
             [outlined]="true"
@@ -223,7 +241,7 @@ import { NotificationsService } from '../../shared/services/notifications.servic
         </div>
         <div class="space-y-4">
           <div
-            *ngFor="let deadline of upcomingDeadlines"
+            *ngFor="let deadline of upcomingDeadlines; trackBy: trackByDeadline"
             class="p-4 bg-[rgb(var(--surface-muted))] rounded-lg"
           >
             <div class="flex items-start justify-between">
@@ -235,12 +253,16 @@ import { NotificationsService } from '../../shared/services/notifications.servic
                 <div class="flex items-center gap-2">
                   <span
                     class="text-xs px-2 py-1 rounded font-medium"
-                    [class.bg-red-100]="deadline.daysUntil <= 1"
-                    [class.text-red-800]="deadline.daysUntil <= 1"
-                    [class.bg-amber-100]="deadline.daysUntil > 1 && deadline.daysUntil <= 3"
-                    [class.text-amber-800]="deadline.daysUntil > 1 && deadline.daysUntil <= 3"
-                    [class.bg-blue-100]="deadline.daysUntil > 3"
-                    [class.text-blue-800]="deadline.daysUntil > 3"
+                    [class.bg-[rgb(var(--tint-danger-bg))]]="deadline.daysUntil <= 1"
+                    [class.text-[rgb(var(--tint-danger-fg))]]="deadline.daysUntil <= 1"
+                    [class.bg-[rgb(var(--tint-warning-bg))]]="
+                      deadline.daysUntil > 1 && deadline.daysUntil <= 3
+                    "
+                    [class.text-[rgb(var(--tint-warning-fg))]]="
+                      deadline.daysUntil > 1 && deadline.daysUntil <= 3
+                    "
+                    [class.bg-[rgb(var(--surface-info))]]="deadline.daysUntil > 3"
+                    [class.text-[rgb(var(--text-info))]]="deadline.daysUntil > 3"
                   >
                     {{
                       deadline.daysUntil === 0
@@ -276,11 +298,11 @@ import { NotificationsService } from '../../shared/services/notifications.servic
     <!-- Pending Actions -->
     <p-card>
       <div class="flex items-center justify-between mb-6">
-        <h3 class="text-lg font-bold text-[rgb(var(--text))]">Pending Actions</h3>
+        <h3 class="text-lg font-semibold text-[rgb(var(--text))]">Pending Actions</h3>
       </div>
       <div class="space-y-3">
         <div
-          *ngFor="let action of pendingActions"
+          *ngFor="let action of pendingActions; trackBy: trackByAction"
           class="p-4 bg-[rgb(var(--surface-muted))] rounded-lg flex items-center justify-between"
         >
           <div class="flex-1">
@@ -306,12 +328,11 @@ import { NotificationsService } from '../../shared/services/notifications.servic
       </div>
     </p-card>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardComponent implements OnInit {
   private readonly casesService = inject(CasesService);
   private readonly arbitrationsService = inject(ArbitrationsService);
-  private readonly notificationsService = inject(NotificationsService);
-
   protected stats = {
     totalActiveCases: 0,
     casesPendingRuling: 0,
@@ -438,6 +459,18 @@ export class DashboardComponent implements OnInit {
     });
 
     this.pendingActions = actions.slice(0, 5);
+  }
+
+  trackByCaseId(_index: number, c: CaseItem): string {
+    return c.id;
+  }
+
+  trackByDeadline(_index: number, d: { caseId: string; date: string; title: string }): string {
+    return `${d.caseId}-${d.date}-${d.title}`;
+  }
+
+  trackByAction(_index: number, a: { title: string; caseNumber: string }): string {
+    return `${a.caseNumber}-${a.title}`;
   }
 
   getStageSeverity(

@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ButtonModule } from 'primeng/button';
-import { Subscription } from 'rxjs';
-import { ConfirmDialogData, ConfirmDialogService } from '../../services/confirm-dialog.service';
+import { ConfirmDialogService } from '../../services/confirm-dialog.service';
 
 @Component({
   standalone: true,
@@ -10,7 +10,7 @@ import { ConfirmDialogData, ConfirmDialogService } from '../../services/confirm-
   imports: [CommonModule, ButtonModule],
   template: `
     <div
-      *ngIf="dialogData"
+      *ngIf="dialogData() as data"
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in"
       (click)="handleBackdropClick($event)"
       role="dialog"
@@ -18,76 +18,44 @@ import { ConfirmDialogData, ConfirmDialogService } from '../../services/confirm-
       [attr.aria-labelledby]="'dialog-title'"
     >
       <div
-        class="card p-6 max-w-md w-full mx-4 shadow-2xl animate-scale-in"
+        class="card p-6 max-w-md w-full mx-4 shadow-lg animate-scale-in"
         (click)="$event.stopPropagation()"
       >
         <div class="flex items-start gap-4 mb-6">
           <div
             class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center"
-            [class.bg-red-100]="dialogData.type === 'danger'"
-            [class.bg-amber-100]="dialogData.type === 'warning'"
-            [class.bg-blue-100]="dialogData.type === 'info' || !dialogData.type"
+            [ngClass]="iconShellClass()"
           >
-            <svg
-              *ngIf="dialogData.type === 'danger'"
-              class="w-6 h-6 text-red-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
-            <svg
-              *ngIf="dialogData.type === 'warning'"
-              class="w-6 h-6 text-amber-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
-            <svg
-              *ngIf="dialogData.type === 'info' || !dialogData.type"
-              class="w-6 h-6 text-blue-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+            <i
+              *ngIf="data.type === 'danger'"
+              class="pi pi-exclamation-triangle text-xl text-danger"
+            ></i>
+            <i
+              *ngIf="data.type === 'warning'"
+              class="pi pi-exclamation-circle text-xl text-warning"
+            ></i>
+            <i
+              *ngIf="data.type === 'info' || !data.type"
+              class="pi pi-info-circle text-xl text-[rgb(var(--primary))]"
+            ></i>
           </div>
-          <div class="flex-1">
-            <h3 id="dialog-title" class="text-lg font-bold text-[rgb(var(--text))] mb-2">
-              {{ dialogData.title }}
+          <div class="flex-1 min-w-0">
+            <h3 id="dialog-title" class="text-lg font-semibold text-[rgb(var(--text))] mb-2">
+              {{ data.title }}
             </h3>
-            <p class="text-sm text-[rgb(var(--text-muted))]">{{ dialogData.message }}</p>
+            <p class="text-sm text-[rgb(var(--text-muted))] leading-relaxed">{{ data.message }}</p>
           </div>
         </div>
-        <div class="flex gap-3 justify-end">
+        <div class="flex gap-3 justify-end flex-wrap">
           <p-button
             [outlined]="true"
             (click)="cancel()"
-            [label]="dialogData.cancelText || 'Cancel'"
+            [label]="data.cancelText || 'Cancel'"
           ></p-button>
           <p-button
-            [severity]="dialogData.type === 'danger' ? 'danger' : 'primary'"
+            [severity]="data.type === 'danger' ? 'danger' : 'primary'"
             (click)="confirm()"
-            [label]="dialogData.confirmText || 'Confirm'"
+            [label]="data.confirmText || 'Confirm'"
           ></p-button>
         </div>
       </div>
@@ -106,7 +74,7 @@ import { ConfirmDialogData, ConfirmDialogService } from '../../services/confirm-
       @keyframes scale-in {
         from {
           opacity: 0;
-          transform: scale(0.95);
+          transform: scale(0.98);
         }
         to {
           opacity: 1;
@@ -121,21 +89,20 @@ import { ConfirmDialogData, ConfirmDialogService } from '../../services/confirm-
       }
     `,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ConfirmDialogComponent implements OnInit, OnDestroy {
+export class ConfirmDialogComponent {
   private readonly confirmDialogService = inject(ConfirmDialogService);
-  protected dialogData: ConfirmDialogData | null = null;
-  private subscription?: Subscription;
 
-  ngOnInit(): void {
-    this.subscription = this.confirmDialogService.getDialog().subscribe((data) => {
-      this.dialogData = data;
-    });
-  }
+  readonly dialogData = toSignal(this.confirmDialogService.getDialog(), { initialValue: null });
 
-  ngOnDestroy(): void {
-    this.subscription?.unsubscribe();
-  }
+  readonly iconShellClass = computed(() => {
+    const d = this.dialogData();
+    const t = d?.type;
+    if (t === 'danger') return 'bg-[rgb(var(--tint-danger-bg))]';
+    if (t === 'warning') return 'bg-[rgb(var(--tint-warning-bg))]';
+    return 'bg-[rgb(var(--surface-info))]';
+  });
 
   confirm(): void {
     this.confirmDialogService.handleResult(true);

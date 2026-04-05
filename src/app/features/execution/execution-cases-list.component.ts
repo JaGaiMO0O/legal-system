@@ -51,15 +51,19 @@ import { ExecutionCasesService } from '../../shared/services/execution-cases.ser
           <div class="flex items-center gap-2 mb-2">
             <span
               *ngIf="executionCase.unifiedCaseId"
-              class="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs font-mono"
+              class="px-2 py-1 bg-[rgb(var(--surface-muted))] text-[rgb(var(--text))] border border-[rgb(var(--border-light))] rounded text-xs font-mono"
               title="Unified Case ID"
             >
               UC: {{ executionCase.unifiedCaseId }}
             </span>
-            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+            <span
+              class="px-2 py-1 bg-info-muted text-info-fg border border-info rounded text-xs font-medium"
+            >
               {{ executionCase.courtRoom }}
             </span>
-            <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs">
+            <span
+              class="px-2 py-1 bg-[rgb(var(--surface-muted))] text-[rgb(var(--text))] border border-[rgb(var(--border-light))] rounded text-xs"
+            >
               {{ executionCase.lastCourtType }}
             </span>
           </div>

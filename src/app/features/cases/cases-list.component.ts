@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
-import { Subject, Subscription } from 'rxjs';
+import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { CaseWorkflowComponent } from '../../shared/components/case-workflow/case-workflow.component';
 import { RelativeDatePipe } from '../../shared/pipes/relative-date.pipe';
@@ -28,9 +29,11 @@ import { ToastService } from '../../shared/services/toast.service';
     CaseWorkflowComponent,
   ],
   template: `
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
       <div>
-        <h2 class="text-3xl font-bold text-[rgb(var(--text))] mb-2">Cases</h2>
+        <h2 class="text-2xl md:text-3xl font-semibold text-[rgb(var(--text))] mb-2 tracking-tight">
+          Cases
+        </h2>
         <p class="text-sm text-[rgb(var(--text-muted))]">
           {{ filteredCases.length }} {{ filteredCases.length === 1 ? 'case' : 'cases' }}
           <span *ngIf="searchQuery || statusFilter || stageFilter">
@@ -64,63 +67,233 @@ import { ToastService } from '../../shared/services/toast.service';
       </div>
     </div>
 
-    <!-- Bulk Actions Bar -->
-    <div
-      *ngIf="showBulkActions"
-      class="card p-4 mb-6 flex items-center justify-between bg-blue-50 border-blue-200"
-    >
-      <div class="flex items-center gap-4">
-        <span class="text-sm font-medium text-blue-900">
-          {{ selectedCases.size }} {{ selectedCases.size === 1 ? 'case' : 'cases' }} selected
-        </span>
-        <div class="flex items-center gap-2">
-          <select
-            [(ngModel)]="bulkStatusAction"
-            class="text-sm border border-blue-300 rounded px-3 py-1 bg-white"
+    <div class="flex flex-col gap-8">
+      <!-- Bulk Actions Bar -->
+      <div
+        *ngIf="showBulkActions"
+        class="card p-4 flex flex-wrap items-center justify-between gap-4 bg-info-muted border border-info"
+      >
+        <div class="flex flex-wrap items-center gap-4">
+          <span class="text-sm font-medium text-info-fg">
+            {{ selectedCases.size }} {{ selectedCases.size === 1 ? 'case' : 'cases' }} selected
+          </span>
+          <div class="flex flex-wrap items-center gap-2">
+            <select
+              [(ngModel)]="bulkStatusAction"
+              class="text-sm border border-info rounded-input px-3 py-1 bg-[rgb(var(--surface))] text-[rgb(var(--text))]"
+            >
+              <option value="">Change Status</option>
+              <option value="open">Set to Open</option>
+              <option value="pending">Set to Pending</option>
+              <option value="closed">Set to Closed</option>
+            </select>
+            <p-button severity="primary" (click)="applyBulkStatus()" class="text-sm">
+              Apply
+            </p-button>
+            <p-button
+              [outlined]="true"
+              (click)="bulkExport()"
+              class="text-sm"
+              label="Export Selected"
+            ></p-button>
+            <p-button [outlined]="true" (click)="bulkDelete()" class="text-sm" severity="danger">
+              Delete Selected
+            </p-button>
+          </div>
+        </div>
+        <button
+          type="button"
+          (click)="clearSelection()"
+          class="text-sm text-[rgb(var(--primary))] hover:underline font-medium"
+        >
+          Clear Selection
+        </button>
+      </div>
+
+      <!-- Search and Filters -->
+      <div class="card p-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="md:col-span-2">
+            <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Search</label>
+            <div class="relative">
+              <input
+                type="text"
+                [(ngModel)]="searchQuery"
+                (ngModelChange)="onSearchChange()"
+                class="w-full pr-4 py-2.5"
+                style="padding-left: 2.5rem;"
+                placeholder="Search by title or client..."
+              />
+              <svg
+                class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[rgb(var(--text-muted))] pointer-events-none z-10"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Status</label>
+            <select [(ngModel)]="statusFilter" (ngModelChange)="applyFilters()" class="w-full">
+              <option value="">All Statuses</option>
+              <option value="open">Open</option>
+              <option value="pending">Pending</option>
+              <option value="closed">Closed</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Stage</label>
+            <select [(ngModel)]="stageFilter" (ngModelChange)="applyFilters()" class="w-full">
+              <option value="">All Stages</option>
+              <option value="primary">Primary</option>
+              <option value="appeal">Appeal</option>
+              <option value="cassation">Cassation</option>
+              <option value="execution">Execution</option>
+              <option value="settled">Settled</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+              >Legal Status</label
+            >
+            <select [(ngModel)]="legalStatusFilter" (ngModelChange)="applyFilters()" class="w-full">
+              <option value="">All Legal Statuses</option>
+              <option value="0">Normal</option>
+              <option value="1">To Legal Dept</option>
+              <option value="3">In Execution</option>
+              <option value="4">Settled</option>
+            </select>
+          </div>
+        </div>
+        <div class="mt-4 flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Sort by</label
+              >
+              <select [(ngModel)]="sortBy" (ngModelChange)="applySorting()" class="w-full">
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="title">Title (A-Z)</option>
+                <option value="client">Client (A-Z)</option>
+                <option value="status">Status</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                >Per page</label
+              >
+              <select [(ngModel)]="itemsPerPage" (ngModelChange)="applyPagination()" class="w-full">
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div
+          *ngIf="searchQuery || statusFilter || stageFilter || legalStatusFilter"
+          class="mt-4 flex items-center gap-2 flex-wrap"
+        >
+          <span class="text-sm text-[rgb(var(--text-muted))]">Active filters:</span>
+          <span
+            *ngIf="searchQuery"
+            class="inline-flex items-center gap-1 px-3 py-1 bg-info-muted text-[rgb(var(--text))] border border-info rounded-full text-xs font-medium"
           >
-            <option value="">Change Status</option>
-            <option value="open">Set to Open</option>
-            <option value="pending">Set to Pending</option>
-            <option value="closed">Set to Closed</option>
-          </select>
-          <p-button severity="primary" (click)="applyBulkStatus()" class="text-sm">
-            Apply
-          </p-button>
-          <p-button
-            [outlined]="true"
-            (click)="bulkExport()"
-            class="text-sm"
-            label="Export Selected"
-          ></p-button>
-          <p-button [outlined]="true" (click)="bulkDelete()" class="text-sm text-red-600">
-            Delete Selected
-          </p-button>
+            Search: "{{ searchQuery }}"
+            <button type="button" (click)="clearSearch()" class="hover:opacity-80">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </span>
+          <span
+            *ngIf="statusFilter"
+            class="inline-flex items-center gap-1 px-3 py-1 bg-info-muted text-[rgb(var(--text))] border border-info rounded-full text-xs font-medium"
+          >
+            Status: {{ statusFilter | titlecase }}
+            <button type="button" (click)="clearStatusFilter()" class="hover:opacity-80">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </span>
+          <span
+            *ngIf="stageFilter"
+            class="inline-flex items-center gap-1 px-3 py-1 bg-info-muted text-[rgb(var(--text))] border border-info rounded-full text-xs font-medium"
+          >
+            Stage: {{ stageFilter | titlecase }}
+            <button type="button" (click)="clearStageFilter()" class="hover:opacity-80">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </span>
+          <span
+            *ngIf="legalStatusFilter"
+            class="inline-flex items-center gap-1 px-3 py-1 bg-info-muted text-[rgb(var(--text))] border border-info rounded-full text-xs font-medium"
+          >
+            Legal: {{ getLegalStatusFilterLabel() }}
+            <button type="button" (click)="clearLegalStatusFilter()" class="hover:opacity-80">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </span>
+          <button
+            (click)="clearAllFilters()"
+            class="text-sm text-[rgb(var(--primary))] hover:underline font-medium"
+          >
+            Clear all
+          </button>
         </div>
       </div>
-      <button
-        (click)="clearSelection()"
-        class="text-sm text-blue-700 hover:text-blue-900 font-medium"
-      >
-        Clear Selection
-      </button>
-    </div>
 
-    <!-- Search and Filters -->
-    <div class="card p-4 mb-6">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="md:col-span-2">
-          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Search</label>
-          <div class="relative">
-            <input
-              type="text"
-              [(ngModel)]="searchQuery"
-              (ngModelChange)="onSearchChange()"
-              class="w-full pr-4 py-2.5"
-              style="padding-left: 2.5rem;"
-              placeholder="Search by title or client..."
-            />
+      <div *ngIf="filteredCases.length === 0 && allCases.length > 0" class="card p-16 text-center">
+        <h3 class="text-lg font-semibold text-[rgb(var(--text))] mb-2">
+          No cases match your filters
+        </h3>
+        <p class="text-sm text-[rgb(var(--text-muted))] mb-6">
+          Try adjusting your search or filters
+        </p>
+        <p-button [outlined]="true" (click)="clearAllFilters()" label="Clear Filters"></p-button>
+      </div>
+
+      <div *ngIf="allCases.length === 0" class="card p-16 text-center">
+        <div class="max-w-md mx-auto">
+          <div
+            class="w-20 h-20 mx-auto mb-6 bg-[rgb(var(--surface-muted))] rounded-full flex items-center justify-center"
+          >
             <svg
-              class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[rgb(var(--text-muted))] pointer-events-none z-10"
+              class="w-10 h-10 text-[rgb(var(--text-muted))]"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -129,392 +302,227 @@ import { ToastService } from '../../shared/services/toast.service';
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
           </div>
-        </div>
-        <div>
-          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Status</label>
-          <select [(ngModel)]="statusFilter" (ngModelChange)="applyFilters()" class="w-full">
-            <option value="">All Statuses</option>
-            <option value="open">Open</option>
-            <option value="pending">Pending</option>
-            <option value="closed">Closed</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Stage</label>
-          <select [(ngModel)]="stageFilter" (ngModelChange)="applyFilters()" class="w-full">
-            <option value="">All Stages</option>
-            <option value="primary">Primary</option>
-            <option value="appeal">Appeal</option>
-            <option value="cassation">Cassation</option>
-            <option value="execution">Execution</option>
-            <option value="settled">Settled</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-            >Legal Status</label
-          >
-          <select [(ngModel)]="legalStatusFilter" (ngModelChange)="applyFilters()" class="w-full">
-            <option value="">All Legal Statuses</option>
-            <option value="0">Normal</option>
-            <option value="1">To Legal Dept</option>
-            <option value="3">In Execution</option>
-            <option value="4">Settled</option>
-          </select>
+          <h3 class="text-lg font-semibold text-[rgb(var(--text))] mb-2">No cases yet</h3>
+          <p class="text-sm text-[rgb(var(--text-muted))] mb-6">
+            Get started by creating your first case
+          </p>
+          <p-button severity="primary" routerLink="/legal/case/new">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Create First Case
+          </p-button>
         </div>
       </div>
-      <div class="mt-4 flex items-center justify-between">
-        <div class="flex items-center gap-4">
-          <div>
-            <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Sort by</label>
-            <select [(ngModel)]="sortBy" (ngModelChange)="applySorting()" class="w-full">
-              <option value="newest">Newest first</option>
-              <option value="oldest">Oldest first</option>
-              <option value="title">Title (A-Z)</option>
-              <option value="client">Client (A-Z)</option>
-              <option value="status">Status</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Per page</label>
-            <select [(ngModel)]="itemsPerPage" (ngModelChange)="applyPagination()" class="w-full">
-              <option value="10">10</option>
-              <option value="20">20</option>
-              <option value="50">50</option>
-              <option value="100">100</option>
-            </select>
-          </div>
-        </div>
-      </div>
-      <div
-        *ngIf="searchQuery || statusFilter || stageFilter || legalStatusFilter"
-        class="mt-4 flex items-center gap-2 flex-wrap"
-      >
-        <span class="text-sm text-[rgb(var(--text-muted))]">Active filters:</span>
-        <span
-          *ngIf="searchQuery"
-          class="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium"
-        >
-          Search: "{{ searchQuery }}"
-          <button (click)="clearSearch()" class="hover:text-blue-900">
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </span>
-        <span
-          *ngIf="statusFilter"
-          class="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium"
-        >
-          Status: {{ statusFilter | titlecase }}
-          <button (click)="clearStatusFilter()" class="hover:text-blue-900">
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </span>
-        <span
-          *ngIf="stageFilter"
-          class="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium"
-        >
-          Stage: {{ stageFilter | titlecase }}
-          <button (click)="clearStageFilter()" class="hover:text-blue-900">
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </span>
-        <span
-          *ngIf="legalStatusFilter"
-          class="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium"
-        >
-          Legal: {{ getLegalStatusFilterLabel() }}
-          <button (click)="clearLegalStatusFilter()" class="hover:text-blue-900">
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </span>
-        <button
-          (click)="clearAllFilters()"
-          class="text-sm text-[rgb(var(--primary))] hover:underline font-medium"
-        >
-          Clear all
-        </button>
-      </div>
-    </div>
 
-    <div *ngIf="filteredCases.length === 0 && allCases.length > 0" class="card p-16 text-center">
-      <h3 class="text-lg font-semibold text-[rgb(var(--text))] mb-2">
-        No cases match your filters
-      </h3>
-      <p class="text-sm text-[rgb(var(--text-muted))] mb-6">Try adjusting your search or filters</p>
-      <p-button [outlined]="true" (click)="clearAllFilters()" label="Clear Filters"></p-button>
-    </div>
-
-    <div *ngIf="allCases.length === 0" class="card p-16 text-center">
-      <div class="max-w-md mx-auto">
+      <div class="grid grid-cols-1 gap-6" *ngIf="paginatedCases.length > 0">
         <div
-          class="w-20 h-20 mx-auto mb-6 bg-[rgb(var(--surface-muted))] rounded-full flex items-center justify-center"
+          *ngFor="let case of paginatedCases; trackBy: trackByCaseId"
+          class="card p-6 group relative overflow-hidden"
+          [class.cursor-pointer]="!showBulkActions"
+          [class.cursor-default]="showBulkActions"
         >
-          <svg
-            class="w-10 h-10 text-[rgb(var(--text-muted))]"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          <div class="flex items-start gap-4">
+            <input
+              *ngIf="showBulkActions"
+              type="checkbox"
+              [checked]="selectedCases.has(case.id)"
+              (change)="toggleCaseSelection(case.id)"
+              class="mt-1 w-4 h-4"
+              (click)="$event.stopPropagation()"
             />
-          </svg>
-        </div>
-        <h3 class="text-lg font-semibold text-[rgb(var(--text))] mb-2">No cases yet</h3>
-        <p class="text-sm text-[rgb(var(--text-muted))] mb-6">
-          Get started by creating your first case
-        </p>
-        <p-button severity="primary" routerLink="/legal/case/new">
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-          Create First Case
-        </p-button>
-      </div>
-    </div>
-
-    <div class="grid grid-cols-1 gap-6" *ngIf="paginatedCases.length > 0">
-      <div
-        *ngFor="let case of paginatedCases"
-        class="card p-6 group relative overflow-hidden"
-        [class.cursor-pointer]="!showBulkActions"
-        [class.cursor-default]="showBulkActions"
-      >
-        <div class="flex items-start gap-4">
-          <input
-            *ngIf="showBulkActions"
-            type="checkbox"
-            [checked]="selectedCases.has(case.id)"
-            (change)="toggleCaseSelection(case.id)"
-            class="mt-1 w-4 h-4"
-            (click)="$event.stopPropagation()"
-          />
-          <div class="flex-1 relative">
-            <a
-              [routerLink]="['/legal/case', case.id]"
-              class="block"
-              (click)="showBulkActions ? $event.preventDefault() : null"
-            >
-              <div class="flex items-start justify-between relative z-10">
-                <div class="flex-1">
-                  <div class="flex items-center gap-3 mb-3">
-                    <h3
-                      class="text-xl font-bold text-[rgb(var(--text))] group-hover:text-[rgb(var(--primary))] transition-colors"
-                    >
-                      {{ case.title }}
-                    </h3>
-                    <span
-                      *ngIf="case.caseNumber || case.baseCaseNumber"
-                      class="px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-300 font-mono shadow-sm"
-                      title="Case Number"
-                    >
-                      #{{ case.caseNumber || case.baseCaseNumber }}
-                    </span>
-                    <span
-                      class="px-3 py-1 rounded-full text-xs font-semibold shadow-sm"
-                      [class.bg-emerald-50]="case.status === 'open'"
-                      [class.text-emerald-700]="case.status === 'open'"
-                      [class.border]="case.status === 'open'"
-                      [class.border-emerald-200]="case.status === 'open'"
-                      [class.bg-amber-50]="case.status === 'pending'"
-                      [class.text-amber-700]="case.status === 'pending'"
-                      [class.border]="case.status === 'pending'"
-                      [class.border-amber-200]="case.status === 'pending'"
-                      [class.bg-slate-50]="case.status === 'closed'"
-                      [class.text-slate-700]="case.status === 'closed'"
-                      [class.border]="case.status === 'closed'"
-                      [class.border-slate-200]="case.status === 'closed'"
-                    >
-                      {{ case.status | titlecase }}
-                    </span>
-                    <span
-                      class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 shadow-sm"
-                      *ngIf="case.stage"
-                    >
-                      {{ case.stage | titlecase }}
-                    </span>
-                    <span
-                      class="px-3 py-1 rounded-full text-xs font-semibold shadow-sm"
-                      *ngIf="case.legalStatus !== undefined"
-                      [class.bg-gray-100]="case.legalStatus === 0"
-                      [class.text-gray-800]="case.legalStatus === 0"
-                      [class.bg-blue-100]="case.legalStatus === 1"
-                      [class.text-blue-800]="case.legalStatus === 1"
-                      [class.bg-yellow-100]="case.legalStatus === 3"
-                      [class.text-yellow-800]="case.legalStatus === 3"
-                      [class.bg-emerald-100]="case.legalStatus === 4"
-                      [class.text-emerald-800]="case.legalStatus === 4"
-                      [class.border]="true"
-                      [class.border-gray-300]="case.legalStatus === 0"
-                      [class.border-blue-300]="case.legalStatus === 1"
-                      [class.border-yellow-300]="case.legalStatus === 3"
-                      [class.border-emerald-300]="case.legalStatus === 4"
-                      title="Legal Status"
-                    >
-                      {{ getLegalStatusLabel(case.legalStatus) }}
-                    </span>
-                    <span
-                      *ngIf="case.settledStatus === 2"
-                      class="px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-300 shadow-sm"
-                    >
-                      Legally Settled
-                    </span>
+            <div class="flex-1 relative">
+              <a
+                [routerLink]="['/legal/case', case.id]"
+                class="block"
+                (click)="showBulkActions ? $event.preventDefault() : null"
+              >
+                <div class="flex items-start justify-between relative z-10">
+                  <div class="flex-1">
+                    <div class="flex items-center gap-3 mb-3">
+                      <h3
+                        class="text-xl font-bold text-[rgb(var(--text))] group-hover:text-[rgb(var(--primary))] transition-colors"
+                      >
+                        {{ case.title }}
+                      </h3>
+                      <span
+                        *ngIf="case.caseNumber || case.baseCaseNumber"
+                        class="px-3 py-1 rounded-full text-xs font-semibold bg-[rgb(var(--surface-muted))] text-[rgb(var(--text))] border border-[rgb(var(--border))] font-mono"
+                        title="Case Number"
+                      >
+                        #{{ case.caseNumber || case.baseCaseNumber }}
+                      </span>
+                      <span
+                        class="px-3 py-1 rounded-full text-xs font-semibold border"
+                        [class.bg-[rgb(var(--tint-success-bg))]]="case.status === 'open'"
+                        [class.text-[rgb(var(--tint-success-fg))]]="case.status === 'open'"
+                        [class.border-[rgb(var(--success))]]="case.status === 'open'"
+                        [class.bg-[rgb(var(--tint-warning-bg))]]="case.status === 'pending'"
+                        [class.text-[rgb(var(--tint-warning-fg))]]="case.status === 'pending'"
+                        [class.border-[rgb(var(--warning))]]="case.status === 'pending'"
+                        [class.bg-[rgb(var(--surface-muted))]]="case.status === 'closed'"
+                        [class.text-[rgb(var(--text-muted))]]="case.status === 'closed'"
+                        [class.border-[rgb(var(--border))]]="case.status === 'closed'"
+                      >
+                        {{ case.status | titlecase }}
+                      </span>
+                      <span
+                        class="px-3 py-1 rounded-full text-xs font-semibold bg-info-muted text-[rgb(var(--primary))] border border-info"
+                        *ngIf="case.stage"
+                      >
+                        {{ case.stage | titlecase }}
+                      </span>
+                      <span
+                        class="px-3 py-1 rounded-full text-xs font-semibold border"
+                        *ngIf="case.legalStatus !== undefined"
+                        [class.bg-[rgb(var(--tint-neutral-bg))]]="case.legalStatus === 0"
+                        [class.text-[rgb(var(--tint-neutral-fg))]]="case.legalStatus === 0"
+                        [class.border-[rgb(var(--border))]]="case.legalStatus === 0"
+                        [class.bg-info-muted]="case.legalStatus === 1"
+                        [class.text-info-fg]="case.legalStatus === 1"
+                        [class.border-info]="case.legalStatus === 1"
+                        [class.bg-[rgb(var(--tint-warning-bg))]]="case.legalStatus === 3"
+                        [class.text-[rgb(var(--tint-warning-fg))]]="case.legalStatus === 3"
+                        [class.border-[rgb(var(--warning))]]="case.legalStatus === 3"
+                        [class.bg-[rgb(var(--tint-success-bg))]]="case.legalStatus === 4"
+                        [class.text-[rgb(var(--tint-success-fg))]]="case.legalStatus === 4"
+                        [class.border-[rgb(var(--success))]]="case.legalStatus === 4"
+                        title="Legal Status"
+                      >
+                        {{ getLegalStatusLabel(case.legalStatus) }}
+                      </span>
+                      <span
+                        *ngIf="case.settledStatus === 2"
+                        class="px-3 py-1 rounded-full text-xs font-semibold bg-[rgb(var(--tint-accent-bg))] text-[rgb(var(--tint-accent-fg))] border border-info"
+                      >
+                        Legally Settled
+                      </span>
+                    </div>
+                    <div class="mb-3">
+                      <app-case-workflow
+                        [currentStage]="case.stage || 'primary'"
+                        mode="compact"
+                      ></app-case-workflow>
+                    </div>
+                    <p class="text-sm text-[rgb(var(--text-muted))] mb-4 font-medium">
+                      Client: <span class="text-[rgb(var(--text))]">{{ case.client }}</span>
+                    </p>
+                    <div class="flex items-center gap-6 text-sm text-[rgb(var(--text-muted))]">
+                      <span *ngIf="case.tasks.length > 0" class="flex items-center gap-1.5">
+                        <svg
+                          class="w-4 h-4 text-[rgb(var(--primary))]"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                          />
+                        </svg>
+                        <span class="font-medium">{{ case.tasks.length }} tasks</span>
+                      </span>
+                      <span *ngIf="case.deadlines.length > 0" class="flex items-center gap-1.5">
+                        <svg
+                          class="w-4 h-4 text-[rgb(var(--primary))]"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                        <span class="font-medium">{{ case.deadlines.length }} deadlines</span>
+                      </span>
+                      <span *ngIf="case.rulings && case.rulings.length > 0">
+                        <svg
+                          class="w-4 h-4 inline mr-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                        {{ case.rulings.length }} rulings
+                      </span>
+                    </div>
                   </div>
-                  <div class="mb-3">
-                    <app-case-workflow
-                      [currentStage]="case.stage || 'primary'"
-                      mode="compact"
-                    ></app-case-workflow>
-                  </div>
-                  <p class="text-sm text-[rgb(var(--text-muted))] mb-4 font-medium">
-                    Client: <span class="text-[rgb(var(--text))]">{{ case.client }}</span>
-                  </p>
-                  <div class="flex items-center gap-6 text-sm text-[rgb(var(--text-muted))]">
-                    <span *ngIf="case.tasks.length > 0" class="flex items-center gap-1.5">
-                      <svg
-                        class="w-4 h-4 text-[rgb(var(--primary))]"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                        />
-                      </svg>
-                      <span class="font-medium">{{ case.tasks.length }} tasks</span>
-                    </span>
-                    <span *ngIf="case.deadlines.length > 0" class="flex items-center gap-1.5">
-                      <svg
-                        class="w-4 h-4 text-[rgb(var(--primary))]"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                      <span class="font-medium">{{ case.deadlines.length }} deadlines</span>
-                    </span>
-                    <span *ngIf="case.rulings && case.rulings.length > 0">
-                      <svg
-                        class="w-4 h-4 inline mr-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
-                      {{ case.rulings.length }} rulings
-                    </span>
+                  <div class="text-right">
+                    <p class="text-xs text-[rgb(var(--text-muted))]">
+                      Updated {{ case.updatedAt | relativeDate }}
+                    </p>
+                    <p class="text-xs text-[rgb(var(--text-muted))] mt-1">
+                      {{ case.updatedAt | date: 'shortDate' }}
+                    </p>
                   </div>
                 </div>
-                <div class="text-right">
-                  <p class="text-xs text-[rgb(var(--text-muted))]">
-                    Updated {{ case.updatedAt | relativeDate }}
-                  </p>
-                  <p class="text-xs text-[rgb(var(--text-muted))] mt-1">
-                    {{ case.updatedAt | date: 'shortDate' }}
-                  </p>
-                </div>
-              </div>
-            </a>
+              </a>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Pagination -->
-    <div *ngIf="totalPages > 1" class="mt-6 flex items-center justify-between">
-      <div class="text-sm text-[rgb(var(--text-muted))]">
-        Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to
-        {{ Math.min(currentPage * itemsPerPage, filteredCases.length) }} of
-        {{ filteredCases.length }} cases
-      </div>
-      <div class="flex items-center gap-2">
-        <p-button
-          [outlined]="true"
-          (click)="goToPage(currentPage - 1)"
-          [disabled]="currentPage === 1"
-        >
-          Previous
-        </p-button>
-        <div class="flex items-center gap-1">
-          <button
-            *ngFor="let page of getPageNumbers()"
-            (click)="goToPage(page)"
-            class="px-3 py-1 rounded text-sm font-medium transition-colors"
-            [class.bg-[rgb(var(--primary))]]="page === currentPage"
-            [class.text-[rgb(var(--text-inverse))]]="page === currentPage"
-            [class.text-[rgb(var(--text))]]="page !== currentPage"
-            [class.hover:bg-[rgb(var(--surface-muted))]]="page !== currentPage"
-          >
-            {{ page }}
-          </button>
+      <!-- Pagination -->
+      <div *ngIf="totalPages > 1" class="flex items-center justify-between">
+        <div class="text-sm text-[rgb(var(--text-muted))]">
+          Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to
+          {{ Math.min(currentPage * itemsPerPage, filteredCases.length) }} of
+          {{ filteredCases.length }} cases
         </div>
-        <p-button
-          [outlined]="true"
-          (click)="goToPage(currentPage + 1)"
-          [disabled]="currentPage === totalPages"
-        >
-          Next
-        </p-button>
+        <div class="flex items-center gap-2">
+          <p-button
+            [outlined]="true"
+            (click)="goToPage(currentPage - 1)"
+            [disabled]="currentPage === 1"
+          >
+            Previous
+          </p-button>
+          <div class="flex items-center gap-1">
+            <button
+              *ngFor="let page of getPageNumbers(); trackBy: trackByPage"
+              (click)="goToPage(page)"
+              class="px-3 py-1 rounded text-sm font-medium transition-colors"
+              [class.bg-[rgb(var(--primary))]]="page === currentPage"
+              [class.text-[rgb(var(--text-inverse))]]="page === currentPage"
+              [class.text-[rgb(var(--text))]]="page !== currentPage"
+              [class.hover:bg-[rgb(var(--surface-muted))]]="page !== currentPage"
+            >
+              {{ page }}
+            </button>
+          </div>
+          <p-button
+            [outlined]="true"
+            (click)="goToPage(currentPage + 1)"
+            [disabled]="currentPage === totalPages"
+          >
+            Next
+          </p-button>
+        </div>
       </div>
     </div>
   `,
 })
-export class CasesListComponent implements OnInit, OnDestroy {
+export class CasesListComponent {
   getLegalStatusLabel(legalStatus?: number): string {
     const status = legalStatus ?? 1; // Default to 1 (To Legal Department)
     switch (status) {
@@ -549,20 +557,20 @@ export class CasesListComponent implements OnInit, OnDestroy {
   protected selectedCases = new Set<string>();
   protected selectAll = false;
   protected showBulkActions = false;
-  private searchSubject = new Subject<string>();
-  private searchSubscription?: Subscription;
+  private readonly searchSubject = new Subject<string>();
 
-  ngOnInit(): void {
-    // Debounce search input
-    this.searchSubscription = this.searchSubject
-      .pipe(debounceTime(300), distinctUntilChanged())
-      .subscribe(() => {
-        this.applyFilters();
-      });
+  constructor() {
+    this.searchSubject
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
+      .subscribe(() => this.applyFilters());
   }
 
-  ngOnDestroy(): void {
-    this.searchSubscription?.unsubscribe();
+  trackByCaseId(_index: number, c: CaseItem): string {
+    return c.id;
+  }
+
+  trackByPage(_index: number, page: number): number {
+    return page;
   }
 
   onSearchChange(): void {

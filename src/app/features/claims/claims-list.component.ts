@@ -87,7 +87,7 @@ import { ToastService } from '../../shared/services/toast.service';
                 [size]="'small'"
                 [routerLink]="['/legal/case', c.linkedCaseId]"
                 (click)="viewClaim(c)"
-                styleClass="action-button"
+                styleClass="action-button claims-list-action-btn"
               ></p-button>
               <p-button
                 *ngIf="c.legalFlag === 0"
@@ -95,21 +95,21 @@ import { ToastService } from '../../shared/services/toast.service';
                 severity="primary"
                 [size]="'small'"
                 (click)="convert(c)"
-                styleClass="action-button"
+                styleClass="action-button claims-list-action-btn"
               ></p-button>
               <p-button
                 [label]="'View Claim'"
                 severity="primary"
                 [size]="'small'"
                 [routerLink]="['/claims', c.id]"
-                styleClass="action-button"
+                styleClass="action-button claims-list-action-btn"
               ></p-button>
               <p-button
                 [label]="'Business Settlement'"
                 severity="primary"
                 [size]="'small'"
                 (click)="createSettlement(c)"
-                styleClass="action-button"
+                styleClass="action-button claims-list-action-btn"
               ></p-button>
               <span
                 *ngIf="c.unifiedCaseId"

@@ -43,7 +43,9 @@ import { CourtLevel, CourtsService, CourtType } from '../../shared/services/cour
       >
         <div class="flex items-center justify-between mb-2">
           <h3 class="font-semibold text-lg">{{ court.name }}</h3>
-          <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs font-mono">
+          <span
+            class="px-2 py-1 bg-[rgb(var(--surface-muted))] text-[rgb(var(--text))] border border-[rgb(var(--border-light))] rounded text-xs font-mono"
+          >
             {{ court.levels.length }} levels
           </span>
         </div>
@@ -51,7 +53,7 @@ import { CourtLevel, CourtsService, CourtType } from '../../shared/services/cour
           <div class="flex flex-wrap gap-1">
             <span
               *ngFor="let lvl of court.levels"
-              class="px-2 py-0.5 rounded-full text-xs bg-blue-50 text-blue-800 border border-blue-200"
+              class="px-2 py-0.5 rounded-full text-xs bg-info-muted text-info-fg border border-info"
             >
               {{ levelLabel(lvl) }}
             </span>

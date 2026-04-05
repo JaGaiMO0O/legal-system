@@ -50,10 +50,14 @@ import { ArbitrationsService } from '../../shared/services/arbitrations.service'
             {{ arbitration.caseDescription || 'No description' }}
           </h3>
           <div class="flex items-center gap-2 mb-2">
-            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+            <span
+              class="px-2 py-1 bg-info-muted text-info-fg border border-info rounded text-xs font-medium"
+            >
               {{ arbitration.arbitrationRoom }}
             </span>
-            <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs">
+            <span
+              class="px-2 py-1 bg-[rgb(var(--surface-muted))] text-[rgb(var(--text))] border border-[rgb(var(--border-light))] rounded text-xs"
+            >
               {{ arbitration.appealability }}
             </span>
           </div>

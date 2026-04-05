@@ -15,6 +15,8 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(),
     providePrimeNG({
+      ripple: false,
+      inputStyle: 'outlined',
       theme: {
         preset: Aura,
         options: {
