@@ -39,42 +39,43 @@ export class BusinessSettlementService {
 
   private seedData(): void {
     const now = new Date();
+    const toIso = (daysOffset: number) =>
+      new Date(now.getTime() + daysOffset * 24 * 60 * 60 * 1000).toISOString();
     const settlements: BusinessSettlement[] = [
       {
         id: 'settle-1',
-        departmentAmount: 50000,
-        legalDepartmentAmount: 30000,
-        managementAmount: 20000,
-        adversaryAmount: 40000,
-        amountOfAmicableAgreement: 100000,
-        linkedCaseId: 'case-5',
-        createdAt: new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        departmentAmount: 28000,
+        legalDepartmentAmount: 19000,
+        managementAmount: 15000,
+        adversaryAmount: 54000,
+        amountOfAmicableAgreement: 98000,
+        linkedCaseId: 'case-6',
+        createdAt: toIso(-24),
+        updatedAt: toIso(-5),
+      },
+      {
+        id: 'settle-2',
+        departmentAmount: 35000,
+        legalDepartmentAmount: 21000,
+        managementAmount: 11000,
+        adversaryAmount: 87000,
+        amountOfAmicableAgreement: 124000,
+        linkedCaseId: 'case-2',
+        createdAt: toIso(-13),
+        updatedAt: toIso(-2),
+      },
+      {
+        id: 'settle-3',
+        departmentAmount: 16000,
+        legalDepartmentAmount: 14000,
+        managementAmount: 10000,
+        adversaryAmount: 42000,
+        amountOfAmicableAgreement: 68000,
+        linkedCaseId: 'case-3',
+        createdAt: toIso(-7),
+        updatedAt: toIso(-1),
       },
     ];
-
-    // Add more settlements to reach 10 total
-    for (let i = 0; i < 9; i++) {
-      const baseAmount = 50000 + i * 10000;
-      const departmentAmount = baseAmount * 0.4;
-      const legalDepartmentAmount = baseAmount * 0.3;
-      const managementAmount = baseAmount * 0.2;
-      const adversaryAmount = baseAmount * 0.5;
-      const amountOfAmicableAgreement = baseAmount * 1.2;
-      const daysAgo = 60 - i * 5;
-
-      settlements.push({
-        id: `settle-${2 + i}`,
-        departmentAmount: Math.round(departmentAmount),
-        legalDepartmentAmount: Math.round(legalDepartmentAmount),
-        managementAmount: Math.round(managementAmount),
-        adversaryAmount: Math.round(adversaryAmount),
-        amountOfAmicableAgreement: Math.round(amountOfAmicableAgreement),
-        linkedCaseId: i < 5 ? `case-${6 + i}` : undefined,
-        createdAt: new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(now.getTime() - (daysAgo - 3) * 24 * 60 * 60 * 1000).toISOString(),
-      });
-    }
 
     this.storage.set(STORAGE_KEY, settlements);
   }

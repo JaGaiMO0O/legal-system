@@ -1,7 +1,9 @@
 import { Routes } from '@angular/router';
+import { adminGuard } from './core/auth/admin.guard';
+import { authGuard } from './core/auth/auth.guard';
 
-export const routes: Routes = [
-  { path: '', redirectTo: 'legal/dashboard', pathMatch: 'full' },
+const protectedChildRoutes: Routes = [
+  { path: '', pathMatch: 'full', redirectTo: 'legal/dashboard' },
   {
     path: 'legal/dashboard',
     loadComponent: () =>
@@ -22,20 +24,9 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/cases/case-detail.component').then((m) => m.CaseDetailComponent),
   },
-  // Legacy routes for backward compatibility
   { path: 'cases', redirectTo: 'legal/dashboard', pathMatch: 'full' },
   { path: 'cases/new', redirectTo: 'legal/case/new', pathMatch: 'full' },
   { path: 'cases/:id', redirectTo: 'legal/case/:id', pathMatch: 'prefix' },
-  {
-    path: 'claims',
-    loadComponent: () =>
-      import('./features/claims/claims-list.component').then((m) => m.ClaimsListComponent),
-  },
-  {
-    path: 'claims/:id',
-    loadComponent: () =>
-      import('./features/claims/claim-detail.component').then((m) => m.ClaimDetailComponent),
-  },
   {
     path: 'arbitrations',
     loadComponent: () =>
@@ -80,31 +71,37 @@ export const routes: Routes = [
   },
   {
     path: 'courts',
+    canActivate: [adminGuard],
     loadComponent: () =>
       import('./features/courts/courts-list.component').then((m) => m.CourtsListComponent),
   },
   {
     path: 'courts/new',
+    canActivate: [adminGuard],
     loadComponent: () =>
       import('./features/courts/court-detail.component').then((m) => m.CourtDetailComponent),
   },
   {
     path: 'courts/:id',
+    canActivate: [adminGuard],
     loadComponent: () =>
       import('./features/courts/court-detail.component').then((m) => m.CourtDetailComponent),
   },
   {
     path: 'lawyers',
+    canActivate: [adminGuard],
     loadComponent: () =>
       import('./features/lawyers/lawyers-list.component').then((m) => m.LawyersListComponent),
   },
   {
     path: 'lawyers/new',
+    canActivate: [adminGuard],
     loadComponent: () =>
       import('./features/lawyers/lawyer-detail.component').then((m) => m.LawyerDetailComponent),
   },
   {
     path: 'lawyers/:id',
+    canActivate: [adminGuard],
     loadComponent: () =>
       import('./features/lawyers/lawyer-detail.component').then((m) => m.LawyerDetailComponent),
   },
@@ -137,4 +134,18 @@ export const routes: Routes = [
       ),
   },
   { path: '**', redirectTo: 'legal/dashboard' },
+];
+
+export const routes: Routes = [
+  {
+    path: 'login',
+    loadComponent: () => import('./features/auth/login.component').then((m) => m.LoginComponent),
+  },
+  {
+    path: '',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./layout/main-layout.component').then((m) => m.MainLayoutComponent),
+    children: protectedChildRoutes,
+  },
 ];

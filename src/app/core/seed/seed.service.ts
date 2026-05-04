@@ -12,53 +12,27 @@ export class SeedService {
   private readonly audit = inject(AuditService);
 
   run(): void {
-    const markKey = 'seeded-v1';
+    const markKey = 'seeded-v2';
     const already = localStorage.getItem(markKey);
     if (already) return;
 
-    // Seed claims (write directly to storage to avoid circular deps)
-    const claimsKey = 'claims';
-    const existingClaims = this.storage.get<any[]>(claimsKey, []);
-    if ((existingClaims ?? []).length === 0) {
-      const today = new Date();
-      const mkDate = (d: number) =>
-        new Date(today.getTime() - d * 86400000).toISOString().slice(0, 10);
-      const claims = [
-        {
-          id: crypto.randomUUID?.() ?? String(Math.random()),
-          kind: 'motor',
-          reference: 'MTR-2025-001',
-          claimant: 'Adam Green',
-          date: mkDate(2),
-          legalFlag: 0,
-          details: 'Minor collision on highway 1',
-        },
-      ];
-      this.storage.set(claimsKey, claims);
-    }
+    // Force reset once so all users receive the new mock dataset.
+    this.storage.clearAll();
+    localStorage.removeItem('seeded-v1');
 
     // Seed court types
     if (this.courts.list().length === 0) {
-      this.courts.create('Civil');
+      this.courts.create('General Civil');
+      this.courts.create('Commercial');
+      this.courts.create('Labor');
       this.courts.create('Criminal', ['primary', 'appeal', 'cassation']);
+      this.courts.create('Execution', ['execution']);
     }
 
-    // Seed cases
-    if (this.cases.list().length === 0) {
-      const c1 = this.cases.create({
-        title: 'Traffic accident claim',
-        client: 'John Doe',
-        tags: ['motor'],
-      });
-      this.cases.addTask(c1.id, 'Collect medical reports');
-      this.cases.addDeadline(
-        c1.id,
-        'First hearing',
-        new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
-      );
-    }
+    // Seed cases via CasesService.seedData()
+    this.cases.list();
 
-    this.audit.record('seed.completed', { version: 'v1' });
+    this.audit.record('seed.completed', { version: 'v2' });
     localStorage.setItem(markKey, '1');
   }
 }

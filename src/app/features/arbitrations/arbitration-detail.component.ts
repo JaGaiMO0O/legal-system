@@ -6,7 +6,11 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ButtonModule } from 'primeng/button';
 import { CalendarModule } from 'primeng/calendar';
 import { CardModule } from 'primeng/card';
-import { Arbitration, ArbitrationsService } from '../../shared/services/arbitrations.service';
+import {
+  Arbitration,
+  ArbitrationHearing,
+  ArbitrationsService,
+} from '../../shared/services/arbitrations.service';
 import { CaseTrackingService } from '../../shared/services/case-tracking.service';
 import { CasesService } from '../../shared/services/cases.service';
 import { Lawyer, LawyersService } from '../../shared/services/lawyers.service';
@@ -145,25 +149,31 @@ import { ToastService } from '../../shared/services/toast.service';
       <p-card>
         <div class="flex items-center justify-between mb-4">
           <h3 class="font-semibold">Hearings</h3>
-          <div class="flex gap-2">
+          <div class="flex gap-2 w-full md:w-auto md:min-w-[28rem]">
             <p-calendar
               [(ngModel)]="newHearingDate"
               dateFormat="dd/mm/yy"
               [showIcon]="true"
-              styleClass="text-sm"
+              styleClass="w-full text-sm"
             ></p-calendar>
             <input
               type="text"
               [(ngModel)]="newHearingRemarks"
               placeholder="Remarks"
-              class="border rounded px-2 py-1 text-sm"
+              class="border rounded px-2 py-1 text-sm flex-1 min-w-0"
             />
             <button class="px-2 py-1 border rounded text-sm" (click)="addHearing()">Add</button>
           </div>
         </div>
+        <input
+          type="search"
+          class="w-full mb-3 text-sm border rounded px-2 py-1.5"
+          [(ngModel)]="hearingTabSearch"
+          placeholder="Filter hearings..."
+        />
         <ul class="space-y-2">
           <li
-            *ngFor="let hearing of arbitration.hearings; trackBy: trackByHearingId"
+            *ngFor="let hearing of filteredHearings(); trackBy: trackByHearingId"
             class="flex items-center justify-between border-b pb-2"
           >
             <div>
@@ -183,6 +193,12 @@ import { ToastService } from '../../shared/services/toast.service';
             class="text-sm text-[rgb(var(--text-muted))]"
           >
             No hearings scheduled
+          </li>
+          <li
+            *ngIf="arbitration.hearings.length > 0 && filteredHearings().length === 0"
+            class="text-sm text-[rgb(var(--text-muted))]"
+          >
+            No hearings match your filter.
           </li>
         </ul>
       </p-card>
@@ -217,10 +233,21 @@ export class ArbitrationDetailComponent {
   private readonly toast = inject(ToastService);
 
   protected arbitration: Arbitration;
-  protected fillingDate: string = '';
-  protected newHearingDate: string = '';
+  protected fillingDate: Date | null = null;
+  protected newHearingDate: Date | null = null;
   protected newHearingRemarks: string = '';
+  protected hearingTabSearch = '';
   protected lawyers: Lawyer[] = [];
+
+  filteredHearings(): ArbitrationHearing[] {
+    const list = this.arbitration.hearings ?? [];
+    const q = this.hearingTabSearch.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter((h) => {
+      const blob = [h.remarks, h.date].filter(Boolean).join(' ').toLowerCase();
+      return blob.includes(q);
+    });
+  }
 
   constructor() {
     this.lawyers = this.lawyersService.list();
@@ -229,7 +256,7 @@ export class ArbitrationDetailComponent {
       const existing = this.arbitrationsService.getById(id);
       if (existing) {
         this.arbitration = { ...existing };
-        this.fillingDate = existing.fillingDate ? existing.fillingDate.split('T')[0] : '';
+        this.fillingDate = existing.fillingDate ? new Date(existing.fillingDate) : null;
       } else {
         this.arbitration = this.createEmptyArbitration();
       }
@@ -257,7 +284,7 @@ export class ArbitrationDetailComponent {
   }
 
   save(): void {
-    this.arbitration.fillingDate = this.fillingDate ? new Date(this.fillingDate).toISOString() : '';
+    this.arbitration.fillingDate = this.fillingDate ? this.fillingDate.toISOString() : '';
 
     if (this.arbitration.id) {
       this.arbitrationsService.update(this.arbitration.id, this.arbitration);
@@ -291,11 +318,11 @@ export class ArbitrationDetailComponent {
   addHearing(): void {
     if (!this.newHearingDate) return;
     this.arbitrationsService.addHearing(this.arbitration.id, {
-      date: new Date(this.newHearingDate).toISOString(),
+      date: this.newHearingDate.toISOString(),
       remarks: this.newHearingRemarks,
     });
     this.arbitration = this.arbitrationsService.getById(this.arbitration.id)!;
-    this.newHearingDate = '';
+    this.newHearingDate = null;
     this.newHearingRemarks = '';
   }
 
@@ -328,6 +355,7 @@ export class ArbitrationDetailComponent {
         client: this.arbitration.companyRepresentative.lawyerName || 'Unknown Client',
         tags: ['arbitration'],
         legalStatus: 1,
+        matterType: 'CommercialContract',
       });
 
       // Link case to arbitration via unifiedCaseId

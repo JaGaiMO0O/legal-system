@@ -79,6 +79,32 @@ export interface DisabilityMetrics {
 
 export type DamageType = 'Fatal' | 'Disability';
 
+export type CaseMatterType =
+  | 'MotorInsurance'
+  | 'CommercialContract'
+  | 'LaborEmployment'
+  | 'RealEstate'
+  | 'CriminalDefense'
+  | 'GeneralCivil';
+
+export const CASE_MATTER_TYPE_LABELS: Record<CaseMatterType, string> = {
+  MotorInsurance: 'Motor / Insurance',
+  CommercialContract: 'Commercial / Contract',
+  LaborEmployment: 'Labor / Employment',
+  RealEstate: 'Real estate',
+  CriminalDefense: 'Criminal defense',
+  GeneralCivil: 'General civil',
+};
+
+export const CASE_MATTER_TYPES: CaseMatterType[] = [
+  'MotorInsurance',
+  'CommercialContract',
+  'LaborEmployment',
+  'RealEstate',
+  'CriminalDefense',
+  'GeneralCivil',
+];
+
 export interface CaseItem {
   id: string;
   title: string;
@@ -107,6 +133,21 @@ export interface CaseItem {
   // Damage type and disability metrics
   damageType?: DamageType;
   disabilityMetrics?: DisabilityMetrics;
+  /** Practice / matter category (distinct from court ruling Plaintiff/Defendant). */
+  matterType?: CaseMatterType;
+  // Matter-specific fields
+  contractReference?: string;
+  disputedAmount?: number;
+  employerName?: string;
+  employeeName?: string;
+  employmentStartDate?: string;
+  propertyAddress?: string;
+  propertyType?: string;
+  titleDeedNumber?: string;
+  offenseType?: string;
+  incidentDate?: string;
+  policeReportNumber?: string;
+  caseSummary?: string;
 }
 
 const STORAGE_KEY = 'cases';
@@ -196,602 +237,344 @@ export class CasesService {
   private seedData(): void {
     const now = new Date();
     const generateId = () => this.generateId();
+    const isoDay = (daysOffset: number) =>
+      new Date(now.getTime() + daysOffset * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const isoDate = (daysOffset: number) =>
+      new Date(now.getTime() + daysOffset * 24 * 60 * 60 * 1000).toISOString();
+
     const cases: CaseItem[] = [
       {
         id: 'case-1',
-        title: 'Traffic Accident Claim - Case #2025-001',
-        client: 'Ahmed Al-Mansouri',
-        claimant: 'Ahmed Al-Mansouri',
+        title: 'Fleet Collision Compensation - Q4/2025',
+        client: 'Nour Logistics Co.',
+        claimant: 'Nour Logistics Co.',
         status: 'open',
         stage: 'primary',
-        caseNumber: '2025003',
-        baseCaseNumber: '2025003',
+        caseNumber: '2026101',
+        baseCaseNumber: '2026101',
         legalStatus: 1,
-        unifiedCaseId: 'uc-1',
-        tags: ['motor', 'accident'],
+        unifiedCaseId: 'uc-1001',
+        matterType: 'MotorInsurance',
+        tags: ['motor', 'insurance'],
         damageType: 'Disability',
-        disabilityMetrics: { moralPercent: 15, physicalPercent: 25 },
+        disabilityMetrics: { moralPercent: 12, physicalPercent: 28 },
         claimantDemographics: {
           nationality: 'Saudi',
           sex: 'Male',
           maritalStatus: 'Married',
-          profession: 'Engineer',
-          age: 35,
-          dependents: 3,
+          profession: 'Fleet Supervisor',
+          age: 39,
+          dependents: 4,
         },
         deadlines: [
-          { id: generateId(), title: 'Submit evidence', date: '2025-01-15' },
-          { id: generateId(), title: 'Court hearing', date: '2025-02-10' },
+          { id: generateId(), title: 'Submit accident reconstruction report', date: isoDay(8) },
         ],
-        tasks: [
-          { id: generateId(), title: 'Review medical reports', done: false },
-          { id: generateId(), title: 'Prepare witness statements', done: true },
-        ],
+        tasks: [{ id: generateId(), title: 'Collect traffic camera records', done: false }],
         developments: [
-          {
-            id: generateId(),
-            date: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Case filed at Primary Court',
-          },
-          {
-            id: generateId(),
-            date: new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Initial hearing scheduled',
-          },
+          { id: generateId(), date: isoDate(-12), note: 'Primary claim bundle filed.' },
         ],
         rulings: [],
-        createdAt: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: isoDate(-25),
+        updatedAt: isoDate(-2),
       },
       {
         id: 'case-2',
-        title: 'Commercial Contract Dispute',
-        client: 'Sara Al-Otaibi',
-        claimant: 'Sara Al-Otaibi',
-        status: 'open',
+        title: 'Software Licensing Breach',
+        client: 'Atlas Digital Solutions',
+        claimant: 'Atlas Digital Solutions',
+        status: 'pending',
         stage: 'appeal',
-        caseNumber: '2025004',
-        baseCaseNumber: '2025004',
+        caseNumber: '2026102',
+        baseCaseNumber: '2026102',
         legalStatus: 1,
-        unifiedCaseId: 'uc-2',
+        unifiedCaseId: 'uc-1002',
+        matterType: 'CommercialContract',
         tags: ['commercial', 'contract'],
-        damageType: 'Fatal',
-        claimantDemographics: {
-          nationality: 'Saudi',
-          sex: 'Female',
-          maritalStatus: 'Single',
-          profession: 'Business Owner',
-          age: 42,
-          dependents: 0,
-        },
-        deadlines: [{ id: generateId(), title: 'Appeal submission', date: '2025-02-20' }],
-        tasks: [
-          { id: generateId(), title: 'Review contract terms', done: true },
-          { id: generateId(), title: 'Prepare appeal documents', done: false },
-        ],
+        contractReference: 'CTR-2026-014',
+        disputedAmount: 420000,
+        deadlines: [{ id: generateId(), title: 'Appeal memorandum filing', date: isoDay(14) }],
+        tasks: [{ id: generateId(), title: 'Review indemnity clauses', done: false }],
         developments: [
-          {
-            id: generateId(),
-            date: new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Case filed at Primary Court',
-          },
-          {
-            id: generateId(),
-            date: new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Primary court ruling issued',
-          },
-          {
-            id: generateId(),
-            date: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Appeal filed',
-          },
+          { id: generateId(), date: isoDate(-40), note: 'Primary judgment partially adverse.' },
         ],
         rulings: [
           {
             id: generateId(),
             stage: 'primary',
-            caseNo: '2025004',
+            caseNo: '2026102',
             caseType: 'Plaintiff',
-            courtType: 'Civil',
+            courtType: 'Commercial',
             courtLevel: 'Primary',
             courtCity: 'Riyadh',
-            caseDetails: 'Contract dispute over payment terms',
-            filingDate: new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-            filingNo: 'F-2025-001',
+            caseDetails: 'Dispute on licensing fee and support obligations.',
+            filingDate: isoDay(-65),
+            filingNo: 'F-2026-201',
             stageNo: 1,
             rulingInFavorOf: 'Adversary',
-            rulingDate: new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-            courtFees: 5000,
-            legalExpenses: 15000,
-            translationCourtFees: 2000,
-            courtFeesInCash: 1000,
-            expertFees: 8000,
-            advocacyFees: 12000,
-            otherExpenses: 3000,
-            adversaryName: 'ABC Trading Company',
-            indemnityByCourtAmount: 150000,
-            date: new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000).toISOString(),
+            rulingDate: isoDay(-40),
+            courtFees: 8500,
+            legalExpenses: 29000,
+            translationCourtFees: 0,
+            courtFeesInCash: 1200,
+            expertFees: 14000,
+            advocacyFees: 22000,
+            otherExpenses: 5000,
+            adversaryName: 'BlueOcean Systems',
+            indemnityByCourtAmount: 75000,
+            date: isoDate(-40),
           },
         ],
-        createdAt: new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: isoDate(-70),
+        updatedAt: isoDate(-3),
       },
       {
         id: 'case-3',
-        title: 'Property Damage Claim',
-        client: 'Mohammed Al-Rashid',
-        claimant: 'Mohammed Al-Rashid',
-        status: 'pending',
-        stage: 'cassation',
-        caseNumber: '2025005',
-        baseCaseNumber: '2025005',
+        title: 'Warehouse Lease Termination Dispute',
+        client: 'Harbor Import Group',
+        claimant: 'Harbor Import Group',
+        status: 'open',
+        stage: 'primary',
+        caseNumber: '2026103',
+        baseCaseNumber: '2026103',
         legalStatus: 1,
-        unifiedCaseId: 'uc-3',
-        tags: ['property', 'damage'],
-        damageType: 'Disability',
-        disabilityMetrics: { moralPercent: 10, physicalPercent: 20 },
-        claimantDemographics: {
-          nationality: 'Saudi',
-          sex: 'Male',
-          maritalStatus: 'Married',
-          profession: 'Teacher',
-          age: 48,
-          dependents: 4,
-        },
-        deadlines: [{ id: generateId(), title: 'Cassation hearing', date: '2025-03-05' }],
-        tasks: [{ id: generateId(), title: 'Finalize cassation arguments', done: false }],
+        unifiedCaseId: 'uc-1003',
+        matterType: 'RealEstate',
+        tags: ['real-estate', 'lease'],
+        propertyAddress: 'Eastern Ring Rd, Warehouse Block C, Riyadh',
+        propertyType: 'Commercial',
+        titleDeedNumber: 'DEED-RE-2026-055',
+        deadlines: [{ id: generateId(), title: 'Submit valuation evidence', date: isoDay(10) }],
+        tasks: [{ id: generateId(), title: 'Obtain notarized lease addendum', done: true }],
         developments: [
-          {
-            id: generateId(),
-            date: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Case filed at Primary Court',
-          },
-          {
-            id: generateId(),
-            date: new Date(now.getTime() - 70 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Primary court ruling',
-          },
-          {
-            id: generateId(),
-            date: new Date(now.getTime() - 50 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Appeal court ruling',
-          },
-          {
-            id: generateId(),
-            date: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Moved to Cassation Court',
-          },
+          { id: generateId(), date: isoDate(-18), note: 'Notice of termination challenged.' },
         ],
-        rulings: [
-          {
-            id: generateId(),
-            stage: 'primary',
-            caseNo: '2025005',
-            caseType: 'Defendant',
-            courtType: 'Civil',
-            courtLevel: 'Primary',
-            courtCity: 'Jeddah',
-            caseDetails: 'Property damage from construction',
-            filingDate: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-            filingNo: 'F-2025-002',
-            stageNo: 1,
-            rulingInFavorOf: 'Company',
-            rulingDate: new Date(now.getTime() - 70 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-            courtFees: 3000,
-            legalExpenses: 10000,
-            translationCourtFees: 1500,
-            courtFeesInCash: 500,
-            expertFees: 5000,
-            advocacyFees: 8000,
-            otherExpenses: 2000,
-            adversaryName: 'XYZ Construction',
-            indemnityByCourtAmount: 0,
-            date: new Date(now.getTime() - 70 * 24 * 60 * 60 * 1000).toISOString(),
-          },
-          {
-            id: generateId(),
-            stage: 'appeal',
-            caseNo: '202500501',
-            caseType: 'Defendant',
-            courtType: 'Civil',
-            courtLevel: 'Appeal',
-            courtCity: 'Jeddah',
-            caseDetails: 'Appeal of primary court ruling',
-            filingDate: new Date(now.getTime() - 55 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-            filingNo: 'F-2025-003',
-            stageNo: 2,
-            rulingInFavorOf: 'Company',
-            rulingDate: new Date(now.getTime() - 50 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-            courtFees: 4000,
-            legalExpenses: 12000,
-            translationCourtFees: 2000,
-            courtFeesInCash: 1000,
-            expertFees: 6000,
-            advocacyFees: 10000,
-            otherExpenses: 2500,
-            adversaryName: 'XYZ Construction',
-            indemnityByCourtAmount: 0,
-            date: new Date(now.getTime() - 50 * 24 * 60 * 60 * 1000).toISOString(),
-          },
-        ],
-        createdAt: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        rulings: [],
+        createdAt: isoDate(-22),
+        updatedAt: isoDate(-1),
       },
       {
         id: 'case-4',
-        title: 'Workplace Injury Case',
-        client: 'Fatima Al-Zahra',
-        claimant: 'Fatima Al-Zahra',
-        status: 'open',
-        stage: 'execution',
-        caseNumber: '2025006',
-        baseCaseNumber: '2025006',
-        legalStatus: 3,
-        unifiedCaseId: 'uc-4',
-        tags: ['workplace', 'injury'],
-        damageType: 'Disability',
-        disabilityMetrics: { moralPercent: 20, physicalPercent: 30 },
-        claimantDemographics: {
-          nationality: 'Saudi',
-          sex: 'Female',
-          maritalStatus: 'Married',
-          profession: 'Nurse',
-          age: 38,
-          dependents: 2,
-        },
-        deadlines: [],
-        tasks: [{ id: generateId(), title: 'Monitor payment execution', done: false }],
+        title: 'Unpaid Overtime and End-of-Service Claim',
+        client: 'Safa Healthcare',
+        claimant: 'Leena Al-Harthi',
+        status: 'pending',
+        stage: 'cassation',
+        caseNumber: '2026104',
+        baseCaseNumber: '2026104',
+        legalStatus: 1,
+        unifiedCaseId: 'uc-1004',
+        matterType: 'LaborEmployment',
+        tags: ['labor', 'employment'],
+        employerName: 'Safa Healthcare',
+        employeeName: 'Leena Al-Harthi',
+        employmentStartDate: '2018-09-01',
+        deadlines: [{ id: generateId(), title: 'Cassation brief deadline', date: isoDay(12) }],
+        tasks: [{ id: generateId(), title: 'Reconcile payroll export', done: false }],
         developments: [
-          {
-            id: generateId(),
-            date: new Date(now.getTime() - 120 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Case filed at Primary Court',
-          },
-          {
-            id: generateId(),
-            date: new Date(now.getTime() - 100 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Primary court ruling',
-          },
-          {
-            id: generateId(),
-            date: new Date(now.getTime() - 80 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Appeal court ruling',
-          },
-          {
-            id: generateId(),
-            date: new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Cassation court ruling',
-          },
-          {
-            id: generateId(),
-            date: new Date(now.getTime() - 40 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Moved to Execution Court',
-          },
+          { id: generateId(), date: isoDate(-55), note: 'Appeal court adjusted compensation.' },
         ],
         rulings: [
           {
             id: generateId(),
             stage: 'primary',
-            caseNo: '2025006',
-            caseType: 'Plaintiff',
+            caseNo: '2026104',
+            caseType: 'Defendant',
             courtType: 'Labor',
             courtLevel: 'Primary',
-            courtCity: 'Riyadh',
-            caseDetails: 'Workplace injury claim',
-            filingDate: new Date(now.getTime() - 120 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-            filingNo: 'F-2025-004',
+            courtCity: 'Jeddah',
+            caseDetails: 'Overtime compensation and leave balance dispute.',
+            filingDate: isoDay(-120),
+            filingNo: 'F-2026-178',
             stageNo: 1,
             rulingInFavorOf: 'Adversary',
-            rulingDate: new Date(now.getTime() - 100 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-            courtFees: 6000,
-            legalExpenses: 18000,
-            translationCourtFees: 2500,
-            courtFeesInCash: 1500,
-            expertFees: 10000,
-            advocacyFees: 15000,
-            otherExpenses: 4000,
-            adversaryName: 'Fatima Al-Zahra',
-            indemnityByCourtAmount: 200000,
-            date: new Date(now.getTime() - 100 * 24 * 60 * 60 * 1000).toISOString(),
+            rulingDate: isoDay(-88),
+            courtFees: 4100,
+            legalExpenses: 14000,
+            translationCourtFees: 0,
+            courtFeesInCash: 600,
+            expertFees: 6500,
+            advocacyFees: 9700,
+            otherExpenses: 2800,
+            adversaryName: 'Leena Al-Harthi',
+            indemnityByCourtAmount: 96000,
+            date: isoDate(-88),
           },
           {
             id: generateId(),
             stage: 'appeal',
-            caseNo: '202500601',
-            caseType: 'Plaintiff',
+            caseNo: '202610401',
+            caseType: 'Defendant',
             courtType: 'Labor',
             courtLevel: 'Appeal',
-            courtCity: 'Riyadh',
-            caseDetails: 'Appeal of primary ruling',
-            filingDate: new Date(now.getTime() - 85 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-            filingNo: 'F-2025-005',
+            courtCity: 'Jeddah',
+            caseDetails: 'Appeal on overtime computation method.',
+            filingDate: isoDay(-80),
+            filingNo: 'F-2026-199',
             stageNo: 2,
             rulingInFavorOf: 'Adversary',
-            rulingDate: new Date(now.getTime() - 80 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-            courtFees: 7000,
-            legalExpenses: 20000,
-            translationCourtFees: 3000,
-            courtFeesInCash: 2000,
-            expertFees: 12000,
-            advocacyFees: 18000,
-            otherExpenses: 5000,
-            adversaryName: 'Fatima Al-Zahra',
-            indemnityByCourtAmount: 250000,
-            date: new Date(now.getTime() - 80 * 24 * 60 * 60 * 1000).toISOString(),
-          },
-          {
-            id: generateId(),
-            stage: 'cassation',
-            caseNo: '202500602',
-            caseType: 'Plaintiff',
-            courtType: 'Labor',
-            courtLevel: 'Cassation',
-            courtCity: 'Riyadh',
-            caseDetails: 'Cassation review',
-            filingDate: new Date(now.getTime() - 65 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-            filingNo: 'F-2025-006',
-            stageNo: 3,
-            rulingInFavorOf: 'Adversary',
-            rulingDate: new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-            courtFees: 8000,
-            legalExpenses: 22000,
-            translationCourtFees: 3500,
-            courtFeesInCash: 2500,
-            expertFees: 15000,
-            advocacyFees: 20000,
-            otherExpenses: 6000,
-            adversaryName: 'Fatima Al-Zahra',
-            indemnityByCourtAmount: 280000,
-            date: new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString(),
+            rulingDate: isoDay(-55),
+            courtFees: 5200,
+            legalExpenses: 16800,
+            translationCourtFees: 0,
+            courtFeesInCash: 800,
+            expertFees: 8400,
+            advocacyFees: 11800,
+            otherExpenses: 3200,
+            adversaryName: 'Leena Al-Harthi',
+            indemnityByCourtAmount: 122000,
+            date: isoDate(-55),
           },
         ],
-        createdAt: new Date(now.getTime() - 120 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(now.getTime() - 40 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: isoDate(-130),
+        updatedAt: isoDate(-4),
       },
       {
         id: 'case-5',
-        title: 'Medical Malpractice Claim',
-        client: 'Khalid Al-Mutairi',
-        claimant: 'Khalid Al-Mutairi',
+        title: 'Financial Fraud Defense - Executive File',
+        client: 'Salem Al-Faraj',
+        claimant: 'Public Prosecution',
+        status: 'open',
+        stage: 'primary',
+        caseNumber: '2026105',
+        baseCaseNumber: '2026105',
+        legalStatus: 1,
+        unifiedCaseId: 'uc-1005',
+        matterType: 'CriminalDefense',
+        tags: ['criminal', 'defense'],
+        offenseType: 'Financial Fraud Allegation',
+        incidentDate: isoDay(-95),
+        policeReportNumber: 'PR-2026-4401',
+        deadlines: [
+          { id: generateId(), title: 'Submit forensic accounting rebuttal', date: isoDay(6) },
+        ],
+        tasks: [{ id: generateId(), title: 'Review seizure warrant timeline', done: false }],
+        developments: [{ id: generateId(), date: isoDate(-10), note: 'Charge sheet disclosed.' }],
+        rulings: [],
+        createdAt: isoDate(-36),
+        updatedAt: isoDate(-1),
+      },
+      {
+        id: 'case-6',
+        title: 'General Civil Damages - Vendor Negligence',
+        client: 'Al Noor Trading',
+        claimant: 'Al Noor Trading',
         status: 'closed',
         stage: 'settled',
-        caseNumber: '2025007',
-        baseCaseNumber: '2025007',
+        caseNumber: '2026106',
+        baseCaseNumber: '2026106',
         legalStatus: 4,
         settledStatus: 2,
-        unifiedCaseId: 'uc-5',
-        tags: ['medical', 'malpractice'],
-        damageType: 'Fatal',
-        claimantDemographics: {
-          nationality: 'Saudi',
-          sex: 'Male',
-          maritalStatus: 'Widowed',
-          profession: 'Retired',
-          age: 65,
-          dependents: 0,
-        },
+        unifiedCaseId: 'uc-1006',
+        matterType: 'GeneralCivil',
+        tags: ['general-civil'],
+        caseSummary: 'Claim for business interruption damages resolved by amicable settlement.',
         deadlines: [],
         tasks: [],
         developments: [
-          {
-            id: generateId(),
-            date: new Date(now.getTime() - 150 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Case filed at Primary Court',
-          },
-          {
-            id: generateId(),
-            date: new Date(now.getTime() - 130 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Primary court ruling',
-          },
-          {
-            id: generateId(),
-            date: new Date(now.getTime() - 100 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Case settled out of court',
-          },
-          {
-            id: generateId(),
-            date: new Date(now.getTime() - 95 * 24 * 60 * 60 * 1000).toISOString(),
-            note: 'Case marked as legally settled',
-          },
+          { id: generateId(), date: isoDate(-20), note: 'Amicable settlement signed.' },
         ],
-        rulings: [
-          {
-            id: generateId(),
-            stage: 'primary',
-            caseNo: '2025007',
-            caseType: 'Plaintiff',
-            courtType: 'Civil',
-            courtLevel: 'Primary',
-            courtCity: 'Dammam',
-            caseDetails: 'Medical malpractice claim',
-            filingDate: new Date(now.getTime() - 150 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-            filingNo: 'F-2025-007',
-            stageNo: 1,
-            rulingInFavorOf: 'Adversary',
-            rulingDate: new Date(now.getTime() - 130 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-            courtFees: 10000,
-            legalExpenses: 25000,
-            translationCourtFees: 4000,
-            courtFeesInCash: 3000,
-            expertFees: 20000,
-            advocacyFees: 25000,
-            otherExpenses: 8000,
-            adversaryName: 'Khalid Al-Mutairi',
-            indemnityByCourtAmount: 500000,
-            date: new Date(now.getTime() - 130 * 24 * 60 * 60 * 1000).toISOString(),
-          },
-        ],
-        createdAt: new Date(now.getTime() - 150 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(now.getTime() - 95 * 24 * 60 * 60 * 1000).toISOString(),
+        rulings: [],
+        createdAt: isoDate(-90),
+        updatedAt: isoDate(-20),
       },
     ];
 
-    // Add more cases to reach 25 total
-    const additionalCases: CaseItem[] = [];
+    const extraMatterTypes: CaseMatterType[] = [
+      'MotorInsurance',
+      'CommercialContract',
+      'LaborEmployment',
+      'RealEstate',
+      'CriminalDefense',
+      'GeneralCivil',
+    ];
     const clients = [
-      'Omar Al-Harbi',
-      'Layla Al-Ghamdi',
-      'Yousef Al-Shehri',
-      'Noura Al-Qahtani',
-      'Faisal Al-Dosari',
-      'Hanan Al-Mazrouei',
-      'Sultan Al-Otaibi',
-      'Reem Al-Shammari',
-      'Bandar Al-Mutlaq',
-      'Maha Al-Fahad',
-      'Nasser Al-Subaie',
-      'Amal Al-Harbi',
-      'Turki Al-Rashid',
-      'Hala Al-Zahrani',
-      'Majed Al-Omari',
-      'Lina Al-Shamrani',
-      'Khalid Al-Mutairi',
-      'Rana Al-Dosari',
-      'Saad Al-Ghamdi',
-      'Dina Al-Shehri',
+      'Arabia Retail Group',
+      'Horizon Freight',
+      'Crescent Hospitality',
+      'Najd Properties',
+      'Falcon Manufacturing',
+      'Bayan Tech',
     ];
-    const stages: CaseStage[] = ['primary', 'appeal', 'cassation', 'execution', 'settled'];
-    const statuses: CaseStatus[] = ['open', 'pending', 'closed'];
-    const damageTypes: DamageType[] = ['Fatal', 'Disability'];
-    const nationalities = ['Saudi', 'Egyptian', 'Jordanian', 'Lebanese', 'Syrian'];
-    const professions = [
-      'Engineer',
-      'Doctor',
-      'Teacher',
-      'Business Owner',
-      'Government Employee',
-      'Retired',
-    ];
-    const maritalStatuses = ['Single', 'Married', 'Divorced', 'Widowed'];
 
-    for (let i = 0; i < 20; i++) {
-      const caseNum = 2025008 + i;
-      const stage = stages[i % stages.length];
-      const status = stage === 'settled' ? 'closed' : statuses[i % statuses.length];
-      const legalStatus = stage === 'execution' ? 3 : stage === 'settled' ? 4 : 1;
-      const damageType = damageTypes[i % damageTypes.length];
-      const client = clients[i % clients.length];
-      const daysAgo = 180 - i * 7;
-
-      additionalCases.push({
-        id: `case-${6 + i}`,
-        title: `Legal Case ${caseNum}`,
-        client,
-        claimant: client,
-        status,
+    for (let i = 0; i < 10; i++) {
+      const matterType = extraMatterTypes[i % extraMatterTypes.length];
+      const seq = 107 + i;
+      const stage: CaseStage = i % 4 === 0 ? 'appeal' : i % 5 === 0 ? 'execution' : 'primary';
+      const legalStatus = stage === 'execution' ? 3 : 1;
+      const base: CaseItem = {
+        id: `case-${7 + i}`,
+        title: `${CASE_MATTER_TYPE_LABELS[matterType]} Matter ${seq}`,
+        client: clients[i % clients.length],
+        claimant: clients[i % clients.length],
+        status: i % 3 === 0 ? 'pending' : 'open',
         stage,
-        caseNumber: caseNum.toString(),
-        baseCaseNumber: caseNum.toString(),
+        caseNumber: `2026${seq}`,
+        baseCaseNumber: `2026${seq}`,
         legalStatus,
-        settledStatus: stage === 'settled' ? 2 : undefined,
-        unifiedCaseId: `uc-${6 + i}`,
-        tags: ['general'],
-        damageType,
-        disabilityMetrics:
-          damageType === 'Disability'
-            ? {
-                moralPercent: 10 + (i % 20),
-                physicalPercent: 15 + (i % 25),
-              }
-            : undefined,
-        claimantDemographics: {
-          nationality: nationalities[i % nationalities.length],
-          sex: i % 2 === 0 ? 'Male' : 'Female',
-          maritalStatus: maritalStatuses[i % maritalStatuses.length],
-          profession: professions[i % professions.length],
-          age: 25 + (i % 40),
-          dependents: i % 5,
-        },
-        deadlines:
-          i % 3 === 0
-            ? [
-                {
-                  id: generateId(),
-                  title: `Deadline ${i + 1}`,
-                  date: new Date(now.getTime() + (i + 1) * 7 * 24 * 60 * 60 * 1000)
-                    .toISOString()
-                    .split('T')[0],
-                },
-              ]
-            : [],
-        tasks: [{ id: generateId(), title: `Task ${i + 1}`, done: i % 2 === 0 }],
+        unifiedCaseId: `uc-11${i}`,
+        matterType,
+        tags: ['generated'],
+        deadlines: [{ id: generateId(), title: 'Next procedural filing', date: isoDay(5 + i) }],
+        tasks: [{ id: generateId(), title: 'Prepare hearing bundle', done: i % 2 === 0 }],
         developments: [
-          {
-            id: generateId(),
-            date: new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000).toISOString(),
-            note: `Case ${stage} stage initiated`,
-          },
+          { id: generateId(), date: isoDate(-(i + 3) * 4), note: 'Case activity logged.' },
         ],
-        rulings:
-          stage !== 'primary'
-            ? [
-                {
-                  id: generateId(),
-                  stage: 'primary',
-                  caseNo: caseNum.toString(),
-                  caseType: 'Plaintiff',
-                  courtType: 'Civil',
-                  courtLevel: 'Primary',
-                  courtCity: 'Riyadh',
-                  caseDetails: `Case details for ${caseNum}`,
-                  filingDate: new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000)
-                    .toISOString()
-                    .split('T')[0],
-                  filingNo: `F-2025-${String(8 + i).padStart(3, '0')}`,
-                  stageNo: 1,
-                  rulingInFavorOf: i % 2 === 0 ? 'Company' : 'Adversary',
-                  rulingDate: new Date(now.getTime() - (daysAgo - 20) * 24 * 60 * 60 * 1000)
-                    .toISOString()
-                    .split('T')[0],
-                  courtFees: 5000 + i * 100,
-                  legalExpenses: 15000 + i * 200,
-                  translationCourtFees: 2000 + i * 50,
-                  courtFeesInCash: 1000 + i * 25,
-                  expertFees: 8000 + i * 150,
-                  advocacyFees: 12000 + i * 180,
-                  otherExpenses: 3000 + i * 75,
-                  adversaryName: client,
-                  indemnityByCourtAmount: i % 2 === 0 ? 0 : 100000 + i * 5000,
-                  date: new Date(
-                    now.getTime() - (daysAgo - 20) * 24 * 60 * 60 * 1000,
-                  ).toISOString(),
-                },
-              ]
-            : [],
-        createdAt: new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(now.getTime() - (daysAgo - 10) * 24 * 60 * 60 * 1000).toISOString(),
-      });
+        rulings: [],
+        createdAt: isoDate(-(i + 8) * 7),
+        updatedAt: isoDate(-(i + 1) * 2),
+      };
+
+      switch (matterType) {
+        case 'MotorInsurance':
+          base.tags = ['motor', 'insurance'];
+          base.damageType = i % 2 === 0 ? 'Disability' : 'Fatal';
+          base.disabilityMetrics =
+            base.damageType === 'Disability'
+              ? { moralPercent: 8 + i, physicalPercent: 14 + i }
+              : undefined;
+          base.claimantDemographics = {
+            nationality: i % 2 === 0 ? 'Saudi' : 'Jordanian',
+            sex: i % 2 === 0 ? 'Male' : 'Female',
+            maritalStatus: i % 2 === 0 ? 'Married' : 'Single',
+            profession: 'Driver',
+            age: 29 + i,
+            dependents: i % 4,
+          };
+          break;
+        case 'CommercialContract':
+          base.tags = ['commercial', 'contract'];
+          base.contractReference = `CTR-2026-${String(300 + i)}`;
+          base.disputedAmount = 90000 + i * 12000;
+          break;
+        case 'LaborEmployment':
+          base.tags = ['labor', 'employment'];
+          base.employerName = clients[i % clients.length];
+          base.employeeName = `Employee ${i + 1}`;
+          base.employmentStartDate = isoDay(-(1200 + i * 15));
+          break;
+        case 'RealEstate':
+          base.tags = ['real-estate', 'property'];
+          base.propertyAddress = `Block ${i + 2}, North District, Riyadh`;
+          base.propertyType = i % 2 === 0 ? 'Residential' : 'Commercial';
+          base.titleDeedNumber = `DEED-2026-${String(500 + i)}`;
+          break;
+        case 'CriminalDefense':
+          base.tags = ['criminal', 'defense'];
+          base.offenseType = i % 2 === 0 ? 'Embezzlement Allegation' : 'Forgery Allegation';
+          base.incidentDate = isoDay(-(140 + i * 3));
+          base.policeReportNumber = `PR-2026-${String(7000 + i)}`;
+          break;
+        case 'GeneralCivil':
+        default:
+          base.tags = ['general-civil'];
+          base.caseSummary = `General civil compensation and liability dispute file ${seq}.`;
+          break;
+      }
+
+      cases.push(base);
     }
 
-    this.storage.set(STORAGE_KEY, [...cases, ...additionalCases]);
+    this.storage.set(STORAGE_KEY, cases);
   }
 
   getById(id: string): CaseItem | undefined {
@@ -808,6 +591,7 @@ export class CasesService {
     legalStatus?: number;
     companyLawyerId?: string;
     companyLawyerName?: string;
+    matterType?: CaseMatterType;
   }): CaseItem {
     // Validate input
     if (!input.title || !input.title.trim()) {
@@ -833,6 +617,7 @@ export class CasesService {
       legalStatus: input.legalStatus ?? 1, // Default to 1 (To Legal Department) when created from claim
       companyLawyerId: input.companyLawyerId,
       companyLawyerName: input.companyLawyerName,
+      matterType: input.matterType ?? 'GeneralCivil',
       tags: input.tags ?? [],
       deadlines: [],
       tasks: [],
@@ -863,6 +648,19 @@ export class CasesService {
         | 'claimantDemographics'
         | 'damageType'
         | 'disabilityMetrics'
+        | 'matterType'
+        | 'contractReference'
+        | 'disputedAmount'
+        | 'employerName'
+        | 'employeeName'
+        | 'employmentStartDate'
+        | 'propertyAddress'
+        | 'propertyType'
+        | 'titleDeedNumber'
+        | 'offenseType'
+        | 'incidentDate'
+        | 'policeReportNumber'
+        | 'caseSummary'
       >
     >,
   ): void {

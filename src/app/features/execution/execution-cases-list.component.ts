@@ -1,34 +1,48 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
-import { ExecutionCasesService } from '../../shared/services/execution-cases.service';
+import {
+  ExecutionCase,
+  ExecutionCasesService,
+} from '../../shared/services/execution-cases.service';
 
 @Component({
   standalone: true,
   selector: 'app-execution-cases-list',
-  imports: [CommonModule, RouterModule, TranslateModule, ButtonModule, CardModule],
+  imports: [CommonModule, FormsModule, RouterModule, TranslateModule, ButtonModule, CardModule],
   template: `
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
       <div>
         <h2 class="text-2xl font-bold text-[rgb(var(--text))]">Execution Cases</h2>
         <p class="text-sm text-[rgb(var(--text-muted))] mt-1">
-          {{ executionCases.length }} {{ executionCases.length === 1 ? 'case' : 'cases' }} total
+          {{ filteredCases().length }} of {{ executionCases.length }}
+          {{ executionCases.length === 1 ? 'case' : 'cases' }}
+          <span *ngIf="searchQuery.trim()">(filtered)</span>
         </p>
       </div>
-      <p-button severity="primary" routerLink="/execution/new">
-        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 4v16m8-8H4"
-          />
-        </svg>
-        Add Execution Case
-      </p-button>
+      <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto md:min-w-[16rem]">
+        <input
+          type="search"
+          class="w-full rounded-input border border-[rgb(var(--border))] px-3 py-2 text-sm bg-[rgb(var(--surface))] text-[rgb(var(--text))]"
+          [(ngModel)]="searchQuery"
+          placeholder="Search case no, lawyer, amounts..."
+        />
+        <p-button severity="primary" routerLink="/execution/new" styleClass="shrink-0">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+          Add
+        </p-button>
+      </div>
     </div>
 
     <div *ngIf="executionCases.length === 0" class="card p-12 text-center">
@@ -36,11 +50,18 @@ import { ExecutionCasesService } from '../../shared/services/execution-cases.ser
     </div>
 
     <div
+      *ngIf="executionCases.length > 0 && filteredCases().length === 0"
+      class="card p-12 text-center"
+    >
+      <p class="text-[rgb(var(--text-muted))]">No execution cases match your search.</p>
+    </div>
+
+    <div
       class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-      *ngIf="executionCases.length > 0"
+      *ngIf="filteredCases().length > 0"
     >
       <p-card
-        *ngFor="let executionCase of executionCases"
+        *ngFor="let executionCase of filteredCases()"
         class="cursor-pointer hover:shadow-lg transition-shadow"
         [routerLink]="['/execution', executionCase.id]"
       >
@@ -105,4 +126,29 @@ import { ExecutionCasesService } from '../../shared/services/execution-cases.ser
 export class ExecutionCasesListComponent {
   private readonly executionCasesService = inject(ExecutionCasesService);
   protected executionCases = this.executionCasesService.list();
+  protected searchQuery = '';
+
+  filteredCases(): ExecutionCase[] {
+    const q = this.searchQuery.trim().toLowerCase();
+    if (!q) return this.executionCases;
+    return this.executionCases.filter((c) => {
+      const blob = [
+        c.executionCaseNo,
+        c.caseNumber,
+        c.fileNo,
+        c.courtRoom,
+        c.companyLawyer,
+        c.lastCourtType,
+        c.lastCourtLevel,
+        c.linkedCaseId,
+        c.unifiedCaseId,
+        String(c.amountRuled),
+        String(c.amountPaid),
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return blob.includes(q);
+    });
+  }
 }

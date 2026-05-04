@@ -277,10 +277,10 @@ export class MotorLiabilityCaseDetailComponent {
   private readonly casesService = inject(CasesService);
 
   protected caseData: MotorLiabilityCase;
-  protected dateOfInsertion: string = '';
-  protected periodFrom: string = '';
-  protected periodTo: string = '';
-  protected rulingDate: string = '';
+  protected dateOfInsertion: Date | null = null;
+  protected periodFrom: Date | null = null;
+  protected periodTo: Date | null = null;
+  protected rulingDate: Date | null = null;
   protected linkedLegalCaseNumber: string = '';
 
   constructor() {
@@ -289,12 +289,10 @@ export class MotorLiabilityCaseDetailComponent {
       const existing = this.motorLiabilityService.getById(id);
       if (existing) {
         this.caseData = { ...existing };
-        this.dateOfInsertion = existing.dateOfInsertion
-          ? existing.dateOfInsertion.split('T')[0]
-          : '';
-        this.periodFrom = existing.periodFrom ? existing.periodFrom.split('T')[0] : '';
-        this.periodTo = existing.periodTo ? existing.periodTo.split('T')[0] : '';
-        this.rulingDate = existing.rulingDate ? existing.rulingDate.split('T')[0] : '';
+        this.dateOfInsertion = existing.dateOfInsertion ? new Date(existing.dateOfInsertion) : null;
+        this.periodFrom = existing.periodFrom ? new Date(existing.periodFrom) : null;
+        this.periodTo = existing.periodTo ? new Date(existing.periodTo) : null;
+        this.rulingDate = existing.rulingDate ? new Date(existing.rulingDate) : null;
         this.linkedLegalCaseNumber = this.resolveLegalCaseNumber(existing.unifiedCaseId);
       } else {
         this.caseData = this.createEmptyCase();
@@ -342,12 +340,10 @@ export class MotorLiabilityCaseDetailComponent {
   }
 
   save(): void {
-    this.caseData.dateOfInsertion = this.dateOfInsertion
-      ? new Date(this.dateOfInsertion).toISOString()
-      : '';
-    this.caseData.periodFrom = this.periodFrom ? new Date(this.periodFrom).toISOString() : '';
-    this.caseData.periodTo = this.periodTo ? new Date(this.periodTo).toISOString() : '';
-    this.caseData.rulingDate = this.rulingDate ? new Date(this.rulingDate).toISOString() : '';
+    this.caseData.dateOfInsertion = this.dateOfInsertion ? this.dateOfInsertion.toISOString() : '';
+    this.caseData.periodFrom = this.periodFrom ? this.periodFrom.toISOString() : '';
+    this.caseData.periodTo = this.periodTo ? this.periodTo.toISOString() : '';
+    this.caseData.rulingDate = this.rulingDate ? this.rulingDate.toISOString() : '';
 
     if (this.caseData.id) {
       this.motorLiabilityService.update(this.caseData.id, this.caseData);
@@ -382,6 +378,6 @@ export class MotorLiabilityCaseDetailComponent {
   }
 
   cancel(): void {
-    this.router.navigate(['/legal/dashboard']);
+    this.router.navigate(['/legal/cases']);
   }
 }

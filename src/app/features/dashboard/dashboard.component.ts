@@ -191,7 +191,7 @@ import { CaseItem, CasesService } from '../../shared/services/cases.service';
             label="View All"
             [outlined]="true"
             [size]="'small'"
-            routerLink="/legal/dashboard"
+            routerLink="/legal/cases"
           ></p-button>
         </div>
         <div class="space-y-4">
@@ -236,7 +236,8 @@ import { CaseItem, CasesService } from '../../shared/services/cases.service';
             label="View All"
             [outlined]="true"
             [size]="'small'"
-            routerLink="/legal/dashboard"
+            routerLink="/legal/cases"
+            [queryParams]="{ focus: 'deadlines' }"
           ></p-button>
         </div>
         <div class="space-y-4">

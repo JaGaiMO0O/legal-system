@@ -68,105 +68,86 @@ export class ArbitrationsService {
   private seedData(): void {
     const now = new Date();
     const generateId = () => this.generateId();
+    const toIso = (daysOffset: number) =>
+      new Date(now.getTime() + daysOffset * 24 * 60 * 60 * 1000).toISOString();
+
     const arbitrations: Arbitration[] = [
       {
         id: 'arb-1',
-        caseNumber: '2025001',
+        caseNumber: '2026201',
         appealability: 'Appealable',
-        fillingDate: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-        caseDescription: 'Commercial dispute regarding contract terms',
-        arbitrationRoom: 'Room A-101',
-        arbitrationFees: 25000,
+        fillingDate: toIso(-35),
+        caseDescription:
+          'Dispute over delayed delivery penalties in logistics outsourcing agreement.',
+        arbitrationRoom: 'Room B-11',
+        arbitrationFees: 38000,
+        maximumPeriod: '9 months',
+        companyRepresentative: {
+          lawyerName: 'Rana Al-Enezi',
+          position: 'Lead Counsel',
+          address: 'Riyadh, Takhassusi Street',
+        },
+        oppositionRepresentative: {
+          lawyerName: 'External Counsel - Omar Haddad',
+          position: 'Respondent Representative',
+          address: 'Jeddah, Rawdah District',
+        },
+        hearings: [
+          { id: generateId(), date: toIso(6), remarks: 'Jurisdiction and timetable conference' },
+          { id: generateId(), date: toIso(21), remarks: 'Document production hearing' },
+        ],
+        unifiedCaseId: 'uc-arb-201',
+        createdAt: toIso(-35),
+        updatedAt: toIso(-2),
+      },
+      {
+        id: 'arb-2',
+        caseNumber: '2026202',
+        appealability: 'Non-Appealable',
+        fillingDate: toIso(-60),
+        caseDescription: 'Construction subcontractor payment dispute over variation orders.',
+        arbitrationRoom: 'Room A-04',
+        arbitrationFees: 52000,
+        maximumPeriod: '12 months',
+        companyRepresentative: {
+          lawyerName: 'Abdullah Al-Mugren',
+          position: 'Senior Associate',
+          address: 'Khobar, Tower 2',
+        },
+        oppositionRepresentative: {
+          lawyerName: 'External Counsel - Yasmeen Qadi',
+          position: 'Claimant Counsel',
+          address: 'Riyadh, Al Olaya',
+        },
+        hearings: [{ id: generateId(), date: toIso(12), remarks: 'Witness list and expert scope' }],
+        unifiedCaseId: 'uc-arb-202',
+        createdAt: toIso(-60),
+        updatedAt: toIso(-5),
+      },
+      {
+        id: 'arb-3',
+        caseNumber: '2026203',
+        appealability: 'Appealable',
+        fillingDate: toIso(-18),
+        caseDescription: 'Service level breach under managed IT contract.',
+        arbitrationRoom: 'Room C-02',
+        arbitrationFees: 27000,
         maximumPeriod: '6 months',
         companyRepresentative: {
-          lawyerName: 'Dr. Mohammed Al-Sheikh',
-          position: 'Senior Legal Counsel',
-          address: 'Riyadh, King Fahd Road, Building 123',
+          lawyerName: 'Maha Al-Zahrani',
+          position: 'Corporate Counsel',
+          address: 'Dammam, King Saud Street',
         },
         oppositionRepresentative: {
-          lawyerName: 'Ahmed Al-Rashid',
-          position: 'Legal Advisor',
-          address: 'Jeddah, Corniche Road, Office 456',
+          lawyerName: 'External Counsel - Hatem Nassar',
+          position: 'Respondent Counsel',
+          address: 'Riyadh, Granada',
         },
-        hearings: [
-          {
-            id: generateId(),
-            date: new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000).toISOString(),
-            remarks: 'Initial hearing - case presentation',
-          },
-        ],
-        createdAt: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        hearings: [{ id: generateId(), date: toIso(9), remarks: 'Early merits review session' }],
+        createdAt: toIso(-18),
+        updatedAt: toIso(-1),
       },
     ];
-
-    // Add more arbitrations to reach 15 total
-    const rooms = ['Room A-101', 'Room A-102', 'Room B-201', 'Room B-202', 'Room C-301'];
-    const periods = ['6 months', '12 months', '18 months', '24 months'];
-    const appealabilities = ['Appealable', 'Non-Appealable'];
-    const companyLawyers = [
-      'Dr. Mohammed Al-Sheikh',
-      'Ahmed Al-Rashid',
-      'Sara Al-Otaibi',
-      'Khalid Al-Mutairi',
-      'Fatima Al-Zahra',
-      'Omar Al-Harbi',
-      'Layla Al-Ghamdi',
-    ];
-    const oppositionLawyers = [
-      'Yousef Al-Shehri',
-      'Noura Al-Qahtani',
-      'Faisal Al-Dosari',
-      'Hanan Al-Mazrouei',
-      'Sultan Al-Otaibi',
-      'Reem Al-Shammari',
-      'Bandar Al-Mutlaq',
-    ];
-    const positions = ['Senior Legal Counsel', 'Legal Advisor', 'Associate Lawyer', 'Partner'];
-
-    for (let i = 0; i < 14; i++) {
-      const caseNum = 2025030 + i; // Start from 2025030 to avoid conflicts
-      const daysAgo = 120 - i * 5;
-      arbitrations.push({
-        id: `arb-${2 + i}`,
-        caseNumber: caseNum.toString(),
-        appealability: appealabilities[i % appealabilities.length],
-        fillingDate: new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000).toISOString(),
-        caseDescription: `Arbitration case ${caseNum} - ${['Commercial dispute', 'Contract breach', 'Payment dispute', 'Service agreement', 'Partnership dispute'][i % 5]}`,
-        arbitrationRoom: rooms[i % rooms.length],
-        arbitrationFees: 20000 + i * 2000,
-        maximumPeriod: periods[i % periods.length],
-        companyRepresentative: {
-          lawyerName: companyLawyers[i % companyLawyers.length],
-          position: positions[i % positions.length],
-          address: `Riyadh, Building ${100 + i}`,
-        },
-        oppositionRepresentative: {
-          lawyerName: oppositionLawyers[i % oppositionLawyers.length],
-          position: positions[(i + 1) % positions.length],
-          address: `Jeddah, Office ${200 + i}`,
-        },
-        hearings: [
-          {
-            id: generateId(),
-            date: new Date(now.getTime() + (i + 1) * 7 * 24 * 60 * 60 * 1000).toISOString(),
-            remarks: `Hearing ${i + 1} - ${['Initial presentation', 'Evidence review', 'Witness testimony', 'Final arguments'][i % 4]}`,
-          },
-          ...(i % 2 === 0
-            ? [
-                {
-                  id: generateId(),
-                  date: new Date(now.getTime() + (i + 2) * 7 * 24 * 60 * 60 * 1000).toISOString(),
-                  remarks: `Follow-up hearing ${i + 1}`,
-                },
-              ]
-            : []),
-        ],
-        unifiedCaseId: i < 5 ? `uc-arb-${i + 1}` : undefined,
-        createdAt: new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(now.getTime() - (daysAgo - 3) * 24 * 60 * 60 * 1000).toISOString(),
-      });
-    }
 
     this.storage.set(STORAGE_KEY, arbitrations);
   }

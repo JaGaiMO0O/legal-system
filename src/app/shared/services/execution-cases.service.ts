@@ -46,63 +46,62 @@ export class ExecutionCasesService {
 
   private seedData(): void {
     const now = new Date();
+    const toIso = (daysOffset: number) =>
+      new Date(now.getTime() + daysOffset * 24 * 60 * 60 * 1000).toISOString();
+
     const cases: ExecutionCase[] = [
       {
         id: 'exec-1',
-        caseNumber: '2025002',
-        executionCaseNo: 'EX-2025-001',
-        fileNo: 'FILE-2025-001',
-        fileDate: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000).toISOString(),
-        courtRoom: 'Room 15',
-        companyLawyer: 'Dr. Mohammed Al-Sheikh',
-        lastCourtType: 'Cassation Court',
+        caseNumber: '2026301',
+        executionCaseNo: 'EX-2026-301',
+        fileNo: 'FILE-EXEC-301',
+        fileDate: toIso(-28),
+        courtRoom: 'Execution Hall 3',
+        companyLawyer: 'Rana Al-Enezi',
+        lastCourtType: 'Labor Court',
         lastCourtLevel: 'Cassation',
-        amountRuled: 150000,
-        amountPaid: 75000,
+        amountRuled: 122000,
+        amountPaid: 42000,
         linkedCaseId: 'case-4',
-        unifiedCaseId: 'uc-4',
-        createdAt: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        unifiedCaseId: 'uc-1004',
+        createdAt: toIso(-28),
+        updatedAt: toIso(-2),
+      },
+      {
+        id: 'exec-2',
+        caseNumber: '2026302',
+        executionCaseNo: 'EX-2026-302',
+        fileNo: 'FILE-EXEC-302',
+        fileDate: toIso(-12),
+        courtRoom: 'Execution Hall 1',
+        companyLawyer: 'Abdullah Al-Mugren',
+        lastCourtType: 'Commercial Court',
+        lastCourtLevel: 'Appeal',
+        amountRuled: 75000,
+        amountPaid: 25000,
+        linkedCaseId: 'case-2',
+        unifiedCaseId: 'uc-1002',
+        createdAt: toIso(-12),
+        updatedAt: toIso(-1),
+      },
+      {
+        id: 'exec-3',
+        caseNumber: '2026303',
+        executionCaseNo: 'EX-2026-303',
+        fileNo: 'FILE-EXEC-303',
+        fileDate: toIso(-7),
+        courtRoom: 'Execution Hall 5',
+        companyLawyer: 'Maha Al-Zahrani',
+        lastCourtType: 'General Civil Court',
+        lastCourtLevel: 'Appeal',
+        amountRuled: 310000,
+        amountPaid: 90000,
+        linkedCaseId: 'case-6',
+        unifiedCaseId: 'uc-1006',
+        createdAt: toIso(-7),
+        updatedAt: toIso(-1),
       },
     ];
-
-    // Add more execution cases to reach 10 total
-    const courtRooms = ['Room 15', 'Room 16', 'Room 17', 'Room 18', 'Room 19'];
-    const courtTypes = ['Cassation Court', 'Appeal Court', 'Primary Court'];
-    const courtLevels = ['Cassation', 'Appeal', 'Primary'];
-    const lawyers = [
-      'Dr. Mohammed Al-Sheikh',
-      'Ahmed Al-Rashid',
-      'Sara Al-Otaibi',
-      'Khalid Al-Mutairi',
-      'Fatima Al-Zahra',
-      'Omar Al-Harbi',
-      'Layla Al-Ghamdi',
-    ];
-
-    for (let i = 0; i < 9; i++) {
-      const caseNum = 2025040 + i; // Start from 2025040
-      const daysAgo = 60 - i * 5;
-      const amountRuled = 100000 + i * 25000;
-      const amountPaid = amountRuled * (0.3 + i * 0.1); // Varying payment percentages
-      cases.push({
-        id: `exec-${2 + i}`,
-        caseNumber: caseNum.toString(),
-        executionCaseNo: `EX-2025-${String(2 + i).padStart(3, '0')}`,
-        fileNo: `FILE-2025-${String(2 + i).padStart(3, '0')}`,
-        fileDate: new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000).toISOString(),
-        courtRoom: courtRooms[i % courtRooms.length],
-        companyLawyer: lawyers[i % lawyers.length],
-        lastCourtType: courtTypes[i % courtTypes.length],
-        lastCourtLevel: courtLevels[i % courtLevels.length],
-        amountRuled,
-        amountPaid: Math.min(amountPaid, amountRuled),
-        linkedCaseId: i < 5 ? `case-${5 + i}` : undefined,
-        unifiedCaseId: i < 5 ? `uc-${10 + i}` : undefined,
-        createdAt: new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(now.getTime() - (daysAgo - 2) * 24 * 60 * 60 * 1000).toISOString(),
-      });
-    }
 
     this.storage.set(STORAGE_KEY, cases);
   }

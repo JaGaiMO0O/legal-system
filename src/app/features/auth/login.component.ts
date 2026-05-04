@@ -1,0 +1,132 @@
+import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { InputTextModule } from 'primeng/inputtext';
+import { AuthRole, AuthService } from '../../core/auth/auth.service';
+
+@Component({
+  standalone: true,
+  selector: 'app-login',
+  imports: [CommonModule, FormsModule, ButtonModule, CardModule, InputTextModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div class="min-h-screen flex items-center justify-center p-6 bg-[rgb(var(--surface-muted))]">
+      <div class="w-full max-w-lg flex flex-col gap-6">
+        <div class="text-center">
+          <div
+            class="inline-flex w-14 h-14 rounded-xl bg-[rgb(var(--primary-dark))] text-white items-center justify-center mb-4"
+          >
+            <i class="pi pi-shield text-2xl" aria-hidden="true"></i>
+          </div>
+          <h1 class="text-2xl font-semibold text-[rgb(var(--text))] tracking-tight">
+            Legal System
+          </h1>
+          <p class="text-sm text-[rgb(var(--text-muted))] mt-1">Sign in to continue</p>
+        </div>
+
+        <p-card>
+          <div class="flex flex-col gap-4 p-2">
+            <div class="flex flex-col sm:flex-row gap-2">
+              <p-button
+                [outlined]="selectedRole() !== 'admin'"
+                [severity]="selectedRole() === 'admin' ? 'primary' : 'secondary'"
+                styleClass="w-full"
+                label="Admin"
+                (onClick)="selectRole('admin')"
+              ></p-button>
+              <p-button
+                [outlined]="selectedRole() !== 'lawyer'"
+                [severity]="selectedRole() === 'lawyer' ? 'primary' : 'secondary'"
+                styleClass="w-full"
+                label="Lawyer"
+                (onClick)="selectRole('lawyer')"
+              ></p-button>
+            </div>
+
+            <div>
+              <label
+                for="login-user"
+                class="block text-sm font-semibold mb-2 text-[rgb(var(--text))]"
+                >Username</label
+              >
+              <input
+                id="login-user"
+                pInputText
+                class="w-full"
+                [(ngModel)]="username"
+                autocomplete="username"
+                (keydown.enter)="submit()"
+              />
+            </div>
+            <div>
+              <label
+                for="login-pass"
+                class="block text-sm font-semibold mb-2 text-[rgb(var(--text))]"
+                >Password</label
+              >
+              <input
+                id="login-pass"
+                pInputText
+                type="password"
+                class="w-full"
+                [(ngModel)]="password"
+                autocomplete="current-password"
+                (keydown.enter)="submit()"
+              />
+            </div>
+
+            <p *ngIf="error()" class="text-sm text-danger m-0">{{ error() }}</p>
+
+            <p-button
+              severity="primary"
+              styleClass="w-full"
+              label="Sign in"
+              [loading]="loading()"
+              (onClick)="submit()"
+            ></p-button>
+          </div>
+        </p-card>
+      </div>
+    </div>
+  `,
+})
+export class LoginComponent implements OnInit {
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+
+  protected username = '';
+  protected password = '';
+  protected readonly selectedRole = signal<AuthRole>('admin');
+  protected readonly error = signal('');
+  protected readonly loading = signal(false);
+
+  ngOnInit(): void {
+    if (this.auth.isAuthenticated()) {
+      void this.router.navigateByUrl('/legal/dashboard');
+      return;
+    }
+    this.selectRole('admin');
+  }
+
+  selectRole(role: AuthRole): void {
+    this.selectedRole.set(role);
+    this.username = role === 'admin' ? 'admin' : 'lawyer';
+    this.password = role === 'admin' ? 'admin' : 'lawyer';
+    this.error.set('');
+  }
+
+  submit(): void {
+    this.error.set('');
+    this.loading.set(true);
+    const ok = this.auth.login(this.username, this.password);
+    this.loading.set(false);
+    if (ok) {
+      void this.router.navigateByUrl('/legal/dashboard');
+    } else {
+      this.error.set('Invalid username or password for the selected account type.');
+    }
+  }
+}

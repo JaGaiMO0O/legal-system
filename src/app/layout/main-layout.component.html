@@ -1,0 +1,83 @@
+<div class="min-h-screen bg-[rgb(var(--surface-muted))]">
+  <header class="border-b border-black/10 bg-[rgb(var(--primary-dark))] text-white shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 md:h-[4.25rem]">
+        <div class="flex items-center gap-3 rtl:flex-row-reverse">
+          <div
+            class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center shrink-0"
+            aria-hidden="true"
+          >
+            <i class="pi pi-shield text-xl text-white/95"></i>
+          </div>
+          <div>
+            <h1 class="text-lg md:text-xl font-semibold tracking-tight text-white">Legal System</h1>
+            <p class="text-xs text-white/75 mt-0.5 hidden sm:block">Case Management Portal</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 md:gap-3 rtl:flex-row-reverse">
+          <span
+            class="hidden sm:inline text-xs text-white/80 max-w-[10rem] truncate"
+            *ngIf="sessionLabel()"
+            >{{ sessionLabel() }}</span
+          >
+          <p-button
+            label="Log out"
+            [text]="true"
+            styleClass="text-white/95 hover:bg-white/10"
+            (onClick)="logout()"
+          ></p-button>
+          <app-undo-redo class="hidden md:block"></app-undo-redo>
+          <app-theme-toggle></app-theme-toggle>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex flex-col md:flex-row">
+    <button
+      type="button"
+      (click)="toggleSidebar()"
+      class="md:hidden fixed top-20 start-4 z-50 p-2.5 bg-[rgb(var(--surface))] rounded-lg shadow-md border border-[rgb(var(--border))] text-[rgb(var(--text))]"
+      aria-label="Toggle menu"
+    >
+      <i class="pi pi-bars text-lg"></i>
+    </button>
+
+    <aside
+      [class.hidden]="!sidebarOpen()"
+      [class.fixed]="sidebarOpen()"
+      class="w-64 bg-[rgb(var(--surface))] border-e border-[rgb(var(--border-light))] min-h-[calc(100vh-5rem)] shadow-sm md:shadow-none md:block z-40 md:relative max-md:overflow-y-auto"
+    >
+      <nav class="p-4" aria-label="Main">
+        @for (section of navSections(); track section.title) {
+          <div class="mb-6 last:mb-0">
+            <p
+              class="px-3 mb-2 text-[0.65rem] font-semibold uppercase tracking-wider text-[rgb(var(--text-muted))]"
+            >
+              {{ section.title }}
+            </p>
+            <div class="space-y-0.5">
+              @for (item of section.items; track item.path) {
+                <a
+                  [routerLink]="item.path"
+                  [routerLinkActive]="
+                    'border-s-[3px] border-[rgb(var(--primary))] bg-[rgb(var(--surface-muted))] text-[rgb(var(--primary))] font-semibold'
+                  "
+                  [routerLinkActiveOptions]="item.exact ? { exact: true } : { exact: false }"
+                  class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-[rgb(var(--text))] border-s-[3px] border-transparent hover:bg-[rgb(var(--surface-muted))] transition-colors duration-150 rtl:flex-row-reverse"
+                >
+                  <i [class]="item.icon + ' text-base opacity-90'" aria-hidden="true"></i>
+                  <span>{{ item.label }}</span>
+                </a>
+              }
+            </div>
+          </div>
+        }
+      </nav>
+    </aside>
+
+    <main class="flex-1 p-4 md:p-8 bg-[rgb(var(--surface-muted))] min-w-0">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

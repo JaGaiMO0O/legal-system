@@ -298,6 +298,37 @@ textarea:focus {
   align-items: center;
 }
 
+/* PrimeNG calendar should size like other form controls */
+.p-calendar,
+.p-datepicker {
+  width: 100%;
+}
+
+.p-calendar .p-inputtext,
+.p-datepicker .p-inputtext,
+.p-calendar .p-datepicker-input {
+  width: 100%;
+  min-height: 2.5rem !important;
+  height: 2.5rem !important;
+  line-height: 1.5;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  box-sizing: border-box;
+}
+
+.p-calendar .p-datepicker-trigger {
+  min-height: 2.5rem !important;
+  height: 2.5rem !important;
+  width: 2.5rem;
+  flex: 0 0 2.5rem;
+}
+
+.p-calendar.p-inputwrapper,
+.p-datepicker.p-component {
+  display: flex;
+  align-items: stretch;
+}
+
 .p-select.p-component,
 .p-multiselect.p-component,
 .p-cascadeselect.p-component {

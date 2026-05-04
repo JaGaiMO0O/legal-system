@@ -108,77 +108,69 @@ export class LawyersService {
   }
 
   private seedData(): void {
-    const now = new Date().toISOString();
+    const now = Date.now();
     const lawyers: Lawyer[] = [
       {
         id: this.generateId(),
         lawyerNumber: 'LAW-001',
-        name: 'Dr. Sarah Al-Qahtani',
-        phone: '+966-500-111-111',
-        email: 'sarah.qahtani@example.com',
-        address: 'Riyadh, King Fahd Road, Building 100',
-        createdAt: now,
-        updatedAt: now,
+        name: 'Rana Al-Enezi',
+        phone: '+966-501-210-001',
+        email: 'rana.enezi@legal-portal.local',
+        address: 'Riyadh, Takhassusi Street, Office 14',
+        createdAt: new Date(now - 120 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(now - 4 * 24 * 60 * 60 * 1000).toISOString(),
       },
       {
         id: this.generateId(),
         lawyerNumber: 'LAW-002',
-        name: 'Ahmed Al-Harbi',
-        phone: '+966-500-222-222',
-        email: 'ahmed.harbi@example.com',
-        address: 'Jeddah, Corniche Road, Office 200',
-        createdAt: now,
-        updatedAt: now,
+        name: 'Ziad Al-Bishi',
+        phone: '+966-501-210-002',
+        email: 'ziad.bishi@legal-portal.local',
+        address: 'Jeddah, Prince Mohammed Bin Abdulaziz Road, Suite 23',
+        createdAt: new Date(now - 110 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString(),
       },
       {
         id: this.generateId(),
         lawyerNumber: 'LAW-003',
-        name: 'Mona Al-Saleh',
-        phone: '+966-500-333-333',
-        email: 'mona.saleh@example.com',
-        address: 'Dammam, King Saud Road, Building 300',
-        createdAt: now,
-        updatedAt: now,
+        name: 'Maha Al-Zahrani',
+        phone: '+966-501-210-003',
+        email: 'maha.zahrani@legal-portal.local',
+        address: 'Dammam, King Saud Street, Building 5',
+        createdAt: new Date(now - 90 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(now - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: this.generateId(),
+        lawyerNumber: 'LAW-004',
+        name: 'Abdullah Al-Mugren',
+        phone: '+966-501-210-004',
+        email: 'abdullah.mugren@legal-portal.local',
+        address: 'Khobar, Custodian of the Two Holy Mosques Rd, Tower 2',
+        createdAt: new Date(now - 70 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(now - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: this.generateId(),
+        lawyerNumber: 'LAW-005',
+        name: 'Hind Al-Qurashi',
+        phone: '+966-501-210-005',
+        email: 'hind.qurashi@legal-portal.local',
+        address: 'Madinah, King Abdulaziz Rd, Office 8',
+        createdAt: new Date(now - 45 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(now - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: this.generateId(),
+        lawyerNumber: 'LAW-006',
+        name: 'Faisal Al-Qahtani',
+        phone: '+966-501-210-006',
+        email: 'faisal.qahtani@legal-portal.local',
+        address: 'Riyadh, Olaya District, Building 27',
+        createdAt: new Date(now - 20 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(now).toISOString(),
       },
     ];
-
-    // Add more lawyers to reach 15 total
-    const names = [
-      'Dr. Mohammed Al-Sheikh',
-      'Khalid Al-Mutairi',
-      'Fatima Al-Zahra',
-      'Omar Al-Harbi',
-      'Layla Al-Ghamdi',
-      'Yousef Al-Shehri',
-      'Noura Al-Qahtani',
-      'Faisal Al-Dosari',
-      'Hanan Al-Mazrouei',
-      'Sultan Al-Otaibi',
-      'Reem Al-Shammari',
-      'Bandar Al-Mutlaq',
-    ];
-    const cities = ['Riyadh', 'Jeddah', 'Dammam', 'Khobar', 'Mecca', 'Medina'];
-    const streets = [
-      'King Fahd Road',
-      'Corniche Road',
-      'King Saud Road',
-      'Prince Sultan Road',
-      'Olaya Street',
-    ];
-
-    for (let i = 0; i < 12; i++) {
-      const lawyerNum = 4 + i;
-      lawyers.push({
-        id: this.generateId(),
-        lawyerNumber: `LAW-${String(lawyerNum).padStart(3, '0')}`,
-        name: names[i % names.length],
-        phone: `+966-500-${String(400 + i).padStart(3, '0')}-${String(100 + i).padStart(3, '0')}`,
-        email: `${names[i % names.length].toLowerCase().replace(/\s+/g, '.')}@example.com`,
-        address: `${cities[i % cities.length]}, ${streets[i % streets.length]}, Building ${400 + i}`,
-        createdAt: new Date(Date.now() - i * 30 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(Date.now() - i * 30 * 24 * 60 * 60 * 1000).toISOString(),
-      });
-    }
 
     this.storage.set(STORAGE_KEY, lawyers);
   }

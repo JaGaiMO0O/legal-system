@@ -22,9 +22,15 @@ import {
 } from '../../shared/services/business-settlement.service';
 import { CaseTrackingService } from '../../shared/services/case-tracking.service';
 import {
+  CASE_MATTER_TYPE_LABELS,
+  CASE_MATTER_TYPES,
+  CaseDeadline,
+  CaseDevelopment,
   CaseItem,
+  CaseMatterType,
   CaseRuling,
   CasesService,
+  CaseTask,
   CaseStage,
   CaseType,
   ClaimantDemographics,
@@ -47,6 +53,7 @@ type LastSavedData = {
   claimant: string;
   beneficiary: string;
   initialHearingDate: string;
+  matterType: CaseMatterType;
 };
 
 @Component({
@@ -177,6 +184,16 @@ type LastSavedData = {
                 </div>
                 <div>
                   <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                    >Matter type</label
+                  >
+                  <select [(ngModel)]="matterType" class="w-full">
+                    <option *ngFor="let mt of matterTypeOptions" [ngValue]="mt">
+                      {{ matterTypeLabels[mt] }}
+                    </option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
                     >Status</label
                   >
                   <select [(ngModel)]="status" class="w-full">
@@ -298,47 +315,168 @@ type LastSavedData = {
                     styleClass="w-full"
                   ></p-calendar>
                 </div>
-                <div>
+                <ng-container *ngIf="matterType === 'CommercialContract'">
+                  <div>
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                      >Contract Reference</label
+                    >
+                    <input
+                      type="text"
+                      [(ngModel)]="contractReference"
+                      class="w-full"
+                      placeholder="e.g., CTR-2026-004"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                      >Disputed Amount (SAR)</label
+                    >
+                    <input
+                      type="number"
+                      [(ngModel)]="disputedAmount"
+                      min="0"
+                      class="w-full"
+                      placeholder="0"
+                    />
+                  </div>
+                </ng-container>
+
+                <ng-container *ngIf="matterType === 'LaborEmployment'">
+                  <div>
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                      >Employer Name</label
+                    >
+                    <input type="text" [(ngModel)]="employerName" class="w-full" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                      >Employee Name</label
+                    >
+                    <input type="text" [(ngModel)]="employeeName" class="w-full" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                      >Employment Start Date</label
+                    >
+                    <p-calendar
+                      [(ngModel)]="employmentStartDate"
+                      dateFormat="dd/mm/yy"
+                      [showIcon]="true"
+                      styleClass="w-full"
+                    ></p-calendar>
+                  </div>
+                </ng-container>
+
+                <ng-container *ngIf="matterType === 'RealEstate'">
+                  <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                      >Property Address</label
+                    >
+                    <input type="text" [(ngModel)]="propertyAddress" class="w-full" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                      >Property Type</label
+                    >
+                    <input
+                      type="text"
+                      [(ngModel)]="propertyType"
+                      class="w-full"
+                      placeholder="Residential / Commercial"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                      >Title Deed Number</label
+                    >
+                    <input type="text" [(ngModel)]="titleDeedNumber" class="w-full" />
+                  </div>
+                </ng-container>
+
+                <ng-container *ngIf="matterType === 'CriminalDefense'">
+                  <div>
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                      >Offense Type</label
+                    >
+                    <input type="text" [(ngModel)]="offenseType" class="w-full" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                      >Incident Date</label
+                    >
+                    <p-calendar
+                      [(ngModel)]="incidentDate"
+                      dateFormat="dd/mm/yy"
+                      [showIcon]="true"
+                      styleClass="w-full"
+                    ></p-calendar>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                      >Police Report Number</label
+                    >
+                    <input type="text" [(ngModel)]="policeReportNumber" class="w-full" />
+                  </div>
+                </ng-container>
+
+                <div *ngIf="matterType === 'GeneralCivil'" class="md:col-span-2">
                   <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                    >Damage Type</label
+                    >Case Summary</label
                   >
-                  <select [(ngModel)]="damageType" class="w-full">
-                    <option value="">Select damage type</option>
-                    <option value="Fatal">Fatal</option>
-                    <option value="Disability">Disability</option>
-                  </select>
-                </div>
-                <div *ngIf="damageType === 'Disability'">
-                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                    >Moral Percent (%)</label
-                  >
-                  <input
-                    type="number"
-                    [(ngModel)]="disabilityMetrics.moralPercent"
-                    min="0"
-                    max="100"
+                  <textarea
+                    [(ngModel)]="caseSummary"
+                    rows="3"
                     class="w-full"
-                    placeholder="0"
-                  />
+                    placeholder="Brief summary of the civil case"
+                  ></textarea>
                 </div>
-                <div *ngIf="damageType === 'Disability'">
-                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                    >Physical Percent (%)</label
-                  >
-                  <input
-                    type="number"
-                    [(ngModel)]="disabilityMetrics.physicalPercent"
-                    min="0"
-                    max="100"
-                    class="w-full"
-                    placeholder="0"
-                  />
-                </div>
+
+                <ng-container *ngIf="matterType === 'MotorInsurance'">
+                  <div>
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                      >Damage Type</label
+                    >
+                    <select [(ngModel)]="damageType" class="w-full">
+                      <option value="">Select damage type</option>
+                      <option value="Fatal">Fatal</option>
+                      <option value="Disability">Disability</option>
+                    </select>
+                  </div>
+                  <div *ngIf="damageType === 'Disability'">
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                      >Moral Percent (%)</label
+                    >
+                    <input
+                      type="number"
+                      [(ngModel)]="disabilityMetrics.moralPercent"
+                      min="0"
+                      max="100"
+                      class="w-full"
+                      placeholder="0"
+                    />
+                  </div>
+                  <div *ngIf="damageType === 'Disability'">
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+                      >Physical Percent (%)</label
+                    >
+                    <input
+                      type="number"
+                      [(ngModel)]="disabilityMetrics.physicalPercent"
+                      min="0"
+                      max="100"
+                      class="w-full"
+                      placeholder="0"
+                    />
+                  </div>
+                </ng-container>
               </div>
             </div>
 
             <!-- Claimant Demographics Section -->
-            <div class="pt-6 border-t border-[rgb(var(--border-light))]">
+            <div
+              class="pt-6 border-t border-[rgb(var(--border-light))]"
+              *ngIf="matterType === 'MotorInsurance'"
+            >
               <button
                 type="button"
                 class="flex items-center gap-2 text-sm font-semibold text-[rgb(var(--text))] mb-4"
@@ -442,6 +580,12 @@ type LastSavedData = {
               <!-- Tasks Section -->
               <div>
                 <h3 class="text-lg font-bold mb-4">Tasks</h3>
+                <input
+                  type="search"
+                  class="w-full mb-3"
+                  [(ngModel)]="taskTabSearch"
+                  placeholder="Filter tasks..."
+                />
                 <div class="mb-6">
                   <div class="flex gap-2">
                     <input class="flex-1" [(ngModel)]="taskTitle" placeholder="Enter new task" />
@@ -461,7 +605,7 @@ type LastSavedData = {
                 </div>
                 <ul class="space-y-3">
                   <li
-                    *ngFor="let t of caseItem?.tasks"
+                    *ngFor="let t of filteredTasks()"
                     class="flex items-center justify-between p-3 bg-[rgb(var(--surface-muted))] rounded-lg"
                   >
                     <label class="flex items-center gap-3 flex-1 cursor-pointer">
@@ -485,7 +629,7 @@ type LastSavedData = {
                     </button>
                   </li>
                   <li
-                    *ngIf="!caseItem?.tasks || caseItem?.tasks?.length === 0"
+                    *ngIf="(caseItem?.tasks?.length ?? 0) === 0"
                     class="text-sm text-[rgb(var(--text-muted))] text-center py-8"
                   >
                     <div class="flex flex-col items-center gap-2">
@@ -506,11 +650,23 @@ type LastSavedData = {
                       <p class="text-xs opacity-75">Add your first task above</p>
                     </div>
                   </li>
+                  <li
+                    *ngIf="(caseItem?.tasks?.length ?? 0) > 0 && filteredTasks().length === 0"
+                    class="text-sm text-[rgb(var(--text-muted))] text-center py-6"
+                  >
+                    No tasks match your filter.
+                  </li>
                 </ul>
               </div>
               <!-- Deadlines Section -->
               <div>
                 <h3 class="text-lg font-bold mb-4">Deadlines</h3>
+                <input
+                  type="search"
+                  class="w-full mb-3"
+                  [(ngModel)]="deadlineTabSearch"
+                  placeholder="Filter deadlines..."
+                />
                 <div class="mb-6">
                   <div class="space-y-2">
                     <div>
@@ -555,7 +711,7 @@ type LastSavedData = {
                 </div>
                 <ul class="space-y-3">
                   <li
-                    *ngFor="let d of caseItem?.deadlines"
+                    *ngFor="let d of filteredDeadlines()"
                     class="flex items-center justify-between p-3 bg-[rgb(var(--surface-muted))] rounded-lg"
                   >
                     <div class="flex-1">
@@ -604,7 +760,7 @@ type LastSavedData = {
                     </button>
                   </li>
                   <li
-                    *ngIf="!caseItem?.deadlines || caseItem?.deadlines?.length === 0"
+                    *ngIf="(caseItem?.deadlines?.length ?? 0) === 0"
                     class="text-sm text-[rgb(var(--text-muted))] text-center py-8"
                   >
                     <div class="flex flex-col items-center gap-2">
@@ -625,6 +781,14 @@ type LastSavedData = {
                       <p class="text-xs opacity-75">Add your first deadline above</p>
                     </div>
                   </li>
+                  <li
+                    *ngIf="
+                      (caseItem?.deadlines?.length ?? 0) > 0 && filteredDeadlines().length === 0
+                    "
+                    class="text-sm text-[rgb(var(--text-muted))] text-center py-6"
+                  >
+                    No deadlines match your filter.
+                  </li>
                 </ul>
               </div>
             </div>
@@ -636,6 +800,12 @@ type LastSavedData = {
           <div class="p-4 flex flex-col gap-8">
             <div>
               <h3 class="text-lg font-bold mb-4">Developments</h3>
+              <input
+                type="search"
+                class="w-full mb-3 max-w-xl"
+                [(ngModel)]="developmentTabSearch"
+                placeholder="Filter developments..."
+              />
               <div>
                 <textarea
                   class="w-full"
@@ -660,7 +830,7 @@ type LastSavedData = {
             </div>
             <ul class="space-y-3">
               <li
-                *ngFor="let dev of caseItem?.developments"
+                *ngFor="let dev of filteredDevelopments()"
                 class="p-3 bg-[rgb(var(--surface-muted))] rounded-lg"
               >
                 <div class="text-xs text-[rgb(var(--text-muted))] mb-1">
@@ -669,7 +839,7 @@ type LastSavedData = {
                 <div class="text-sm">{{ dev.note }}</div>
               </li>
               <li
-                *ngIf="!caseItem?.developments || caseItem?.developments?.length === 0"
+                *ngIf="(caseItem?.developments?.length ?? 0) === 0"
                 class="text-sm text-[rgb(var(--text-muted))] text-center py-8"
               >
                 <div class="flex flex-col items-center gap-2">
@@ -690,6 +860,14 @@ type LastSavedData = {
                   <p class="text-xs opacity-75">Add your first development above</p>
                 </div>
               </li>
+              <li
+                *ngIf="
+                  (caseItem?.developments?.length ?? 0) > 0 && filteredDevelopments().length === 0
+                "
+                class="text-sm text-[rgb(var(--text-muted))] text-center py-6"
+              >
+                No developments match your filter.
+              </li>
             </ul>
           </div>
         </p-tabPanel>
@@ -698,6 +876,12 @@ type LastSavedData = {
         <p-tabPanel header="Court Rulings">
           <div class="p-4 flex flex-col gap-8">
             <h3 class="text-lg font-bold mb-0">Court Rulings</h3>
+            <input
+              type="search"
+              class="w-full max-w-xl"
+              [(ngModel)]="rulingTabSearch"
+              placeholder="Filter rulings by case no, court, adversary..."
+            />
 
             <!-- Ruling Form -->
             <div
@@ -1024,7 +1208,7 @@ type LastSavedData = {
               <h4 class="font-bold mb-4 text-[rgb(var(--text))]">Existing Rulings</h4>
               <ul class="space-y-4">
                 <li
-                  *ngFor="let r of caseItem?.rulings"
+                  *ngFor="let r of filteredRulings()"
                   class="border border-[rgb(var(--border))] rounded-xl p-5 bg-[rgb(var(--surface-muted))]"
                 >
                   <div
@@ -1198,7 +1382,7 @@ type LastSavedData = {
                   </div>
                 </li>
                 <li
-                  *ngIf="!caseItem?.rulings || caseItem?.rulings?.length === 0"
+                  *ngIf="(caseItem?.rulings?.length ?? 0) === 0"
                   class="text-sm text-[rgb(var(--text-muted))] text-center py-12 bg-[rgb(var(--surface-muted))] rounded-lg"
                 >
                   <div class="flex flex-col items-center gap-3">
@@ -1220,6 +1404,12 @@ type LastSavedData = {
                       <p class="text-xs opacity-75">Add your first court ruling above</p>
                     </div>
                   </div>
+                </li>
+                <li
+                  *ngIf="(caseItem?.rulings?.length ?? 0) > 0 && filteredRulings().length === 0"
+                  class="text-sm text-[rgb(var(--text-muted))] text-center py-8 bg-[rgb(var(--surface-muted))] rounded-lg"
+                >
+                  No rulings match your filter.
                 </li>
               </ul>
             </div>
@@ -1371,7 +1561,7 @@ export class CaseDetailComponent implements OnInit {
   protected status: 'open' | 'pending' | 'closed' | 'on-hold' = 'open';
   protected taskTitle = '';
   protected deadlineTitle = '';
-  protected deadlineDate = '';
+  protected deadlineDate: Date | null = null;
   protected titleError = '';
   protected clientError = '';
   protected deadlineTitleError = '';
@@ -1383,7 +1573,7 @@ export class CaseDetailComponent implements OnInit {
   protected saving = false;
   protected claimant = '';
   protected beneficiary = '';
-  protected initialHearingDate = '';
+  protected initialHearingDate: Date | null = null;
   // Claimant demographics
   protected demographics: ClaimantDemographics = {
     nationality: '',
@@ -1400,13 +1590,31 @@ export class CaseDetailComponent implements OnInit {
     moralPercent: 0,
     physicalPercent: 0,
   };
+  protected contractReference = '';
+  protected disputedAmount: number | null = null;
+  protected employerName = '';
+  protected employeeName = '';
+  protected employmentStartDate: Date | null = null;
+  protected propertyAddress = '';
+  protected propertyType = '';
+  protected titleDeedNumber = '';
+  protected offenseType = '';
+  protected incidentDate: Date | null = null;
+  protected policeReportNumber = '';
+  protected caseSummary = '';
   protected addingTask = false;
   protected addingDeadline = false;
   protected addingRuling = false;
   protected editingRulingId: string | null = null;
-  protected editingRuling: Partial<CaseRuling> = {};
+  protected editingRuling: Partial<Omit<CaseRuling, 'rulingDate'>> & {
+    rulingDate?: Date | string;
+  } = {};
   protected developmentNote = '';
   protected addingDevelopment = false;
+  protected taskTabSearch = '';
+  protected deadlineTabSearch = '';
+  protected developmentTabSearch = '';
+  protected rulingTabSearch = '';
   protected breadcrumbItems: Array<{ label: string; route?: string | any[] }> = [];
   protected autoSaveStatus: 'saved' | 'saving' | 'unsaved' = 'saved';
   protected lawyers: Lawyer[] = [];
@@ -1414,6 +1622,9 @@ export class CaseDetailComponent implements OnInit {
   protected courts: CourtType[] = [];
   protected selectedCourtTypeId = '';
   protected availableLevels: CourtLevel[] = [];
+  protected readonly matterTypeOptions = CASE_MATTER_TYPES;
+  protected readonly matterTypeLabels = CASE_MATTER_TYPE_LABELS;
+  protected matterType: CaseMatterType = 'GeneralCivil';
   private lastSavedData: LastSavedData = {
     title: '',
     client: '',
@@ -1422,6 +1633,7 @@ export class CaseDetailComponent implements OnInit {
     claimant: '',
     beneficiary: '',
     initialHearingDate: '',
+    matterType: 'GeneralCivil',
   };
   protected newRuling = {
     stage: 'primary' as Exclude<CaseStage, 'settled'>,
@@ -1431,11 +1643,11 @@ export class CaseDetailComponent implements OnInit {
     courtLevel: '',
     courtCity: '',
     caseDetails: '',
-    filingDate: new Date().toISOString().slice(0, 10),
+    filingDate: new Date(),
     filingNo: '',
     stageNo: 1,
     rulingInFavorOf: 'Company' as RulingInFavorOf,
-    rulingDate: new Date().toISOString().slice(0, 10),
+    rulingDate: new Date(),
     courtFees: 0,
     legalExpenses: 0,
     translationCourtFees: 0,
@@ -1460,7 +1672,8 @@ export class CaseDetailComponent implements OnInit {
         this.companyLawyerId = this.caseItem.companyLawyerId || '';
         this.claimant = this.caseItem.claimant || '';
         this.beneficiary = this.caseItem.beneficiary || '';
-        this.initialHearingDate = this.caseItem.initialHearingDate || '';
+        this.initialHearingDate = this.parseStoredDate(this.caseItem.initialHearingDate);
+        this.matterType = this.caseItem.matterType ?? 'GeneralCivil';
         this.demographics = this.caseItem.claimantDemographics || {
           nationality: '',
           sex: '',
@@ -1474,8 +1687,20 @@ export class CaseDetailComponent implements OnInit {
           moralPercent: 0,
           physicalPercent: 0,
         };
+        this.contractReference = this.caseItem.contractReference || '';
+        this.disputedAmount = this.caseItem.disputedAmount ?? null;
+        this.employerName = this.caseItem.employerName || '';
+        this.employeeName = this.caseItem.employeeName || '';
+        this.employmentStartDate = this.parseStoredDate(this.caseItem.employmentStartDate);
+        this.propertyAddress = this.caseItem.propertyAddress || '';
+        this.propertyType = this.caseItem.propertyType || '';
+        this.titleDeedNumber = this.caseItem.titleDeedNumber || '';
+        this.offenseType = this.caseItem.offenseType || '';
+        this.incidentDate = this.parseStoredDate(this.caseItem.incidentDate);
+        this.policeReportNumber = this.caseItem.policeReportNumber || '';
+        this.caseSummary = this.caseItem.caseSummary || '';
         this.breadcrumbItems = [
-          { label: 'Cases', route: '/legal/dashboard' },
+          { label: 'Cases', route: '/legal/cases' },
           { label: this.caseItem.title },
         ];
         this.lastSavedData = {
@@ -1486,6 +1711,7 @@ export class CaseDetailComponent implements OnInit {
           claimant: this.caseItem.claimant || '',
           beneficiary: this.caseItem.beneficiary || '',
           initialHearingDate: this.caseItem.initialHearingDate || '',
+          matterType: this.matterType,
         };
         // Set the current case in tracking service
         if (this.caseItem.unifiedCaseId) {
@@ -1511,7 +1737,7 @@ export class CaseDetailComponent implements OnInit {
         }
       }
     } else {
-      this.breadcrumbItems = [{ label: 'Cases', route: '/legal/dashboard' }, { label: 'New Case' }];
+      this.breadcrumbItems = [{ label: 'Cases', route: '/legal/cases' }, { label: 'New Case' }];
     }
   }
 
@@ -1541,7 +1767,9 @@ export class CaseDetailComponent implements OnInit {
         claimant: this.caseItem.claimant || '',
         beneficiary: this.caseItem.beneficiary || '',
         initialHearingDate: this.caseItem.initialHearingDate || '',
+        matterType: this.caseItem.matterType ?? 'GeneralCivil',
       };
+      this.matterType = this.caseItem.matterType ?? 'GeneralCivil';
     }
     this.onCourtTypeChange();
     // Auto-save every 30 seconds
@@ -1560,7 +1788,9 @@ export class CaseDetailComponent implements OnInit {
       this.companyLawyerId !== this.lastSavedData.companyLawyerId ||
       this.claimant.trim() !== this.lastSavedData.claimant ||
       this.beneficiary.trim() !== this.lastSavedData.beneficiary ||
-      this.initialHearingDate !== this.lastSavedData.initialHearingDate;
+      this.formatDateForStorage(this.initialHearingDate) !==
+        this.lastSavedData.initialHearingDate ||
+      this.matterType !== this.lastSavedData.matterType;
     if (!hasChanges) {
       this.autoSaveStatus = 'saved';
       return;
@@ -1583,7 +1813,8 @@ export class CaseDetailComponent implements OnInit {
         companyLawyerName: lawyer?.name,
         claimant: this.claimant.trim() || undefined,
         beneficiary: this.beneficiary.trim() || undefined,
-        initialHearingDate: this.initialHearingDate || undefined,
+        initialHearingDate: this.formatDateForStorage(this.initialHearingDate),
+        matterType: this.matterType,
       });
       this.caseItem = this.cases.getById(this.caseItem.id);
       if (this.caseItem) {
@@ -1595,6 +1826,7 @@ export class CaseDetailComponent implements OnInit {
           claimant: this.caseItem.claimant || '',
           beneficiary: this.caseItem.beneficiary || '',
           initialHearingDate: this.caseItem.initialHearingDate || '',
+          matterType: this.caseItem.matterType ?? 'GeneralCivil',
         };
       }
       this.autoSaveStatus = 'saved';
@@ -1605,7 +1837,7 @@ export class CaseDetailComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/legal/dashboard']);
+    this.router.navigate(['/legal/cases']);
   }
 
   isFormValid(): boolean {
@@ -1643,10 +1875,12 @@ export class CaseDetailComponent implements OnInit {
           client: this.client.trim(),
           claimant: this.claimant.trim() || undefined,
           beneficiary: this.beneficiary.trim() || undefined,
-          initialHearingDate: this.initialHearingDate || undefined,
+          initialHearingDate: this.formatDateForStorage(this.initialHearingDate),
           companyLawyerId: this.companyLawyerId || undefined,
           companyLawyerName: lawyer?.name,
+          matterType: this.matterType,
         });
+        this.cases.updateMeta(newCase.id, this.getMatterSpecificMeta());
         // Update status if not default
         if (this.status !== 'open') {
           this.cases.updateMeta(newCase.id, {
@@ -1664,7 +1898,33 @@ export class CaseDetailComponent implements OnInit {
           this.companyLawyerId = this.caseItem.companyLawyerId || '';
         }
       } else {
-        // Update existing case
+        // Update existing case (single persist; demographics and matter type included)
+        const oldData: Partial<CaseItem> = {
+          title: this.caseItem.title,
+          client: this.caseItem.client,
+          status: this.caseItem.status,
+          matterType: this.caseItem.matterType,
+          companyLawyerId: this.caseItem.companyLawyerId,
+          companyLawyerName: this.caseItem.companyLawyerName,
+          claimant: this.caseItem.claimant,
+          beneficiary: this.caseItem.beneficiary,
+          initialHearingDate: this.caseItem.initialHearingDate,
+          claimantDemographics: this.caseItem.claimantDemographics,
+          damageType: this.caseItem.damageType,
+          disabilityMetrics: this.caseItem.disabilityMetrics,
+          contractReference: this.caseItem.contractReference,
+          disputedAmount: this.caseItem.disputedAmount,
+          employerName: this.caseItem.employerName,
+          employeeName: this.caseItem.employeeName,
+          employmentStartDate: this.caseItem.employmentStartDate,
+          propertyAddress: this.caseItem.propertyAddress,
+          propertyType: this.caseItem.propertyType,
+          titleDeedNumber: this.caseItem.titleDeedNumber,
+          offenseType: this.caseItem.offenseType,
+          incidentDate: this.caseItem.incidentDate,
+          policeReportNumber: this.caseItem.policeReportNumber,
+          caseSummary: this.caseItem.caseSummary,
+        };
         this.cases.updateMeta(this.caseItem.id, {
           title: this.title.trim(),
           client: this.client.trim(),
@@ -1673,20 +1933,9 @@ export class CaseDetailComponent implements OnInit {
           companyLawyerName: lawyer?.name,
           claimant: this.claimant.trim() || undefined,
           beneficiary: this.beneficiary.trim() || undefined,
-          initialHearingDate: this.initialHearingDate || undefined,
-          claimantDemographics: this.demographics,
-          damageType: this.damageType || undefined,
-          disabilityMetrics: this.damageType === 'Disability' ? this.disabilityMetrics : undefined,
-        });
-        const oldData = {
-          title: this.caseItem.title,
-          client: this.caseItem.client,
-          status: this.caseItem.status,
-        };
-        this.cases.updateMeta(this.caseItem.id, {
-          title: this.title.trim(),
-          client: this.client.trim(),
-          status: (this.status as any) === 'on-hold' ? 'pending' : (this.status as any),
+          initialHearingDate: this.formatDateForStorage(this.initialHearingDate),
+          matterType: this.matterType,
+          ...this.getMatterSpecificMeta(),
         });
         this.toast.success('Case updated successfully');
         this.caseItem = this.cases.getById(this.caseItem.id);
@@ -1699,18 +1948,46 @@ export class CaseDetailComponent implements OnInit {
             claimant: this.caseItem.claimant || '',
             beneficiary: this.caseItem.beneficiary || '',
             initialHearingDate: this.caseItem.initialHearingDate || '',
+            matterType: this.caseItem.matterType ?? 'GeneralCivil',
           };
+          this.matterType = this.caseItem.matterType ?? 'GeneralCivil';
           // Record undo action
           this.undoRedo.record({
             type: 'update-case',
             description: 'Update case',
             undo: () => {
-              this.cases.updateMeta(this.caseItem!.id, oldData);
+              this.cases.updateMeta(this.caseItem!.id, {
+                title: oldData.title,
+                client: oldData.client,
+                status: oldData.status,
+                matterType: oldData.matterType,
+                companyLawyerId: oldData.companyLawyerId,
+                companyLawyerName: oldData.companyLawyerName,
+                claimant: oldData.claimant,
+                beneficiary: oldData.beneficiary,
+                initialHearingDate: oldData.initialHearingDate,
+                claimantDemographics: oldData.claimantDemographics,
+                damageType: oldData.damageType,
+                disabilityMetrics: oldData.disabilityMetrics,
+                contractReference: oldData.contractReference,
+                disputedAmount: oldData.disputedAmount,
+                employerName: oldData.employerName,
+                employeeName: oldData.employeeName,
+                employmentStartDate: oldData.employmentStartDate,
+                propertyAddress: oldData.propertyAddress,
+                propertyType: oldData.propertyType,
+                titleDeedNumber: oldData.titleDeedNumber,
+                offenseType: oldData.offenseType,
+                incidentDate: oldData.incidentDate,
+                policeReportNumber: oldData.policeReportNumber,
+                caseSummary: oldData.caseSummary,
+              });
               this.caseItem = this.cases.getById(this.caseItem!.id);
               if (this.caseItem) {
                 this.title = this.caseItem.title;
                 this.client = this.caseItem.client;
                 this.status = this.caseItem.status;
+                this.matterType = this.caseItem.matterType ?? 'GeneralCivil';
               }
             },
             redo: () => {
@@ -1718,12 +1995,20 @@ export class CaseDetailComponent implements OnInit {
                 title: this.title.trim(),
                 client: this.client.trim(),
                 status: (this.status as any) === 'on-hold' ? 'pending' : (this.status as any),
+                matterType: this.matterType,
+                companyLawyerId: this.companyLawyerId || undefined,
+                companyLawyerName: lawyer?.name,
+                claimant: this.claimant.trim() || undefined,
+                beneficiary: this.beneficiary.trim() || undefined,
+                initialHearingDate: this.formatDateForStorage(this.initialHearingDate),
+                ...this.getMatterSpecificMeta(),
               });
               this.caseItem = this.cases.getById(this.caseItem!.id);
               if (this.caseItem) {
                 this.title = this.caseItem.title;
                 this.client = this.caseItem.client;
                 this.status = this.caseItem.status;
+                this.matterType = this.caseItem.matterType ?? 'GeneralCivil';
               }
             },
           });
@@ -1802,6 +2087,156 @@ export class CaseDetailComponent implements OnInit {
     // Reset level if not in available levels
     if (!this.availableLevels.includes(this.newRuling.courtLevel as CourtLevel)) {
       this.newRuling.courtLevel = this.availableLevels[0] || '';
+    }
+  }
+
+  filteredTasks(): CaseTask[] {
+    const tasks = this.caseItem?.tasks ?? [];
+    const q = this.taskTabSearch.trim().toLowerCase();
+    if (!q) return tasks;
+    return tasks.filter((t) => t.title.toLowerCase().includes(q));
+  }
+
+  filteredDeadlines(): CaseDeadline[] {
+    const deadlines = this.caseItem?.deadlines ?? [];
+    const q = this.deadlineTabSearch.trim().toLowerCase();
+    if (!q) return deadlines;
+    return deadlines.filter(
+      (d) => d.title.toLowerCase().includes(q) || (d.date && d.date.toLowerCase().includes(q)),
+    );
+  }
+
+  filteredDevelopments(): CaseDevelopment[] {
+    const list = this.caseItem?.developments ?? [];
+    const q = this.developmentTabSearch.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter((d) => d.note.toLowerCase().includes(q));
+  }
+
+  filteredRulings(): CaseRuling[] {
+    const rulings = this.caseItem?.rulings ?? [];
+    const q = this.rulingTabSearch.trim().toLowerCase();
+    if (!q) return rulings;
+    return rulings.filter((r) => {
+      const blob = [
+        r.caseNo,
+        r.caseType,
+        r.stage,
+        String(r.stageNo),
+        r.courtType,
+        r.adversaryName,
+        r.caseDetails,
+        r.filingDate,
+        r.rulingDate,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return blob.includes(q);
+    });
+  }
+
+  private parseStoredDate(value?: string): Date | null {
+    if (!value) return null;
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  private formatDateForStorage(value: Date | string | null | undefined): string | undefined {
+    if (!value) return undefined;
+    const parsed = value instanceof Date ? value : new Date(value);
+    return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString().slice(0, 10);
+  }
+
+  private getMatterSpecificMeta(): Partial<CaseItem> {
+    const clearNonMotor = {
+      claimantDemographics: undefined,
+      damageType: undefined,
+      disabilityMetrics: undefined,
+    };
+    const clearCommercial = { contractReference: undefined, disputedAmount: undefined };
+    const clearLabor = {
+      employerName: undefined,
+      employeeName: undefined,
+      employmentStartDate: undefined,
+    };
+    const clearRealEstate = {
+      propertyAddress: undefined,
+      propertyType: undefined,
+      titleDeedNumber: undefined,
+    };
+    const clearCriminal = {
+      offenseType: undefined,
+      incidentDate: undefined,
+      policeReportNumber: undefined,
+    };
+    const clearGeneral = { caseSummary: undefined };
+
+    switch (this.matterType) {
+      case 'MotorInsurance':
+        return {
+          ...clearCommercial,
+          ...clearLabor,
+          ...clearRealEstate,
+          ...clearCriminal,
+          ...clearGeneral,
+          claimantDemographics: this.demographics,
+          damageType: this.damageType || undefined,
+          disabilityMetrics: this.damageType === 'Disability' ? this.disabilityMetrics : undefined,
+        };
+      case 'CommercialContract':
+        return {
+          ...clearNonMotor,
+          ...clearLabor,
+          ...clearRealEstate,
+          ...clearCriminal,
+          ...clearGeneral,
+          contractReference: this.contractReference.trim() || undefined,
+          disputedAmount: this.disputedAmount ?? undefined,
+        };
+      case 'LaborEmployment':
+        return {
+          ...clearNonMotor,
+          ...clearCommercial,
+          ...clearRealEstate,
+          ...clearCriminal,
+          ...clearGeneral,
+          employerName: this.employerName.trim() || undefined,
+          employeeName: this.employeeName.trim() || undefined,
+          employmentStartDate: this.formatDateForStorage(this.employmentStartDate),
+        };
+      case 'RealEstate':
+        return {
+          ...clearNonMotor,
+          ...clearCommercial,
+          ...clearLabor,
+          ...clearCriminal,
+          ...clearGeneral,
+          propertyAddress: this.propertyAddress.trim() || undefined,
+          propertyType: this.propertyType.trim() || undefined,
+          titleDeedNumber: this.titleDeedNumber.trim() || undefined,
+        };
+      case 'CriminalDefense':
+        return {
+          ...clearNonMotor,
+          ...clearCommercial,
+          ...clearLabor,
+          ...clearRealEstate,
+          ...clearGeneral,
+          offenseType: this.offenseType.trim() || undefined,
+          incidentDate: this.formatDateForStorage(this.incidentDate),
+          policeReportNumber: this.policeReportNumber.trim() || undefined,
+        };
+      case 'GeneralCivil':
+      default:
+        return {
+          ...clearNonMotor,
+          ...clearCommercial,
+          ...clearLabor,
+          ...clearRealEstate,
+          ...clearCriminal,
+          caseSummary: this.caseSummary.trim() || undefined,
+        };
     }
   }
 
@@ -1995,7 +2430,7 @@ export class CaseDetailComponent implements OnInit {
     if (!this.deadlineDate) {
       this.deadlineDateError = 'Deadline date is required';
     } else {
-      const deadlineDate = new Date(this.deadlineDate);
+      const deadlineDate = this.deadlineDate;
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       if (deadlineDate < today) {
@@ -2016,10 +2451,16 @@ export class CaseDetailComponent implements OnInit {
     }
     this.addingDeadline = true;
     try {
-      this.cases.addDeadline(this.caseItem.id, this.deadlineTitle.trim(), this.deadlineDate);
+      const deadlineDate = this.formatDateForStorage(this.deadlineDate);
+      if (!deadlineDate) {
+        this.deadlineDateError = 'Deadline date is required';
+        this.toast.error('Please fix the errors before adding deadline');
+        return;
+      }
+      this.cases.addDeadline(this.caseItem.id, this.deadlineTitle.trim(), deadlineDate);
       this.caseItem = this.cases.getById(this.caseItem.id);
       this.deadlineTitle = '';
-      this.deadlineDate = '';
+      this.deadlineDate = null;
       this.deadlineTitleError = '';
       this.deadlineDateError = '';
       this.toast.success('Deadline added successfully');
@@ -2112,6 +2553,14 @@ export class CaseDetailComponent implements OnInit {
 
     this.addingRuling = true;
     try {
+      const filingDate = this.formatDateForStorage(this.newRuling.filingDate);
+      const rulingDate = this.formatDateForStorage(this.newRuling.rulingDate);
+      if (!filingDate || !rulingDate) {
+        this.rulingFilingDateError = filingDate ? '' : 'Invalid filing date';
+        this.rulingRulingDateError = rulingDate ? '' : 'Invalid ruling date';
+        this.toast.error('Please fix the errors before adding ruling');
+        return;
+      }
       this.cases.addRuling(this.caseItem.id, {
         stage: this.newRuling.stage,
         caseNo: this.newRuling.caseNo,
@@ -2120,11 +2569,11 @@ export class CaseDetailComponent implements OnInit {
         courtLevel: this.newRuling.courtLevel,
         courtCity: this.newRuling.courtCity,
         caseDetails: this.newRuling.caseDetails,
-        filingDate: this.newRuling.filingDate,
+        filingDate,
         filingNo: this.newRuling.filingNo,
         stageNo: this.newRuling.stageNo,
         rulingInFavorOf: this.newRuling.rulingInFavorOf,
-        rulingDate: this.newRuling.rulingDate,
+        rulingDate,
         courtFees: this.newRuling.courtFees,
         legalExpenses: this.newRuling.legalExpenses,
         translationCourtFees: this.newRuling.translationCourtFees,
@@ -2147,11 +2596,11 @@ export class CaseDetailComponent implements OnInit {
         courtLevel: '',
         courtCity: '',
         caseDetails: '',
-        filingDate: new Date().toISOString().slice(0, 10),
+        filingDate: new Date(),
         filingNo: '',
         stageNo: 1,
         rulingInFavorOf: 'Company' as RulingInFavorOf,
-        rulingDate: new Date().toISOString().slice(0, 10),
+        rulingDate: new Date(),
         courtFees: 0,
         legalExpenses: 0,
         translationCourtFees: 0,
@@ -2181,7 +2630,7 @@ export class CaseDetailComponent implements OnInit {
       caseNo: ruling.caseNo,
       caseType: ruling.caseType,
       courtType: ruling.courtType,
-      rulingDate: ruling.rulingDate,
+      rulingDate: this.parseStoredDate(ruling.rulingDate) || undefined,
       rulingInFavorOf: ruling.rulingInFavorOf,
       adversaryName: ruling.adversaryName,
       indemnityByCourtAmount: ruling.indemnityByCourtAmount,
@@ -2196,7 +2645,12 @@ export class CaseDetailComponent implements OnInit {
   saveEditRuling(rulingId: string): void {
     if (!this.caseItem) return;
     try {
-      this.cases.updateRuling(this.caseItem.id, rulingId, this.editingRuling);
+      const payload: Partial<CaseRuling> = { ...this.editingRuling } as Partial<CaseRuling>;
+      if ('rulingDate' in payload) {
+        const normalized = this.formatDateForStorage(payload.rulingDate as any);
+        payload.rulingDate = normalized ?? undefined;
+      }
+      this.cases.updateRuling(this.caseItem.id, rulingId, payload);
       this.caseItem = this.cases.getById(this.caseItem.id);
       this.editingRulingId = null;
       this.editingRuling = {};

@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
@@ -10,7 +10,13 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { CaseWorkflowComponent } from '../../shared/components/case-workflow/case-workflow.component';
 import { RelativeDatePipe } from '../../shared/pipes/relative-date.pipe';
-import { CaseItem, CasesService } from '../../shared/services/cases.service';
+import {
+  CASE_MATTER_TYPE_LABELS,
+  CASE_MATTER_TYPES,
+  CaseItem,
+  CaseMatterType,
+  CasesService,
+} from '../../shared/services/cases.service';
 import { ConfirmDialogService } from '../../shared/services/confirm-dialog.service';
 import { ExportService } from '../../shared/services/export.service';
 import { ToastService } from '../../shared/services/toast.service';
@@ -36,7 +42,7 @@ import { ToastService } from '../../shared/services/toast.service';
         </h2>
         <p class="text-sm text-[rgb(var(--text-muted))]">
           {{ filteredCases.length }} {{ filteredCases.length === 1 ? 'case' : 'cases' }}
-          <span *ngIf="searchQuery || statusFilter || stageFilter">
+          <span *ngIf="searchQuery || statusFilter || stageFilter || matterFilter">
             ({{ allCases.length }} total)
           </span>
         </p>
@@ -111,8 +117,8 @@ import { ToastService } from '../../shared/services/toast.service';
       </div>
 
       <!-- Search and Filters -->
-      <div class="card p-4">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="card p-4" id="cases-filters-anchor">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div class="md:col-span-2">
             <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">Search</label>
             <div class="relative">
@@ -122,7 +128,7 @@ import { ToastService } from '../../shared/services/toast.service';
                 (ngModelChange)="onSearchChange()"
                 class="w-full pr-4 py-2.5"
                 style="padding-left: 2.5rem;"
-                placeholder="Search by title or client..."
+                placeholder="Search by title, client, or matter type..."
               />
               <svg
                 class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[rgb(var(--text-muted))] pointer-events-none z-10"
@@ -171,6 +177,17 @@ import { ToastService } from '../../shared/services/toast.service';
               <option value="4">Settled</option>
             </select>
           </div>
+          <div>
+            <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
+              >Matter type</label
+            >
+            <select [(ngModel)]="matterFilter" (ngModelChange)="applyFilters()" class="w-full">
+              <option value="">All types</option>
+              <option *ngFor="let mt of matterTypeOptions" [value]="mt">
+                {{ matterTypeLabels[mt] }}
+              </option>
+            </select>
+          </div>
         </div>
         <div class="mt-4 flex items-center justify-between">
           <div class="flex items-center gap-4">
@@ -200,7 +217,7 @@ import { ToastService } from '../../shared/services/toast.service';
           </div>
         </div>
         <div
-          *ngIf="searchQuery || statusFilter || stageFilter || legalStatusFilter"
+          *ngIf="searchQuery || statusFilter || stageFilter || legalStatusFilter || matterFilter"
           class="mt-4 flex items-center gap-2 flex-wrap"
         >
           <span class="text-sm text-[rgb(var(--text-muted))]">Active filters:</span>
@@ -258,6 +275,22 @@ import { ToastService } from '../../shared/services/toast.service';
           >
             Legal: {{ getLegalStatusFilterLabel() }}
             <button type="button" (click)="clearLegalStatusFilter()" class="hover:opacity-80">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </span>
+          <span
+            *ngIf="matterFilter"
+            class="inline-flex items-center gap-1 px-3 py-1 bg-info-muted text-[rgb(var(--text))] border border-info rounded-full text-xs font-medium"
+          >
+            Matter: {{ getMatterFilterLabel() }}
+            <button type="button" (click)="clearMatterFilter()" class="hover:opacity-80">
               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
@@ -380,6 +413,12 @@ import { ToastService } from '../../shared/services/toast.service';
                         *ngIf="case.stage"
                       >
                         {{ case.stage | titlecase }}
+                      </span>
+                      <span
+                        class="px-3 py-1 rounded-full text-xs font-semibold bg-[rgb(var(--surface-muted))] text-[rgb(var(--text))] border border-[rgb(var(--border-light))]"
+                        title="Matter type"
+                      >
+                        {{ matterTypeLabels[caseMatterType(case)] }}
                       </span>
                       <span
                         class="px-3 py-1 rounded-full text-xs font-semibold border"
@@ -523,6 +562,17 @@ import { ToastService } from '../../shared/services/toast.service';
   `,
 })
 export class CasesListComponent {
+  protected readonly matterTypeOptions = CASE_MATTER_TYPES;
+  protected readonly matterTypeLabels = CASE_MATTER_TYPE_LABELS;
+
+  caseMatterType(c: CaseItem): CaseMatterType {
+    return c.matterType ?? 'GeneralCivil';
+  }
+
+  getMatterFilterLabel(): string {
+    return CASE_MATTER_TYPE_LABELS[this.matterFilter as CaseMatterType];
+  }
+
   getLegalStatusLabel(legalStatus?: number): string {
     const status = legalStatus ?? 1; // Default to 1 (To Legal Department)
     switch (status) {
@@ -542,6 +592,7 @@ export class CasesListComponent {
   private readonly exportService = inject(ExportService);
   private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly toast = inject(ToastService);
+  private readonly route = inject(ActivatedRoute);
   protected allCases: CaseItem[] = this.casesService.list();
   protected filteredCases: CaseItem[] = this.allCases;
   protected paginatedCases: CaseItem[] = this.filteredCases;
@@ -549,6 +600,7 @@ export class CasesListComponent {
   protected statusFilter = '';
   protected stageFilter = '';
   protected legalStatusFilter = '';
+  protected matterFilter = '';
   protected sortBy = 'newest';
   protected itemsPerPage = 20;
   protected currentPage = 1;
@@ -563,6 +615,16 @@ export class CasesListComponent {
     this.searchSubject
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
       .subscribe(() => this.applyFilters());
+
+    this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
+      if (params.get('focus') === 'deadlines') {
+        setTimeout(() => {
+          document
+            .getElementById('cases-filters-anchor')
+            ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 0);
+      }
+    });
   }
 
   trackByCaseId(_index: number, c: CaseItem): string {
@@ -583,9 +645,16 @@ export class CasesListComponent {
     // Search filter
     if (this.searchQuery.trim()) {
       const query = this.searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(
-        (c) => c.title.toLowerCase().includes(query) || c.client.toLowerCase().includes(query),
-      );
+      filtered = filtered.filter((c) => {
+        const matter = c.matterType ?? 'GeneralCivil';
+        const matterLabel = CASE_MATTER_TYPE_LABELS[matter].toLowerCase();
+        return (
+          c.title.toLowerCase().includes(query) ||
+          c.client.toLowerCase().includes(query) ||
+          matterLabel.includes(query) ||
+          matter.toLowerCase().includes(query)
+        );
+      });
     }
 
     // Status filter
@@ -602,6 +671,10 @@ export class CasesListComponent {
     if (this.legalStatusFilter) {
       const filterVal = Number(this.legalStatusFilter);
       filtered = filtered.filter((c) => (c.legalStatus ?? 1) === filterVal);
+    }
+
+    if (this.matterFilter) {
+      filtered = filtered.filter((c) => (c.matterType ?? 'GeneralCivil') === this.matterFilter);
     }
 
     this.filteredCases = filtered;
@@ -684,11 +757,17 @@ export class CasesListComponent {
     this.applyFilters();
   }
 
+  clearMatterFilter(): void {
+    this.matterFilter = '';
+    this.applyFilters();
+  }
+
   clearAllFilters(): void {
     this.searchQuery = '';
     this.statusFilter = '';
     this.stageFilter = '';
     this.legalStatusFilter = '';
+    this.matterFilter = '';
     this.currentPage = 1;
     this.applyFilters();
   }

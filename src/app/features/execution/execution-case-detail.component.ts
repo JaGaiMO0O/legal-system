@@ -205,7 +205,7 @@ export class ExecutionCaseDetailComponent {
   private readonly toast = inject(ToastService);
 
   protected executionCase: ExecutionCase;
-  protected fileDate: string = '';
+  protected fileDate: Date | null = null;
 
   constructor() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -213,7 +213,7 @@ export class ExecutionCaseDetailComponent {
       const existing = this.executionCasesService.getById(id);
       if (existing) {
         this.executionCase = { ...existing };
-        this.fileDate = existing.fileDate ? existing.fileDate.split('T')[0] : '';
+        this.fileDate = existing.fileDate ? new Date(existing.fileDate) : null;
       } else {
         this.executionCase = this.createEmptyCase();
       }
@@ -243,7 +243,7 @@ export class ExecutionCaseDetailComponent {
   }
 
   save(): void {
-    this.executionCase.fileDate = this.fileDate ? new Date(this.fileDate).toISOString() : '';
+    this.executionCase.fileDate = this.fileDate ? this.fileDate.toISOString() : '';
 
     if (this.executionCase.id) {
       this.executionCasesService.update(this.executionCase.id, this.executionCase);
