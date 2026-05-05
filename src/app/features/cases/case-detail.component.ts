@@ -43,7 +43,6 @@ import { CourtLevel, CourtsService, CourtType } from '../../shared/services/cour
 import { ExportService } from '../../shared/services/export.service';
 import { Lawyer, LawyersService } from '../../shared/services/lawyers.service';
 import { ToastService } from '../../shared/services/toast.service';
-import { UndoRedoService } from '../../shared/services/undo-redo.service';
 
 type LastSavedData = {
   title: string;
@@ -1550,7 +1549,6 @@ export class CaseDetailComponent implements OnInit {
   private readonly toast = inject(ToastService);
   private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly exportService = inject(ExportService);
-  private readonly undoRedo = inject(UndoRedoService);
   private readonly caseTracking = inject(CaseTrackingService);
   private readonly businessSettlements = inject(BusinessSettlementService);
   private readonly lawyersService = inject(LawyersService);
@@ -1899,32 +1897,6 @@ export class CaseDetailComponent implements OnInit {
         }
       } else {
         // Update existing case (single persist; demographics and matter type included)
-        const oldData: Partial<CaseItem> = {
-          title: this.caseItem.title,
-          client: this.caseItem.client,
-          status: this.caseItem.status,
-          matterType: this.caseItem.matterType,
-          companyLawyerId: this.caseItem.companyLawyerId,
-          companyLawyerName: this.caseItem.companyLawyerName,
-          claimant: this.caseItem.claimant,
-          beneficiary: this.caseItem.beneficiary,
-          initialHearingDate: this.caseItem.initialHearingDate,
-          claimantDemographics: this.caseItem.claimantDemographics,
-          damageType: this.caseItem.damageType,
-          disabilityMetrics: this.caseItem.disabilityMetrics,
-          contractReference: this.caseItem.contractReference,
-          disputedAmount: this.caseItem.disputedAmount,
-          employerName: this.caseItem.employerName,
-          employeeName: this.caseItem.employeeName,
-          employmentStartDate: this.caseItem.employmentStartDate,
-          propertyAddress: this.caseItem.propertyAddress,
-          propertyType: this.caseItem.propertyType,
-          titleDeedNumber: this.caseItem.titleDeedNumber,
-          offenseType: this.caseItem.offenseType,
-          incidentDate: this.caseItem.incidentDate,
-          policeReportNumber: this.caseItem.policeReportNumber,
-          caseSummary: this.caseItem.caseSummary,
-        };
         this.cases.updateMeta(this.caseItem.id, {
           title: this.title.trim(),
           client: this.client.trim(),
@@ -1951,67 +1923,6 @@ export class CaseDetailComponent implements OnInit {
             matterType: this.caseItem.matterType ?? 'GeneralCivil',
           };
           this.matterType = this.caseItem.matterType ?? 'GeneralCivil';
-          // Record undo action
-          this.undoRedo.record({
-            type: 'update-case',
-            description: 'Update case',
-            undo: () => {
-              this.cases.updateMeta(this.caseItem!.id, {
-                title: oldData.title,
-                client: oldData.client,
-                status: oldData.status,
-                matterType: oldData.matterType,
-                companyLawyerId: oldData.companyLawyerId,
-                companyLawyerName: oldData.companyLawyerName,
-                claimant: oldData.claimant,
-                beneficiary: oldData.beneficiary,
-                initialHearingDate: oldData.initialHearingDate,
-                claimantDemographics: oldData.claimantDemographics,
-                damageType: oldData.damageType,
-                disabilityMetrics: oldData.disabilityMetrics,
-                contractReference: oldData.contractReference,
-                disputedAmount: oldData.disputedAmount,
-                employerName: oldData.employerName,
-                employeeName: oldData.employeeName,
-                employmentStartDate: oldData.employmentStartDate,
-                propertyAddress: oldData.propertyAddress,
-                propertyType: oldData.propertyType,
-                titleDeedNumber: oldData.titleDeedNumber,
-                offenseType: oldData.offenseType,
-                incidentDate: oldData.incidentDate,
-                policeReportNumber: oldData.policeReportNumber,
-                caseSummary: oldData.caseSummary,
-              });
-              this.caseItem = this.cases.getById(this.caseItem!.id);
-              if (this.caseItem) {
-                this.title = this.caseItem.title;
-                this.client = this.caseItem.client;
-                this.status = this.caseItem.status;
-                this.matterType = this.caseItem.matterType ?? 'GeneralCivil';
-              }
-            },
-            redo: () => {
-              this.cases.updateMeta(this.caseItem!.id, {
-                title: this.title.trim(),
-                client: this.client.trim(),
-                status: (this.status as any) === 'on-hold' ? 'pending' : (this.status as any),
-                matterType: this.matterType,
-                companyLawyerId: this.companyLawyerId || undefined,
-                companyLawyerName: lawyer?.name,
-                claimant: this.claimant.trim() || undefined,
-                beneficiary: this.beneficiary.trim() || undefined,
-                initialHearingDate: this.formatDateForStorage(this.initialHearingDate),
-                ...this.getMatterSpecificMeta(),
-              });
-              this.caseItem = this.cases.getById(this.caseItem!.id);
-              if (this.caseItem) {
-                this.title = this.caseItem.title;
-                this.client = this.caseItem.client;
-                this.status = this.caseItem.status;
-                this.matterType = this.caseItem.matterType ?? 'GeneralCivil';
-              }
-            },
-          });
         }
         this.autoSaveStatus = 'saved';
       }
@@ -2350,25 +2261,10 @@ export class CaseDetailComponent implements OnInit {
     }
     this.addingTask = true;
     try {
-      const task = this.cases.addTask(this.caseItem.id, t);
+      this.cases.addTask(this.caseItem.id, t);
       this.caseItem = this.cases.getById(this.caseItem.id);
       this.taskTitle = '';
       this.toast.success('Task added successfully');
-      // Record undo action
-      if (task) {
-        this.undoRedo.record({
-          type: 'add-task',
-          description: 'Add task',
-          undo: () => {
-            this.cases.removeTask(this.caseItem!.id, task.id);
-            this.caseItem = this.cases.getById(this.caseItem!.id);
-          },
-          redo: () => {
-            this.cases.addTask(this.caseItem!.id, t);
-            this.caseItem = this.cases.getById(this.caseItem!.id);
-          },
-        });
-      }
     } catch (error) {
       this.toast.error('Failed to add task');
       console.error('Error adding task:', error);
@@ -2398,21 +2294,6 @@ export class CaseDetailComponent implements OnInit {
       this.cases.removeTask(this.caseItem.id, taskId);
       this.caseItem = this.cases.getById(this.caseItem.id);
       this.toast.success('Task removed');
-      // Record undo action
-      if (task) {
-        this.undoRedo.record({
-          type: 'remove-task',
-          description: 'Remove task',
-          undo: () => {
-            this.cases.addTask(this.caseItem!.id, task.title);
-            this.caseItem = this.cases.getById(this.caseItem!.id);
-          },
-          redo: () => {
-            this.cases.removeTask(this.caseItem!.id, taskId);
-            this.caseItem = this.cases.getById(this.caseItem!.id);
-          },
-        });
-      }
     } catch (error) {
       this.toast.error('Failed to remove task');
       console.error('Error removing task:', error);

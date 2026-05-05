@@ -5,7 +5,6 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ButtonModule } from 'primeng/button';
 import { AuthService } from '../core/auth/auth.service';
 import { ThemeToggleComponent } from '../shared/components/theme-toggle.component';
-import { UndoRedoComponent } from '../shared/components/undo-redo/undo-redo.component';
 
 export interface NavItem {
   path: string;
@@ -25,7 +24,6 @@ export interface NavItem {
     TranslateModule,
     ButtonModule,
     ThemeToggleComponent,
-    UndoRedoComponent,
   ],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.scss',

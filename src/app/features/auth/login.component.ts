@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
-import { AuthRole, AuthService } from '../../core/auth/auth.service';
+import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
   standalone: true,
@@ -29,23 +29,6 @@ import { AuthRole, AuthService } from '../../core/auth/auth.service';
 
         <p-card>
           <div class="flex flex-col gap-4 p-2">
-            <div class="flex flex-col sm:flex-row gap-2">
-              <p-button
-                [outlined]="selectedRole() !== 'admin'"
-                [severity]="selectedRole() === 'admin' ? 'primary' : 'secondary'"
-                styleClass="w-full"
-                label="Admin"
-                (onClick)="selectRole('admin')"
-              ></p-button>
-              <p-button
-                [outlined]="selectedRole() !== 'lawyer'"
-                [severity]="selectedRole() === 'lawyer' ? 'primary' : 'secondary'"
-                styleClass="w-full"
-                label="Lawyer"
-                (onClick)="selectRole('lawyer')"
-              ></p-button>
-            </div>
-
             <div>
               <label
                 for="login-user"
@@ -99,7 +82,6 @@ export class LoginComponent implements OnInit {
 
   protected username = '';
   protected password = '';
-  protected readonly selectedRole = signal<AuthRole>('admin');
   protected readonly error = signal('');
   protected readonly loading = signal(false);
 
@@ -108,14 +90,6 @@ export class LoginComponent implements OnInit {
       void this.router.navigateByUrl('/legal/dashboard');
       return;
     }
-    this.selectRole('admin');
-  }
-
-  selectRole(role: AuthRole): void {
-    this.selectedRole.set(role);
-    this.username = role === 'admin' ? 'admin' : 'lawyer';
-    this.password = role === 'admin' ? 'admin' : 'lawyer';
-    this.error.set('');
   }
 
   submit(): void {
@@ -126,7 +100,7 @@ export class LoginComponent implements OnInit {
     if (ok) {
       void this.router.navigateByUrl('/legal/dashboard');
     } else {
-      this.error.set('Invalid username or password for the selected account type.');
+      this.error.set('Invalid username or password.');
     }
   }
 }
