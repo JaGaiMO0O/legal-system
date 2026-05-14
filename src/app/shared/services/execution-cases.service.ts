@@ -16,6 +16,16 @@ export interface ExecutionCase {
   amountPaid: number;
   linkedCaseId?: string;
   unifiedCaseId?: string;
+  requestNo?: string;
+  requestDate?: string;
+  executionApplicant?: string;
+  executionRespondent?: string;
+  requestClassification?: string;
+  demandedSubject?: string;
+  enforcementInstrument?: string;
+  instrumentIssuingBody?: string;
+  executionRequestStatus?: string;
+  rulingReferenceNo?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -54,16 +64,16 @@ export class ExecutionCasesService {
         id: 'exec-1',
         caseNumber: '2026301',
         executionCaseNo: 'EX-2026-301',
-        fileNo: 'FILE-EXEC-301',
+        fileNo: 'ملف-تنفيذ-٣٠١',
         fileDate: toIso(-28),
-        courtRoom: 'Execution Hall 3',
-        companyLawyer: 'Rana Al-Enezi',
-        lastCourtType: 'Labor Court',
-        lastCourtLevel: 'Cassation',
+        courtRoom: 'قاعة التنفيذ ٣',
+        companyLawyer: 'رنا العنزي',
+        lastCourtType: 'محكمة تجارية',
+        lastCourtLevel: 'استئناف',
         amountRuled: 122000,
         amountPaid: 42000,
-        linkedCaseId: 'case-4',
-        unifiedCaseId: 'uc-1004',
+        linkedCaseId: 'case-1',
+        unifiedCaseId: 'uc-1001',
         createdAt: toIso(-28),
         updatedAt: toIso(-2),
       },
@@ -71,34 +81,17 @@ export class ExecutionCasesService {
         id: 'exec-2',
         caseNumber: '2026302',
         executionCaseNo: 'EX-2026-302',
-        fileNo: 'FILE-EXEC-302',
+        fileNo: 'ملف-تنفيذ-٣٠٢',
         fileDate: toIso(-12),
-        courtRoom: 'Execution Hall 1',
-        companyLawyer: 'Abdullah Al-Mugren',
-        lastCourtType: 'Commercial Court',
-        lastCourtLevel: 'Appeal',
+        courtRoom: 'قاعة التنفيذ ١',
+        companyLawyer: 'زياد البيشي',
+        lastCourtType: 'محكمة تجارية',
+        lastCourtLevel: 'ابتدائي',
         amountRuled: 75000,
         amountPaid: 25000,
         linkedCaseId: 'case-2',
         unifiedCaseId: 'uc-1002',
         createdAt: toIso(-12),
-        updatedAt: toIso(-1),
-      },
-      {
-        id: 'exec-3',
-        caseNumber: '2026303',
-        executionCaseNo: 'EX-2026-303',
-        fileNo: 'FILE-EXEC-303',
-        fileDate: toIso(-7),
-        courtRoom: 'Execution Hall 5',
-        companyLawyer: 'Maha Al-Zahrani',
-        lastCourtType: 'General Civil Court',
-        lastCourtLevel: 'Appeal',
-        amountRuled: 310000,
-        amountPaid: 90000,
-        linkedCaseId: 'case-6',
-        unifiedCaseId: 'uc-1006',
-        createdAt: toIso(-7),
         updatedAt: toIso(-1),
       },
     ];
@@ -127,6 +120,16 @@ export class ExecutionCasesService {
     amountPaid: number;
     linkedCaseId?: string;
     unifiedCaseId?: string;
+    requestNo?: string;
+    requestDate?: string;
+    executionApplicant?: string;
+    executionRespondent?: string;
+    requestClassification?: string;
+    demandedSubject?: string;
+    enforcementInstrument?: string;
+    instrumentIssuingBody?: string;
+    executionRequestStatus?: string;
+    rulingReferenceNo?: string;
   }): ExecutionCase {
     const now = new Date().toISOString();
     let caseNumber = input.caseNumber;

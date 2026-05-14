@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
@@ -10,7 +11,7 @@ import { AuthService } from '../../core/auth/auth.service';
 @Component({
   standalone: true,
   selector: 'app-login',
-  imports: [CommonModule, FormsModule, ButtonModule, CardModule, InputTextModule],
+  imports: [CommonModule, FormsModule, ButtonModule, CardModule, InputTextModule, TranslateModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="min-h-screen flex items-center justify-center p-6 bg-[rgb(var(--surface-muted))]">
@@ -22,9 +23,11 @@ import { AuthService } from '../../core/auth/auth.service';
             <i class="pi pi-shield text-2xl" aria-hidden="true"></i>
           </div>
           <h1 class="text-2xl font-semibold text-[rgb(var(--text))] tracking-tight">
-            Legal System
+            {{ 'login.title' | translate }}
           </h1>
-          <p class="text-sm text-[rgb(var(--text-muted))] mt-1">Sign in to continue</p>
+          <p class="text-sm text-[rgb(var(--text-muted))] mt-1">
+            {{ 'login.subtitle' | translate }}
+          </p>
         </div>
 
         <p-card>
@@ -33,7 +36,7 @@ import { AuthService } from '../../core/auth/auth.service';
               <label
                 for="login-user"
                 class="block text-sm font-semibold mb-2 text-[rgb(var(--text))]"
-                >Username</label
+                >{{ 'login.username' | translate }}</label
               >
               <input
                 id="login-user"
@@ -48,7 +51,7 @@ import { AuthService } from '../../core/auth/auth.service';
               <label
                 for="login-pass"
                 class="block text-sm font-semibold mb-2 text-[rgb(var(--text))]"
-                >Password</label
+                >{{ 'login.password' | translate }}</label
               >
               <input
                 id="login-pass"
@@ -66,7 +69,7 @@ import { AuthService } from '../../core/auth/auth.service';
             <p-button
               severity="primary"
               styleClass="w-full"
-              label="Sign in"
+              [label]="'login.submit' | translate"
               [loading]="loading()"
               (onClick)="submit()"
             ></p-button>
@@ -79,6 +82,7 @@ import { AuthService } from '../../core/auth/auth.service';
 export class LoginComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly translate = inject(TranslateService);
 
   protected username = '';
   protected password = '';
@@ -100,7 +104,7 @@ export class LoginComponent implements OnInit {
     if (ok) {
       void this.router.navigateByUrl('/legal/dashboard');
     } else {
-      this.error.set('Invalid username or password.');
+      this.error.set(this.translate.instant('login.errorInvalid'));
     }
   }
 }

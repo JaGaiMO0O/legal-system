@@ -1,9 +1,8 @@
 /**
- * Locale configuration for PrimeNG components
- * Configured for KSA (Saudi Arabia) with AED currency
+ * Locale configuration for PrimeNG numeric/currency inputs (Saudi Arabia).
  */
 export const LOCALE_CONFIG = {
-  locale: 'en-SA', // English (Saudi Arabia) - change to 'ar-SA' for Arabic
-  currency: 'AED',
+  locale: 'ar-SA',
+  currency: 'SAR',
   dateFormat: 'dd/mm/yy',
 } as const;

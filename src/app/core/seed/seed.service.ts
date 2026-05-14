@@ -12,27 +12,25 @@ export class SeedService {
   private readonly audit = inject(AuditService);
 
   run(): void {
-    const markKey = 'seeded-v2';
+    const markKey = 'seeded-v3';
     const already = localStorage.getItem(markKey);
     if (already) return;
 
     // Force reset once so all users receive the new mock dataset.
     this.storage.clearAll();
     localStorage.removeItem('seeded-v1');
+    localStorage.removeItem('seeded-v2');
 
-    // Seed court types
+    // Seed court types (Arabic labels for RTL QA)
     if (this.courts.list().length === 0) {
-      this.courts.create('General Civil');
-      this.courts.create('Commercial');
-      this.courts.create('Labor');
-      this.courts.create('Criminal', ['primary', 'appeal', 'cassation']);
-      this.courts.create('Execution', ['execution']);
+      this.courts.create('محكمة مدنية عامة');
+      this.courts.create('محكمة تجارية');
     }
 
     // Seed cases via CasesService.seedData()
     this.cases.list();
 
-    this.audit.record('seed.completed', { version: 'v2' });
+    this.audit.record('seed.completed', { version: 'v3' });
     localStorage.setItem(markKey, '1');
   }
 }

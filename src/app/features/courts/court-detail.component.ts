@@ -2,17 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { CourtLevel, CourtsService, CourtType } from '../../shared/services/courts.service';
 
-const LEVEL_OPTIONS: { value: CourtLevel; label: string }[] = [
-  { value: 'primary', label: 'Primary Court' },
-  { value: 'appeal', label: 'Appeal Court' },
-  { value: 'cassation', label: 'Cassation Court' },
-  { value: 'execution', label: 'Execution Court' },
-];
+const COURT_LEVEL_ORDER: CourtLevel[] = ['primary', 'appeal', 'cassation', 'execution'];
 
 @Component({
   standalone: true,
@@ -24,7 +19,7 @@ const LEVEL_OPTIONS: { value: CourtLevel; label: string }[] = [
         (click)="cancel()"
         class="mb-4 flex items-center text-[rgb(var(--text-muted))] hover:text-[rgb(var(--text))] transition"
       >
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-5 h-5 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -32,52 +27,68 @@ const LEVEL_OPTIONS: { value: CourtLevel; label: string }[] = [
             d="M15 19l-7-7 7-7"
           />
         </svg>
-        Back to Courts
+        {{ 'courts.detail.backToList' | translate }}
       </button>
-      <h2 class="text-2xl font-bold">{{ court.id ? 'Edit Court Type' : 'New Court Type' }}</h2>
+      <h2 class="text-2xl font-bold">
+        {{
+          court.id
+            ? ('courts.detail.editTitle' | translate)
+            : ('courts.detail.newTitle' | translate)
+        }}
+      </h2>
     </div>
 
     <div class="flex flex-col gap-8">
       <p-card>
         <div class="grid grid-cols-1 gap-4">
           <div>
-            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Name</label>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
+              'courts.detail.name' | translate
+            }}</label>
             <input
               type="text"
               [(ngModel)]="court.name"
               class="w-full"
-              placeholder="e.g., Civil Court"
+              [placeholder]="'courts.detail.namePlaceholder' | translate"
             />
           </div>
           <div>
-            <label class="block text-sm text-[rgb(var(--text-muted))] mb-2"
-              >Levels (order matters)</label
-            >
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-2">{{
+              'courts.detail.levelsOrder' | translate
+            }}</label>
             <div class="space-y-2">
               <label
-                *ngFor="let opt of levelOptions"
-                class="flex items-center gap-2 px-3 py-2 border rounded-lg hover:bg-[rgb(var(--surface-muted))]"
+                *ngFor="let lvl of levelValues"
+                class="flex items-center gap-2 px-3 py-2 border rounded-lg hover:bg-[rgb(var(--surface-muted))] rtl:flex-row-reverse"
               >
                 <input
                   type="checkbox"
-                  [checked]="isLevelSelected(opt.value)"
-                  (change)="toggleLevel(opt.value, $event)"
+                  [checked]="isLevelSelected(lvl)"
+                  (change)="toggleLevel(lvl, $event)"
                 />
-                <span class="text-sm font-medium">{{ opt.label }}</span>
+                <span class="text-sm font-medium">{{ 'courts.level.' + lvl | translate }}</span>
               </label>
             </div>
             <p class="text-xs text-[rgb(var(--text-muted))] mt-2">
-              Selected in order of escalation: {{ court.levels.join(' → ') || 'None' }}
+              {{ 'courts.detail.selectedOrder' | translate: { levels: escalationDisplay() } }}
             </p>
           </div>
         </div>
       </p-card>
 
-      <div class="flex gap-2">
-        <p-button severity="primary" (click)="save()" label="Save"></p-button>
-        <p-button [outlined]="true" (click)="cancel()" label="Cancel"></p-button>
+      <div class="flex gap-2 flex-wrap">
+        <p-button
+          severity="primary"
+          (click)="save()"
+          [label]="'actions.save' | translate"
+        ></p-button>
+        <p-button
+          [outlined]="true"
+          (click)="cancel()"
+          [label]="'actions.cancel' | translate"
+        ></p-button>
         <p-button *ngIf="court.id" [outlined]="true" class="text-red-600" (click)="remove()">
-          Delete
+          {{ 'actions.delete' | translate }}
         </p-button>
       </div>
     </div>
@@ -87,9 +98,10 @@ export class CourtDetailComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly courtsService = inject(CourtsService);
+  private readonly translate = inject(TranslateService);
 
   protected court: CourtType = this.createEmpty();
-  protected levelOptions = LEVEL_OPTIONS;
+  protected readonly levelValues = COURT_LEVEL_ORDER;
 
   constructor() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -99,6 +111,15 @@ export class CourtDetailComponent {
         this.court = { ...existing };
       }
     }
+  }
+
+  escalationDisplay(): string {
+    if (!this.court.levels.length) {
+      return this.translate.instant('courts.detail.noneSelected');
+    }
+    return this.court.levels
+      .map((l) => this.translate.instant(`courts.level.${l}`))
+      .join(this.translate.instant('courts.detail.escalationSeparator'));
   }
 
   private createEmpty(): CourtType {
@@ -125,10 +146,7 @@ export class CourtDetailComponent {
     } else {
       this.court.levels = this.court.levels.filter((l) => l !== level);
     }
-    // Preserve the intended escalation order based on LEVEL_OPTIONS
-    this.court.levels = LEVEL_OPTIONS.map((opt) => opt.value).filter((lvl) =>
-      this.court.levels.includes(lvl),
-    );
+    this.court.levels = COURT_LEVEL_ORDER.filter((lvl) => this.court.levels.includes(lvl));
   }
 
   save(): void {

@@ -49,7 +49,7 @@ export class BusinessSettlementService {
         managementAmount: 15000,
         adversaryAmount: 54000,
         amountOfAmicableAgreement: 98000,
-        linkedCaseId: 'case-6',
+        linkedCaseId: 'case-1',
         createdAt: toIso(-24),
         updatedAt: toIso(-5),
       },
@@ -63,17 +63,6 @@ export class BusinessSettlementService {
         linkedCaseId: 'case-2',
         createdAt: toIso(-13),
         updatedAt: toIso(-2),
-      },
-      {
-        id: 'settle-3',
-        departmentAmount: 16000,
-        legalDepartmentAmount: 14000,
-        managementAmount: 10000,
-        adversaryAmount: 42000,
-        amountOfAmicableAgreement: 68000,
-        linkedCaseId: 'case-3',
-        createdAt: toIso(-7),
-        updatedAt: toIso(-1),
       },
     ];
 

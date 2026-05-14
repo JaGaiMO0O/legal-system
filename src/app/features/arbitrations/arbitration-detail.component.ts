@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ButtonModule } from 'primeng/button';
 import { CalendarModule } from 'primeng/calendar';
 import { CardModule } from 'primeng/card';
@@ -26,7 +26,7 @@ import { ToastService } from '../../shared/services/toast.service';
         (click)="cancel()"
         class="mb-4 flex items-center text-[rgb(var(--text-muted))] hover:text-[rgb(var(--text))] transition"
       >
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-5 h-5 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -34,21 +34,27 @@ import { ToastService } from '../../shared/services/toast.service';
             d="M15 19l-7-7 7-7"
           />
         </svg>
-        Back to Arbitrations
+        {{ 'arbitrations.backToList' | translate }}
       </button>
-      <h2 class="text-2xl font-bold">Arbitration</h2>
+      <h2 class="text-2xl font-bold">{{ 'arbitrations.detailTitle' | translate }}</h2>
     </div>
 
     <div class="flex flex-col gap-8">
       <p-card>
-        <h3 class="font-semibold mb-4">Arbitration Info</h3>
+        <h3 class="font-semibold mb-4">
+          {{ 'arbitrations.sections.arbitrationInfo' | translate }}
+        </h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Appealability</label>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
+              'arbitrations.fields.appealability' | translate
+            }}</label>
             <input type="text" [(ngModel)]="arbitration.appealability" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Filling Date</label>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
+              'arbitrations.fields.fillingDate' | translate
+            }}</label>
             <p-calendar
               [(ngModel)]="fillingDate"
               dateFormat="dd/mm/yy"
@@ -57,15 +63,21 @@ import { ToastService } from '../../shared/services/toast.service';
             ></p-calendar>
           </div>
           <div class="md:col-span-2">
-            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Case Description</label>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
+              'arbitrations.fields.caseDescription' | translate
+            }}</label>
             <textarea [(ngModel)]="arbitration.caseDescription" rows="3" class="w-full"></textarea>
           </div>
           <div>
-            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Arbitration Room</label>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
+              'arbitrations.fields.arbitrationRoom' | translate
+            }}</label>
             <input type="text" [(ngModel)]="arbitration.arbitrationRoom" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Arbitration Fees</label>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
+              'arbitrations.fields.arbitrationFees' | translate
+            }}</label>
             <input
               type="number"
               [(ngModel)]="arbitration.arbitrationFees"
@@ -75,30 +87,38 @@ import { ToastService } from '../../shared/services/toast.service';
             />
           </div>
           <div>
-            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Maximum Period</label>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
+              'arbitrations.fields.maximumPeriod' | translate
+            }}</label>
             <input type="text" [(ngModel)]="arbitration.maximumPeriod" class="w-full" />
           </div>
         </div>
       </p-card>
 
       <p-card>
-        <h3 class="font-semibold mb-4">Company Representative</h3>
+        <h3 class="font-semibold mb-4">
+          {{ 'arbitrations.sections.companyRepresentative' | translate }}
+        </h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Select Lawyer</label>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
+              'arbitrations.selectLawyer' | translate
+            }}</label>
             <select
               [(ngModel)]="arbitration.companyRepresentative.lawyerName"
               class="w-full"
               (ngModelChange)="onSelectLawyer($event, 'company')"
             >
-              <option value="">-- Select Lawyer --</option>
+              <option value="">{{ 'arbitrations.selectLawyerPlaceholder' | translate }}</option>
               <option *ngFor="let l of lawyers" [value]="l.name">
                 {{ l.lawyerNumber }} - {{ l.name }}
               </option>
             </select>
           </div>
           <div>
-            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Position</label>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
+              'arbitrations.fields.position' | translate
+            }}</label>
             <input
               type="text"
               [(ngModel)]="arbitration.companyRepresentative.position"
@@ -106,7 +126,9 @@ import { ToastService } from '../../shared/services/toast.service';
             />
           </div>
           <div class="md:col-span-2">
-            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Address</label>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
+              'arbitrations.fields.address' | translate
+            }}</label>
             <textarea
               [(ngModel)]="arbitration.companyRepresentative.address"
               rows="2"
@@ -117,10 +139,14 @@ import { ToastService } from '../../shared/services/toast.service';
       </p-card>
 
       <p-card>
-        <h3 class="font-semibold mb-4">Opposition Representative</h3>
+        <h3 class="font-semibold mb-4">
+          {{ 'arbitrations.sections.oppositionRepresentative' | translate }}
+        </h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Lawyer Name</label>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
+              'arbitrations.fields.lawyerName' | translate
+            }}</label>
             <input
               type="text"
               [(ngModel)]="arbitration.oppositionRepresentative.lawyerName"
@@ -128,7 +154,9 @@ import { ToastService } from '../../shared/services/toast.service';
             />
           </div>
           <div>
-            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Position</label>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
+              'arbitrations.fields.position' | translate
+            }}</label>
             <input
               type="text"
               [(ngModel)]="arbitration.oppositionRepresentative.position"
@@ -136,7 +164,9 @@ import { ToastService } from '../../shared/services/toast.service';
             />
           </div>
           <div class="md:col-span-2">
-            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Address</label>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
+              'arbitrations.fields.address' | translate
+            }}</label>
             <textarea
               [(ngModel)]="arbitration.oppositionRepresentative.address"
               rows="2"
@@ -147,8 +177,8 @@ import { ToastService } from '../../shared/services/toast.service';
       </p-card>
 
       <p-card>
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="font-semibold">Hearings</h3>
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+          <h3 class="font-semibold">{{ 'arbitrations.sections.hearings' | translate }}</h3>
           <div class="flex gap-2 w-full md:w-auto md:min-w-[28rem]">
             <p-calendar
               [(ngModel)]="newHearingDate"
@@ -159,18 +189,34 @@ import { ToastService } from '../../shared/services/toast.service';
             <input
               type="text"
               [(ngModel)]="newHearingRemarks"
-              placeholder="Remarks"
+              [placeholder]="'arbitrations.fields.remarks' | translate"
               class="border rounded px-2 py-1 text-sm flex-1 min-w-0"
             />
-            <button class="px-2 py-1 border rounded text-sm" (click)="addHearing()">Add</button>
+            <button class="px-2 py-1 border rounded text-sm" (click)="addHearing()">
+              {{ 'actions.add' | translate }}
+            </button>
           </div>
         </div>
-        <input
-          type="search"
-          class="w-full mb-3 text-sm border rounded px-2 py-1.5"
-          [(ngModel)]="hearingTabSearch"
-          placeholder="Filter hearings..."
-        />
+        <div class="relative w-full mb-3">
+          <input
+            type="text"
+            inputmode="search"
+            autocomplete="off"
+            class="w-full text-sm border rounded py-1.5 pe-2 search-input-with-icon--compact"
+            [(ngModel)]="hearingTabSearch"
+            [placeholder]="'arbitrations.filterHearings' | translate"
+          />
+          <span class="search-input-icon search-input-icon--tight" aria-hidden="true">
+            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </span>
+        </div>
         <ul class="space-y-2">
           <li
             *ngFor="let hearing of filteredHearings(); trackBy: trackByHearingId"
@@ -178,27 +224,27 @@ import { ToastService } from '../../shared/services/toast.service';
           >
             <div>
               <span class="font-medium">{{ hearing.date | date: 'short' }}</span>
-              <span class="ml-2 text-sm text-[rgb(var(--text-muted))]">{{ hearing.remarks }}</span>
+              <span class="ms-2 text-sm text-[rgb(var(--text-muted))]">{{ hearing.remarks }}</span>
             </div>
             <button
               type="button"
               class="text-xs text-danger hover:underline"
               (click)="removeHearing(hearing.id)"
             >
-              Remove
+              {{ 'common.remove' | translate }}
             </button>
           </li>
           <li
             *ngIf="arbitration.hearings.length === 0"
             class="text-sm text-[rgb(var(--text-muted))]"
           >
-            No hearings scheduled
+            {{ 'arbitrations.noHearings' | translate }}
           </li>
           <li
             *ngIf="arbitration.hearings.length > 0 && filteredHearings().length === 0"
             class="text-sm text-[rgb(var(--text-muted))]"
           >
-            No hearings match your filter.
+            {{ 'arbitrations.hearingsNoMatchFilter' | translate }}
           </li>
         </ul>
       </p-card>
@@ -206,7 +252,7 @@ import { ToastService } from '../../shared/services/toast.service';
       <div class="flex gap-2">
         <div class="flex items-center gap-3">
           <p-button *ngIf="arbitration.id" severity="success" (click)="createCase()">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -214,10 +260,18 @@ import { ToastService } from '../../shared/services/toast.service';
                 d="M12 4v16m8-8H4"
               />
             </svg>
-            Create Case
+            {{ 'arbitrations.createCase' | translate }}
           </p-button>
-          <p-button severity="primary" (click)="save()" label="Save"></p-button>
-          <p-button [outlined]="true" (click)="cancel()" label="Cancel"></p-button>
+          <p-button
+            severity="primary"
+            (click)="save()"
+            [label]="'actions.save' | translate"
+          ></p-button>
+          <p-button
+            [outlined]="true"
+            (click)="cancel()"
+            [label]="'actions.cancel' | translate"
+          ></p-button>
         </div>
       </div>
     </div>
@@ -231,6 +285,7 @@ export class ArbitrationDetailComponent {
   private readonly caseTracking = inject(CaseTrackingService);
   private readonly lawyersService = inject(LawyersService);
   private readonly toast = inject(ToastService);
+  private readonly translate = inject(TranslateService);
 
   protected arbitration: Arbitration;
   protected fillingDate: Date | null = null;
@@ -337,7 +392,7 @@ export class ArbitrationDetailComponent {
 
   createCase(): void {
     if (!this.arbitration.id) {
-      this.toast.warning('Please save the arbitration first');
+      this.toast.warning(this.translate.instant('toasts.arbitration.saveFirst'));
       return;
     }
 
@@ -349,10 +404,16 @@ export class ArbitrationDetailComponent {
         this.arbitrationsService.update(this.arbitration.id, { unifiedCaseId });
       }
 
+      const caseTitle = this.translate.instant('arbitrations.caseFromArbitrationTitle', {
+        caseNumber: this.arbitration.caseNumber || '',
+      });
+
       // Create case with data from arbitration
       const newCase = this.casesService.create({
-        title: `Case from Arbitration ${this.arbitration.caseNumber}`,
-        client: this.arbitration.companyRepresentative.lawyerName || 'Unknown Client',
+        title: caseTitle,
+        client:
+          this.arbitration.companyRepresentative.lawyerName ||
+          this.translate.instant('common.unassigned'),
         tags: ['arbitration'],
         legalStatus: 1,
         matterType: 'CommercialContract',
@@ -372,10 +433,10 @@ export class ArbitrationDetailComponent {
         client: newCase.client,
       });
 
-      this.toast.success('Case created successfully from arbitration');
+      this.toast.success(this.translate.instant('toasts.arbitration.caseCreated'));
       this.router.navigate(['/legal/case', newCase.id]);
     } catch (error: any) {
-      this.toast.error(error?.message || 'Failed to create case');
+      this.toast.error(error?.message || this.translate.instant('toasts.arbitration.createFailed'));
       console.error('Error creating case from arbitration:', error);
     }
   }

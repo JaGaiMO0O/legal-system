@@ -18,9 +18,9 @@
     [class.border-t-4]="size === 'large'"
     [class.border-b-4]="size === 'large'"
     role="status"
-    aria-label="Loading"
+    [attr.aria-label]="'common.loadingAria' | translate"
   >
-    <span class="sr-only">Loading...</span>
+    <span class="sr-only">{{ 'common.loading' | translate }}</span>
   </div>
-  <span *ngIf="message" class="ml-3 text-sm text-[rgb(var(--text-muted))]">{{ message }}</span>
+  <span *ngIf="message" class="ms-3 text-sm text-[rgb(var(--text-muted))]">{{ message }}</span>
 </div>

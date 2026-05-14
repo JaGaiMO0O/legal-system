@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
@@ -11,14 +12,22 @@ import { CaseItem, CasesService } from '../../shared/services/cases.service';
 @Component({
   standalone: true,
   selector: 'app-dashboard',
-  imports: [CommonModule, RouterModule, ButtonModule, CardModule, TagModule, RelativeDatePipe],
+  imports: [
+    CommonModule,
+    RouterModule,
+    ButtonModule,
+    CardModule,
+    TagModule,
+    RelativeDatePipe,
+    TranslateModule,
+  ],
   template: `
     <div class="mb-8">
       <h2 class="text-2xl md:text-3xl font-semibold text-[rgb(var(--text))] mb-2 tracking-tight">
-        Dashboard
+        {{ 'dashboard.title' | translate }}
       </h2>
       <p class="text-sm text-[rgb(var(--text-muted))] leading-relaxed">
-        Overview of your legal cases and activities
+        {{ 'dashboard.subtitle' | translate }}
       </p>
     </div>
 
@@ -27,7 +36,9 @@ import { CaseItem, CasesService } from '../../shared/services/cases.service';
       <p-card>
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-[rgb(var(--text-muted))] mb-1">Total Active Cases</p>
+            <p class="text-sm text-[rgb(var(--text-muted))] mb-1">
+              {{ 'dashboard.totalActiveCases' | translate }}
+            </p>
             <p class="text-3xl font-bold text-[rgb(var(--text))]">{{ stats.totalActiveCases }}</p>
           </div>
           <div
@@ -53,7 +64,9 @@ import { CaseItem, CasesService } from '../../shared/services/cases.service';
       <p-card>
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-[rgb(var(--text-muted))] mb-1">Cases Pending Ruling</p>
+            <p class="text-sm text-[rgb(var(--text-muted))] mb-1">
+              {{ 'dashboard.casesPendingRuling' | translate }}
+            </p>
             <p class="text-3xl font-bold text-[rgb(var(--text))]">{{ stats.casesPendingRuling }}</p>
           </div>
           <div
@@ -79,7 +92,9 @@ import { CaseItem, CasesService } from '../../shared/services/cases.service';
       <p-card>
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-[rgb(var(--text-muted))] mb-1">Cases in Execution</p>
+            <p class="text-sm text-[rgb(var(--text-muted))] mb-1">
+              {{ 'dashboard.casesInExecution' | translate }}
+            </p>
             <p class="text-3xl font-bold text-[rgb(var(--text))]">{{ stats.casesInExecution }}</p>
           </div>
           <div
@@ -105,7 +120,9 @@ import { CaseItem, CasesService } from '../../shared/services/cases.service';
       <p-card>
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-[rgb(var(--text-muted))] mb-1">Settled This Month</p>
+            <p class="text-sm text-[rgb(var(--text-muted))] mb-1">
+              {{ 'dashboard.settledThisMonth' | translate }}
+            </p>
             <p class="text-3xl font-bold text-[rgb(var(--text))]">{{ stats.settledThisMonth }}</p>
           </div>
           <div
@@ -131,7 +148,9 @@ import { CaseItem, CasesService } from '../../shared/services/cases.service';
       <p-card>
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-[rgb(var(--text-muted))] mb-1">Upcoming Deadlines</p>
+            <p class="text-sm text-[rgb(var(--text-muted))] mb-1">
+              {{ 'dashboard.upcomingDeadlines' | translate }}
+            </p>
             <p class="text-3xl font-bold text-[rgb(var(--text))]">{{ stats.upcomingDeadlines }}</p>
           </div>
           <div
@@ -157,7 +176,9 @@ import { CaseItem, CasesService } from '../../shared/services/cases.service';
       <p-card>
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-[rgb(var(--text-muted))] mb-1">Active Arbitrations</p>
+            <p class="text-sm text-[rgb(var(--text-muted))] mb-1">
+              {{ 'dashboard.activeArbitrations' | translate }}
+            </p>
             <p class="text-3xl font-bold text-[rgb(var(--text))]">{{ stats.activeArbitrations }}</p>
           </div>
           <div
@@ -186,9 +207,11 @@ import { CaseItem, CasesService } from '../../shared/services/cases.service';
       <!-- Recent Cases -->
       <p-card>
         <div class="flex items-center justify-between mb-6">
-          <h3 class="text-lg font-semibold text-[rgb(var(--text))]">Recent Cases</h3>
+          <h3 class="text-lg font-semibold text-[rgb(var(--text))]">
+            {{ 'dashboard.recentCases' | translate }}
+          </h3>
           <p-button
-            label="View All"
+            [label]="'actions.viewAll' | translate"
             [outlined]="true"
             [size]="'small'"
             routerLink="/legal/cases"
@@ -203,10 +226,12 @@ import { CaseItem, CasesService } from '../../shared/services/cases.service';
             <div class="flex items-start justify-between">
               <div class="flex-1">
                 <h4 class="font-semibold text-[rgb(var(--text))] mb-1">{{ case.title }}</h4>
-                <p class="text-sm text-[rgb(var(--text-muted))] mb-2">Client: {{ case.client }}</p>
+                <p class="text-sm text-[rgb(var(--text-muted))] mb-2">
+                  {{ 'common.clientLabel' | translate }}: {{ case.client }}
+                </p>
                 <div class="flex items-center gap-2">
                   <p-tag
-                    [value]="case.stage | titlecase"
+                    [value]="'cases.stage.' + (case.stage || 'primary') | translate"
                     [severity]="getStageSeverity(case.stage)"
                   ></p-tag>
                   <span class="text-xs text-[rgb(var(--text-muted))] font-mono">
@@ -223,7 +248,7 @@ import { CaseItem, CasesService } from '../../shared/services/cases.service';
             *ngIf="recentCases.length === 0"
             class="text-center py-8 text-[rgb(var(--text-muted))]"
           >
-            No recent cases
+            {{ 'dashboard.noRecentCases' | translate }}
           </div>
         </div>
       </p-card>
@@ -231,9 +256,11 @@ import { CaseItem, CasesService } from '../../shared/services/cases.service';
       <!-- Upcoming Deadlines -->
       <p-card>
         <div class="flex items-center justify-between mb-6">
-          <h3 class="text-lg font-semibold text-[rgb(var(--text))]">Upcoming Deadlines</h3>
+          <h3 class="text-lg font-semibold text-[rgb(var(--text))]">
+            {{ 'dashboard.upcomingDeadlinesTitle' | translate }}
+          </h3>
           <p-button
-            label="View All"
+            [label]="'actions.viewAll' | translate"
             [outlined]="true"
             [size]="'small'"
             routerLink="/legal/cases"
@@ -249,7 +276,7 @@ import { CaseItem, CasesService } from '../../shared/services/cases.service';
               <div class="flex-1">
                 <h4 class="font-semibold text-[rgb(var(--text))] mb-1">{{ deadline.title }}</h4>
                 <p class="text-sm text-[rgb(var(--text-muted))] mb-2">
-                  Case: #{{ deadline.caseNumber }}
+                  {{ 'common.casePrefix' | translate }}: #{{ deadline.caseNumber }}
                 </p>
                 <div class="flex items-center gap-2">
                   <span
@@ -267,10 +294,10 @@ import { CaseItem, CasesService } from '../../shared/services/cases.service';
                   >
                     {{
                       deadline.daysUntil === 0
-                        ? 'Today'
+                        ? ('common.today' | translate)
                         : deadline.daysUntil === 1
-                          ? 'Tomorrow'
-                          : 'In ' + deadline.daysUntil + ' days'
+                          ? ('common.tomorrow' | translate)
+                          : ('common.inDays' | translate: { count: deadline.daysUntil })
                     }}
                   </span>
                   <span class="text-xs text-[rgb(var(--text-muted))]">
@@ -279,7 +306,7 @@ import { CaseItem, CasesService } from '../../shared/services/cases.service';
                 </div>
               </div>
               <p-button
-                label="View"
+                [label]="'actions.view' | translate"
                 [outlined]="true"
                 [size]="'small'"
                 [routerLink]="['/legal/case', deadline.caseId]"
@@ -290,7 +317,7 @@ import { CaseItem, CasesService } from '../../shared/services/cases.service';
             *ngIf="upcomingDeadlines.length === 0"
             class="text-center py-8 text-[rgb(var(--text-muted))]"
           >
-            No upcoming deadlines
+            {{ 'dashboard.noUpcomingDeadlines' | translate }}
           </div>
         </div>
       </p-card>
@@ -299,18 +326,20 @@ import { CaseItem, CasesService } from '../../shared/services/cases.service';
     <!-- Pending Actions -->
     <p-card>
       <div class="flex items-center justify-between mb-6">
-        <h3 class="text-lg font-semibold text-[rgb(var(--text))]">Pending Actions</h3>
+        <h3 class="text-lg font-semibold text-[rgb(var(--text))]">
+          {{ 'dashboard.pendingActions' | translate }}
+        </h3>
       </div>
       <div class="space-y-3">
         <div
           *ngFor="let action of pendingActions; trackBy: trackByAction"
-          class="p-4 bg-[rgb(var(--surface-muted))] rounded-lg flex items-center justify-between"
+          class="p-4 bg-[rgb(var(--surface-muted))] rounded-lg flex items-center justify-between gap-4"
         >
           <div class="flex-1">
             <h4 class="font-semibold text-[rgb(var(--text))] mb-1">{{ action.title }}</h4>
             <p class="text-sm text-[rgb(var(--text-muted))]">{{ action.message }}</p>
             <span class="text-xs text-[rgb(var(--text-muted))] font-mono mt-1 block">
-              Case #{{ action.caseNumber }}
+              {{ 'common.casePrefix' | translate }} #{{ action.caseNumber }}
             </span>
           </div>
           <p-button
@@ -324,7 +353,7 @@ import { CaseItem, CasesService } from '../../shared/services/cases.service';
           *ngIf="pendingActions.length === 0"
           class="text-center py-8 text-[rgb(var(--text-muted))]"
         >
-          No pending actions
+          {{ 'dashboard.noPendingActions' | translate }}
         </div>
       </div>
     </p-card>
@@ -334,6 +363,7 @@ import { CaseItem, CasesService } from '../../shared/services/cases.service';
 export class DashboardComponent implements OnInit {
   private readonly casesService = inject(CasesService);
   private readonly arbitrationsService = inject(ArbitrationsService);
+  private readonly translate = inject(TranslateService);
   protected stats = {
     totalActiveCases: 0,
     casesPendingRuling: 0,
@@ -449,11 +479,14 @@ export class DashboardComponent implements OnInit {
         const hasRuling = c.rulings?.some((r) => r.stage === c.stage);
         if (!hasRuling) {
           actions.push({
-            title: 'Ruling Required',
-            message: `Case ${c.caseNumber} at ${c.stage} stage needs a court ruling`,
+            title: this.translate.instant('dashboard.rulingRequiredTitle'),
+            message: this.translate.instant('dashboard.rulingRequiredMessage', {
+              caseNumber: c.caseNumber,
+              stage: this.translate.instant(`cases.stage.${c.stage || 'primary'}`),
+            }),
             caseNumber: c.caseNumber,
             link: `/legal/case/${c.id}`,
-            actionText: 'Add Ruling',
+            actionText: this.translate.instant('dashboard.addRuling'),
           });
         }
       }

@@ -49,6 +49,8 @@ if (typeof window !== 'undefined') {
     try {
       localStorage.removeItem('legal-portal-store-v1');
       localStorage.removeItem('seeded-v1');
+      localStorage.removeItem('seeded-v2');
+      localStorage.removeItem('seeded-v3');
       console.log('✓ All legal portal data cleared from localStorage');
       console.log('  Reload the page to re-seed fresh data');
     } catch (error) {

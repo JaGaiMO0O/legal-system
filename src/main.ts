@@ -1,32 +1,22 @@
+import { registerLocaleData } from '@angular/common';
+import localeArSA from '@angular/common/locales/ar-SA';
 import { bootstrapApplication } from '@angular/platform-browser';
+import { provideTranslateService, TranslateLoader } from '@ngx-translate/core';
 import { appConfig } from './app/app.config';
 import { AppComponent } from './app/app.component';
-import { importProvidersFrom } from '@angular/core';
-import { HttpClientModule, HttpClient } from '@angular/common/http';
-import { TranslateModule, TranslateLoader, TranslationObject } from '@ngx-translate/core';
-import { Observable } from 'rxjs';
+import { BundledTranslateLoader } from './app/core/i18n/bundled-translate.loader';
 
-class JsonHttpLoader implements TranslateLoader {
-  constructor(private http: HttpClient) {}
-  getTranslation(lang: string): Observable<TranslationObject> {
-    return this.http.get<TranslationObject>(`/assets/i18n/${lang}.json`);
-  }
-}
-
+registerLocaleData(localeArSA);
 bootstrapApplication(AppComponent, {
   ...appConfig,
   providers: [
     ...(appConfig.providers || []),
-    importProvidersFrom(
-      HttpClientModule,
-      TranslateModule.forRoot({
-        loader: {
-          provide: TranslateLoader,
-          useFactory: (http: HttpClient) => new JsonHttpLoader(http),
-          deps: [HttpClient],
-        },
-        defaultLanguage: 'en',
-      }),
-    ),
+    ...provideTranslateService({
+      fallbackLang: 'ar',
+      loader: {
+        provide: TranslateLoader,
+        useClass: BundledTranslateLoader,
+      },
+    }),
   ],
 }).catch((err) => console.error(err));

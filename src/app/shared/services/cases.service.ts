@@ -105,6 +105,29 @@ export const CASE_MATTER_TYPES: CaseMatterType[] = [
   'GeneralCivil',
 ];
 
+/** Optional extended tracker fields stored on a case. */
+export interface PortalWorkbookFields {
+  userNumber?: string;
+  externalId?: string;
+  plaintiff?: string;
+  defendant?: string;
+  claimType?: string;
+  claimValue?: string;
+  compensationType?: string;
+  claimStatus?: string;
+  requiredAction?: string;
+  remarks?: string;
+  subrogationFiledOn?: string;
+  subrogationExpectedEnd?: string;
+  courtSubject?: string;
+  courtName?: string;
+  courtCity?: string;
+  nextHearingDate?: string;
+  nextHearingTime?: string;
+  decisionType?: string;
+  doublePaymentAmount?: number;
+}
+
 export interface CaseItem {
   id: string;
   title: string;
@@ -148,6 +171,7 @@ export interface CaseItem {
   incidentDate?: string;
   policeReportNumber?: string;
   caseSummary?: string;
+  portalWorkbook?: PortalWorkbookFields;
 }
 
 const STORAGE_KEY = 'cases';
@@ -245,9 +269,9 @@ export class CasesService {
     const cases: CaseItem[] = [
       {
         id: 'case-1',
-        title: 'Fleet Collision Compensation - Q4/2025',
-        client: 'Nour Logistics Co.',
-        claimant: 'Nour Logistics Co.',
+        title: 'تعويض تصادم مركبات — أسطول نقل',
+        client: 'شركة نور لللوجستيات',
+        claimant: 'شركة نور لللوجستيات',
         status: 'open',
         stage: 'primary',
         caseNumber: '2026101',
@@ -255,23 +279,21 @@ export class CasesService {
         legalStatus: 1,
         unifiedCaseId: 'uc-1001',
         matterType: 'MotorInsurance',
-        tags: ['motor', 'insurance'],
+        tags: ['مركبات', 'تأمين'],
         damageType: 'Disability',
         disabilityMetrics: { moralPercent: 12, physicalPercent: 28 },
         claimantDemographics: {
-          nationality: 'Saudi',
+          nationality: 'سعودي',
           sex: 'Male',
           maritalStatus: 'Married',
-          profession: 'Fleet Supervisor',
+          profession: 'مشرف أسطول',
           age: 39,
           dependents: 4,
         },
-        deadlines: [
-          { id: generateId(), title: 'Submit accident reconstruction report', date: isoDay(8) },
-        ],
-        tasks: [{ id: generateId(), title: 'Collect traffic camera records', done: false }],
+        deadlines: [{ id: generateId(), title: 'تقديم تقرير إعادة تمثيل الحادث', date: isoDay(8) }],
+        tasks: [{ id: generateId(), title: 'جمع تسجيلات كاميرات المرور', done: false }],
         developments: [
-          { id: generateId(), date: isoDate(-12), note: 'Primary claim bundle filed.' },
+          { id: generateId(), date: isoDate(-12), note: 'تم تقديم حزمة المطالبة ابتدائيًا.' },
         ],
         rulings: [],
         createdAt: isoDate(-25),
@@ -279,9 +301,9 @@ export class CasesService {
       },
       {
         id: 'case-2',
-        title: 'Software Licensing Breach',
-        client: 'Atlas Digital Solutions',
-        claimant: 'Atlas Digital Solutions',
+        title: 'نزاع ترخيص برمجيات ودعم فني',
+        client: 'أطلس الرقمية',
+        claimant: 'أطلس الرقمية',
         status: 'pending',
         stage: 'appeal',
         caseNumber: '2026102',
@@ -289,13 +311,13 @@ export class CasesService {
         legalStatus: 1,
         unifiedCaseId: 'uc-1002',
         matterType: 'CommercialContract',
-        tags: ['commercial', 'contract'],
+        tags: ['تجاري', 'عقد'],
         contractReference: 'CTR-2026-014',
         disputedAmount: 420000,
-        deadlines: [{ id: generateId(), title: 'Appeal memorandum filing', date: isoDay(14) }],
-        tasks: [{ id: generateId(), title: 'Review indemnity clauses', done: false }],
+        deadlines: [{ id: generateId(), title: 'آخر موعد لمذكرة الاستئناف', date: isoDay(14) }],
+        tasks: [{ id: generateId(), title: 'مراجعة بنود التعويض', done: false }],
         developments: [
-          { id: generateId(), date: isoDate(-40), note: 'Primary judgment partially adverse.' },
+          { id: generateId(), date: isoDate(-40), note: 'حكم ابتدائي جزئي لصالح الخصم.' },
         ],
         rulings: [
           {
@@ -305,8 +327,8 @@ export class CasesService {
             caseType: 'Plaintiff',
             courtType: 'Commercial',
             courtLevel: 'Primary',
-            courtCity: 'Riyadh',
-            caseDetails: 'Dispute on licensing fee and support obligations.',
+            courtCity: 'الرياض',
+            caseDetails: 'خلاف حول رسوم الترخيص والتزامات الدعم الفني.',
             filingDate: isoDay(-65),
             filingNo: 'F-2026-201',
             stageNo: 1,
@@ -319,7 +341,7 @@ export class CasesService {
             expertFees: 14000,
             advocacyFees: 22000,
             otherExpenses: 5000,
-            adversaryName: 'BlueOcean Systems',
+            adversaryName: 'أنظمة المحيط الأزرق',
             indemnityByCourtAmount: 75000,
             date: isoDate(-40),
           },
@@ -327,252 +349,7 @@ export class CasesService {
         createdAt: isoDate(-70),
         updatedAt: isoDate(-3),
       },
-      {
-        id: 'case-3',
-        title: 'Warehouse Lease Termination Dispute',
-        client: 'Harbor Import Group',
-        claimant: 'Harbor Import Group',
-        status: 'open',
-        stage: 'primary',
-        caseNumber: '2026103',
-        baseCaseNumber: '2026103',
-        legalStatus: 1,
-        unifiedCaseId: 'uc-1003',
-        matterType: 'RealEstate',
-        tags: ['real-estate', 'lease'],
-        propertyAddress: 'Eastern Ring Rd, Warehouse Block C, Riyadh',
-        propertyType: 'Commercial',
-        titleDeedNumber: 'DEED-RE-2026-055',
-        deadlines: [{ id: generateId(), title: 'Submit valuation evidence', date: isoDay(10) }],
-        tasks: [{ id: generateId(), title: 'Obtain notarized lease addendum', done: true }],
-        developments: [
-          { id: generateId(), date: isoDate(-18), note: 'Notice of termination challenged.' },
-        ],
-        rulings: [],
-        createdAt: isoDate(-22),
-        updatedAt: isoDate(-1),
-      },
-      {
-        id: 'case-4',
-        title: 'Unpaid Overtime and End-of-Service Claim',
-        client: 'Safa Healthcare',
-        claimant: 'Leena Al-Harthi',
-        status: 'pending',
-        stage: 'cassation',
-        caseNumber: '2026104',
-        baseCaseNumber: '2026104',
-        legalStatus: 1,
-        unifiedCaseId: 'uc-1004',
-        matterType: 'LaborEmployment',
-        tags: ['labor', 'employment'],
-        employerName: 'Safa Healthcare',
-        employeeName: 'Leena Al-Harthi',
-        employmentStartDate: '2018-09-01',
-        deadlines: [{ id: generateId(), title: 'Cassation brief deadline', date: isoDay(12) }],
-        tasks: [{ id: generateId(), title: 'Reconcile payroll export', done: false }],
-        developments: [
-          { id: generateId(), date: isoDate(-55), note: 'Appeal court adjusted compensation.' },
-        ],
-        rulings: [
-          {
-            id: generateId(),
-            stage: 'primary',
-            caseNo: '2026104',
-            caseType: 'Defendant',
-            courtType: 'Labor',
-            courtLevel: 'Primary',
-            courtCity: 'Jeddah',
-            caseDetails: 'Overtime compensation and leave balance dispute.',
-            filingDate: isoDay(-120),
-            filingNo: 'F-2026-178',
-            stageNo: 1,
-            rulingInFavorOf: 'Adversary',
-            rulingDate: isoDay(-88),
-            courtFees: 4100,
-            legalExpenses: 14000,
-            translationCourtFees: 0,
-            courtFeesInCash: 600,
-            expertFees: 6500,
-            advocacyFees: 9700,
-            otherExpenses: 2800,
-            adversaryName: 'Leena Al-Harthi',
-            indemnityByCourtAmount: 96000,
-            date: isoDate(-88),
-          },
-          {
-            id: generateId(),
-            stage: 'appeal',
-            caseNo: '202610401',
-            caseType: 'Defendant',
-            courtType: 'Labor',
-            courtLevel: 'Appeal',
-            courtCity: 'Jeddah',
-            caseDetails: 'Appeal on overtime computation method.',
-            filingDate: isoDay(-80),
-            filingNo: 'F-2026-199',
-            stageNo: 2,
-            rulingInFavorOf: 'Adversary',
-            rulingDate: isoDay(-55),
-            courtFees: 5200,
-            legalExpenses: 16800,
-            translationCourtFees: 0,
-            courtFeesInCash: 800,
-            expertFees: 8400,
-            advocacyFees: 11800,
-            otherExpenses: 3200,
-            adversaryName: 'Leena Al-Harthi',
-            indemnityByCourtAmount: 122000,
-            date: isoDate(-55),
-          },
-        ],
-        createdAt: isoDate(-130),
-        updatedAt: isoDate(-4),
-      },
-      {
-        id: 'case-5',
-        title: 'Financial Fraud Defense - Executive File',
-        client: 'Salem Al-Faraj',
-        claimant: 'Public Prosecution',
-        status: 'open',
-        stage: 'primary',
-        caseNumber: '2026105',
-        baseCaseNumber: '2026105',
-        legalStatus: 1,
-        unifiedCaseId: 'uc-1005',
-        matterType: 'CriminalDefense',
-        tags: ['criminal', 'defense'],
-        offenseType: 'Financial Fraud Allegation',
-        incidentDate: isoDay(-95),
-        policeReportNumber: 'PR-2026-4401',
-        deadlines: [
-          { id: generateId(), title: 'Submit forensic accounting rebuttal', date: isoDay(6) },
-        ],
-        tasks: [{ id: generateId(), title: 'Review seizure warrant timeline', done: false }],
-        developments: [{ id: generateId(), date: isoDate(-10), note: 'Charge sheet disclosed.' }],
-        rulings: [],
-        createdAt: isoDate(-36),
-        updatedAt: isoDate(-1),
-      },
-      {
-        id: 'case-6',
-        title: 'General Civil Damages - Vendor Negligence',
-        client: 'Al Noor Trading',
-        claimant: 'Al Noor Trading',
-        status: 'closed',
-        stage: 'settled',
-        caseNumber: '2026106',
-        baseCaseNumber: '2026106',
-        legalStatus: 4,
-        settledStatus: 2,
-        unifiedCaseId: 'uc-1006',
-        matterType: 'GeneralCivil',
-        tags: ['general-civil'],
-        caseSummary: 'Claim for business interruption damages resolved by amicable settlement.',
-        deadlines: [],
-        tasks: [],
-        developments: [
-          { id: generateId(), date: isoDate(-20), note: 'Amicable settlement signed.' },
-        ],
-        rulings: [],
-        createdAt: isoDate(-90),
-        updatedAt: isoDate(-20),
-      },
     ];
-
-    const extraMatterTypes: CaseMatterType[] = [
-      'MotorInsurance',
-      'CommercialContract',
-      'LaborEmployment',
-      'RealEstate',
-      'CriminalDefense',
-      'GeneralCivil',
-    ];
-    const clients = [
-      'Arabia Retail Group',
-      'Horizon Freight',
-      'Crescent Hospitality',
-      'Najd Properties',
-      'Falcon Manufacturing',
-      'Bayan Tech',
-    ];
-
-    for (let i = 0; i < 10; i++) {
-      const matterType = extraMatterTypes[i % extraMatterTypes.length];
-      const seq = 107 + i;
-      const stage: CaseStage = i % 4 === 0 ? 'appeal' : i % 5 === 0 ? 'execution' : 'primary';
-      const legalStatus = stage === 'execution' ? 3 : 1;
-      const base: CaseItem = {
-        id: `case-${7 + i}`,
-        title: `${CASE_MATTER_TYPE_LABELS[matterType]} Matter ${seq}`,
-        client: clients[i % clients.length],
-        claimant: clients[i % clients.length],
-        status: i % 3 === 0 ? 'pending' : 'open',
-        stage,
-        caseNumber: `2026${seq}`,
-        baseCaseNumber: `2026${seq}`,
-        legalStatus,
-        unifiedCaseId: `uc-11${i}`,
-        matterType,
-        tags: ['generated'],
-        deadlines: [{ id: generateId(), title: 'Next procedural filing', date: isoDay(5 + i) }],
-        tasks: [{ id: generateId(), title: 'Prepare hearing bundle', done: i % 2 === 0 }],
-        developments: [
-          { id: generateId(), date: isoDate(-(i + 3) * 4), note: 'Case activity logged.' },
-        ],
-        rulings: [],
-        createdAt: isoDate(-(i + 8) * 7),
-        updatedAt: isoDate(-(i + 1) * 2),
-      };
-
-      switch (matterType) {
-        case 'MotorInsurance':
-          base.tags = ['motor', 'insurance'];
-          base.damageType = i % 2 === 0 ? 'Disability' : 'Fatal';
-          base.disabilityMetrics =
-            base.damageType === 'Disability'
-              ? { moralPercent: 8 + i, physicalPercent: 14 + i }
-              : undefined;
-          base.claimantDemographics = {
-            nationality: i % 2 === 0 ? 'Saudi' : 'Jordanian',
-            sex: i % 2 === 0 ? 'Male' : 'Female',
-            maritalStatus: i % 2 === 0 ? 'Married' : 'Single',
-            profession: 'Driver',
-            age: 29 + i,
-            dependents: i % 4,
-          };
-          break;
-        case 'CommercialContract':
-          base.tags = ['commercial', 'contract'];
-          base.contractReference = `CTR-2026-${String(300 + i)}`;
-          base.disputedAmount = 90000 + i * 12000;
-          break;
-        case 'LaborEmployment':
-          base.tags = ['labor', 'employment'];
-          base.employerName = clients[i % clients.length];
-          base.employeeName = `Employee ${i + 1}`;
-          base.employmentStartDate = isoDay(-(1200 + i * 15));
-          break;
-        case 'RealEstate':
-          base.tags = ['real-estate', 'property'];
-          base.propertyAddress = `Block ${i + 2}, North District, Riyadh`;
-          base.propertyType = i % 2 === 0 ? 'Residential' : 'Commercial';
-          base.titleDeedNumber = `DEED-2026-${String(500 + i)}`;
-          break;
-        case 'CriminalDefense':
-          base.tags = ['criminal', 'defense'];
-          base.offenseType = i % 2 === 0 ? 'Embezzlement Allegation' : 'Forgery Allegation';
-          base.incidentDate = isoDay(-(140 + i * 3));
-          base.policeReportNumber = `PR-2026-${String(7000 + i)}`;
-          break;
-        case 'GeneralCivil':
-        default:
-          base.tags = ['general-civil'];
-          base.caseSummary = `General civil compensation and liability dispute file ${seq}.`;
-          break;
-      }
-
-      cases.push(base);
-    }
 
     this.storage.set(STORAGE_KEY, cases);
   }
@@ -661,6 +438,7 @@ export class CasesService {
         | 'incidentDate'
         | 'policeReportNumber'
         | 'caseSummary'
+        | 'portalWorkbook'
       >
     >,
   ): void {

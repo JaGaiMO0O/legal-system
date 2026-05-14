@@ -124,11 +124,13 @@ export class NotificationsService {
           (deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
         );
         if (daysUntil >= 0 && daysUntil <= 7) {
+          const when =
+            daysUntil === 0 ? 'اليوم' : daysUntil === 1 ? 'غدًا' : `خلال ${daysUntil} أيام`;
           notifications.push({
             id: this.generateId(),
             type: 'deadline',
-            title: 'Upcoming Deadline',
-            message: `Deadline "${deadline.title}" for case ${c.caseNumber} is ${daysUntil === 0 ? 'today' : `in ${daysUntil} day${daysUntil > 1 ? 's' : ''}`}`,
+            title: 'موعد نهائي قريب',
+            message: `الموعد «${deadline.title}» للقضية رقم ${c.caseNumber} ${when}.`,
             caseNumber: c.caseNumber,
             link: `/legal/case/${c.id}`,
             read: false,
@@ -146,8 +148,8 @@ export class NotificationsService {
           notifications.push({
             id: this.generateId(),
             type: 'ruling',
-            title: 'Ruling Required',
-            message: `Case ${c.caseNumber} at ${c.stage} stage requires a court ruling before proceeding`,
+            title: 'مطلوب تسجيل حكم',
+            message: `القضية رقم ${c.caseNumber} في مرحلة لاحقة تحتاج حكمًا محكومًا قبل المتابعة.`,
             caseNumber: c.caseNumber,
             link: `/legal/case/${c.id}`,
             read: index % 3 !== 0, // Some are read
@@ -166,8 +168,8 @@ export class NotificationsService {
           notifications.push({
             id: this.generateId(),
             type: 'settlement',
-            title: 'Case Settled',
-            message: `Case ${c.caseNumber} has been legally settled`,
+            title: 'تم تسوية القضية',
+            message: `اكتملت التسوية القانونية للقضية رقم ${c.caseNumber}.`,
             caseNumber: c.caseNumber,
             link: `/legal/case/${c.id}`,
             read: false,
@@ -182,16 +184,16 @@ export class NotificationsService {
       {
         id: this.generateId(),
         type: 'case',
-        title: 'New Case Created',
-        message: 'A new case has been added to the system',
+        title: 'قضية جديدة',
+        message: 'تمت إضافة قضية جديدة إلى النظام.',
         read: false,
         createdAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
       },
       {
         id: this.generateId(),
         type: 'arbitration',
-        title: 'Arbitration Hearing Scheduled',
-        message: 'An arbitration hearing has been scheduled for next week',
+        title: 'جلسة تحكيم',
+        message: 'تم جدولة جلسة تحكيم للأسبوع القادم.',
         read: true,
         createdAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
       },

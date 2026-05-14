@@ -12,7 +12,22 @@ body {
 
 body {
   margin: 0;
-  font-family: Inter, Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: Tajawal, 'Noto Sans Arabic', Inter, Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* Logical default so RTL/LTR both align prose to the reading edge */
+  text-align: start;
+}
+
+/* Legacy Tailwind left/right align utilities → logical under document RTL */
+html[dir='rtl'] .text-left {
+  text-align: start !important;
+}
+
+html[dir='rtl'] .text-right {
+  text-align: end !important;
+}
+
+html[dir='rtl'] app-login {
+  text-align: start;
 }
 
 @media print {
@@ -160,7 +175,7 @@ body {
   .table th,
   .table td {
     display: block;
-    text-align: left;
+    text-align: start;
     padding: 0.5rem;
   }
 }
@@ -284,6 +299,11 @@ select {
   background-size: 1.25em 1.25em;
 }
 
+html[dir='rtl'] select {
+  padding: 0.5rem 1rem 0.5rem 2.5rem;
+  background-position: left 0.75rem center;
+}
+
 input:focus,
 select:focus,
 textarea:focus {
@@ -291,6 +311,46 @@ textarea:focus {
   box-shadow:
     0 0 0 3px rgb(var(--focus-ring) / 0.18),
     0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Leading search icon: global input `px-4` can override Tailwind `pl-*` — reserve inline-start gutter */
+input[type='text'].search-input-with-icon,
+input[type='search'].search-input-with-icon {
+  padding-inline-start: 2.5rem;
+}
+
+input[type='text'].search-input-with-icon--compact,
+input[type='search'].search-input-with-icon--compact {
+  padding-inline-start: 2.25rem;
+}
+
+/* Leading icon: flex vertical center (more reliable than translate-y on mixed line-heights) */
+.search-input-icon {
+  position: absolute;
+  inset-block: 0;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  z-index: 10;
+  color: rgb(var(--text-muted));
+}
+
+html[dir='ltr'] .search-input-icon {
+  left: 0.75rem;
+  right: auto;
+}
+
+html[dir='rtl'] .search-input-icon {
+  right: 0.75rem;
+  left: auto;
+}
+
+html[dir='ltr'] .search-input-icon--tight {
+  left: 0.625rem;
+}
+
+html[dir='rtl'] .search-input-icon--tight {
+  right: 0.625rem;
 }
 
 /* PrimeNG — vertically center closed value with dropdown chevron / icons */
@@ -365,7 +425,7 @@ input.p-inputnumber-input {
 /* Tables */
 .table {
   width: 100%;
-  text-align: left;
+  text-align: start;
   border-radius: var(--radius-table);
   @apply border border-[rgb(var(--border-light))] overflow-hidden;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
@@ -385,7 +445,15 @@ input.p-inputnumber-input {
 
 .table tbody tr:hover {
   @apply bg-[rgb(var(--surface-muted))];
+}
+
+/* Hover accent on the inline-start edge (reading-order side) */
+html[dir='ltr'] .table tbody tr:hover {
   box-shadow: inset 3px 0 0 0 rgb(var(--primary));
+}
+
+html[dir='rtl'] .table tbody tr:hover {
+  box-shadow: inset -3px 0 0 0 rgb(var(--primary));
 }
 
 /* Claims actions cell layout */
@@ -393,7 +461,7 @@ td.space-x-2 {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  align-items: flex-end;
+  align-items: end;
   gap: 0.25rem;
 }
 
@@ -482,6 +550,20 @@ td.space-x-2 .btn {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+/* Normalize native search field chrome; custom leading icons use `.search-input-with-icon*` + `.search-input-icon`. */
+input[type='search'] {
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+input[type='search']::-webkit-search-decoration,
+input[type='search']::-webkit-search-cancel-button,
+input[type='search']::-webkit-search-results-button,
+input[type='search']::-webkit-search-results-decoration {
+  appearance: none;
+  -webkit-appearance: none;
+}
+
 .p-steps {
   background: transparent;
 }
@@ -501,6 +583,16 @@ td.space-x-2 .btn {
   font-weight: 600;
 }
 
+/* PrimeNG Steps: connector pseudo-elements use physical `left` + translateX (LTR-only). Mirror for RTL. */
+html[dir='rtl'] .p-steps .p-steps-item::before {
+  left: auto;
+  right: 0;
+}
+
+html[dir='rtl'] .p-steps .p-steps-item:first-child::before {
+  transform: translateX(-100%);
+}
+
 .p-button.p-button-primary {
   background: rgb(var(--primary));
   border-color: rgb(var(--primary));
@@ -509,4 +601,30 @@ td.space-x-2 .btn {
 .p-button.p-button-primary:not(:disabled):hover {
   background: rgb(var(--primary-dark));
   border-color: rgb(var(--primary-dark));
+}
+
+/* Logical alignment for Aura / PrimeNG (tables, dialogs, overlays respect html[dir]) */
+.p-datatable .p-datatable-thead > tr > th,
+.p-datatable .p-datatable-tbody > tr > td,
+.p-datatable .p-datatable-tfoot > tr > td {
+  text-align: start;
+}
+
+.p-dialog .p-dialog-title,
+.p-dialog .p-dialog-content {
+  text-align: start;
+}
+
+.p-toast-message-text,
+.p-toast-message-content {
+  text-align: start;
+}
+
+.p-fluid .p-inputtext,
+textarea.p-inputtextarea {
+  text-align: start;
+}
+
+.p-paginator {
+  direction: inherit;
 }

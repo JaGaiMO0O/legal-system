@@ -1,13 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { TranslateModule } from '@ngx-translate/core';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogService } from '../../services/confirm-dialog.service';
 
 @Component({
   standalone: true,
   selector: 'app-confirm-dialog',
-  imports: [CommonModule, ButtonModule],
+  imports: [CommonModule, ButtonModule, TranslateModule],
   template: `
     <div
       *ngIf="dialogData() as data"
@@ -21,7 +22,7 @@ import { ConfirmDialogService } from '../../services/confirm-dialog.service';
         class="card p-6 max-w-md w-full mx-4 shadow-lg animate-scale-in"
         (click)="$event.stopPropagation()"
       >
-        <div class="flex items-start gap-4 mb-6">
+        <div class="flex items-start gap-4 mb-6 rtl:flex-row-reverse">
           <div
             class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center"
             [ngClass]="iconShellClass()"
@@ -46,16 +47,16 @@ import { ConfirmDialogService } from '../../services/confirm-dialog.service';
             <p class="text-sm text-[rgb(var(--text-muted))] leading-relaxed">{{ data.message }}</p>
           </div>
         </div>
-        <div class="flex gap-3 justify-end flex-wrap">
+        <div class="flex gap-3 justify-end flex-wrap rtl:flex-row-reverse">
           <p-button
             [outlined]="true"
             (click)="cancel()"
-            [label]="data.cancelText || 'Cancel'"
+            [label]="data.cancelText || ('actions.cancel' | translate)"
           ></p-button>
           <p-button
             [severity]="data.type === 'danger' ? 'danger' : 'primary'"
             (click)="confirm()"
-            [label]="data.confirmText || 'Confirm'"
+            [label]="data.confirmText || ('actions.confirm' | translate)"
           ></p-button>
         </div>
       </div>

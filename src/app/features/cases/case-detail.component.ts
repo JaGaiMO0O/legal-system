@@ -3,7 +3,7 @@ import { Component, DestroyRef, HostListener, inject, OnInit } from '@angular/co
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ButtonModule } from 'primeng/button';
 import { CalendarModule } from 'primeng/calendar';
 import { CardModule } from 'primeng/card';
@@ -22,7 +22,6 @@ import {
 } from '../../shared/services/business-settlement.service';
 import { CaseTrackingService } from '../../shared/services/case-tracking.service';
 import {
-  CASE_MATTER_TYPE_LABELS,
   CASE_MATTER_TYPES,
   CaseDeadline,
   CaseDevelopment,
@@ -36,6 +35,7 @@ import {
   ClaimantDemographics,
   DamageType,
   DisabilityMetrics,
+  PortalWorkbookFields,
   RulingInFavorOf,
 } from '../../shared/services/cases.service';
 import { ConfirmDialogService } from '../../shared/services/confirm-dialog.service';
@@ -53,6 +53,7 @@ type LastSavedData = {
   beneficiary: string;
   initialHearingDate: string;
   matterType: CaseMatterType;
+  portalJson: string;
 };
 
 @Component({
@@ -84,15 +85,20 @@ type LastSavedData = {
             <h2
               class="text-2xl md:text-3xl font-semibold tracking-tight mb-2 text-[rgb(var(--text))]"
             >
-              {{ caseItem?.title || 'New Case' }}
+              {{ caseItem?.title || ('common.newCase' | translate) }}
             </h2>
             <p class="text-sm text-[rgb(var(--text-muted))]">
-              Client: {{ caseItem?.client || 'Not set' }}
+              {{ 'common.clientLabel' | translate }}:
+              {{ caseItem?.client || ('common.notSet' | translate) }}
             </p>
           </div>
           <div class="flex items-center gap-3">
             <p-tag
-              [value]="'Stage: ' + (caseItem?.stage || 'primary' | titlecase)"
+              [value]="
+                ('common.stagePrefix' | translate) +
+                ': ' +
+                ('cases.stage.' + (caseItem?.stage || 'primary') | translate)
+              "
               severity="info"
             ></p-tag>
             <p-button
@@ -101,7 +107,7 @@ type LastSavedData = {
               *ngIf="caseItem?.stage !== 'settled'"
               class="text-sm"
             >
-              Next Court
+              {{ 'caseDetail.header.nextCourt' | translate }}
             </p-button>
             <p-button
               severity="primary"
@@ -111,7 +117,7 @@ type LastSavedData = {
               "
               class="text-sm"
             >
-              Settle Case
+              {{ 'caseDetail.header.settleCase' | translate }}
             </p-button>
             <p-button
               severity="primary"
@@ -119,10 +125,10 @@ type LastSavedData = {
               *ngIf="caseItem?.stage === 'execution'"
               class="text-sm"
             >
-              Execute Case
+              {{ 'cases.execute' | translate }}
             </p-button>
             <p-button [outlined]="true" (click)="exportCase()" *ngIf="caseItem" class="text-sm">
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -130,7 +136,7 @@ type LastSavedData = {
                   d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
               </svg>
-              Export
+              {{ 'caseDetail.header.export' | translate }}
             </p-button>
           </div>
         </div>
@@ -147,91 +153,246 @@ type LastSavedData = {
       <!-- Tabbed Content -->
       <p-tabView>
         <!-- Overview Tab -->
-        <p-tabPanel header="Overview">
+        <p-tabPanel [header]="'caseDetail.tabs.overview' | translate">
           <div class="p-4 flex flex-col gap-8">
             <div>
-              <h3 class="text-lg font-bold mb-6">Case Information</h3>
+              <h3 class="text-lg font-bold mb-6">{{ 'caseDetail.caseInformation' | translate }}</h3>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                    >Case Number</label
-                  >
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                    'caseDetail.caseNumber' | translate
+                  }}</label>
                   <input
                     type="text"
                     [value]="
-                      caseItem?.caseNumber || caseItem?.baseCaseNumber || 'Will be generated'
+                      caseItem?.caseNumber ||
+                      caseItem?.baseCaseNumber ||
+                      ('common.willBeGenerated' | translate)
                     "
                     readonly
                     class="w-full bg-[rgb(var(--surface-muted))] cursor-not-allowed font-mono"
                   />
                 </div>
                 <div>
-                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                    >Legal Status</label
-                  >
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                    'caseDetail.legalStatus' | translate
+                  }}</label>
                   <div class="flex items-center gap-2">
                     <p-tag
-                      [value]="getLegalStatusLabel()"
+                      [value]="'cases.legalStatus.' + legalStatusTranslationSegment() | translate"
                       [severity]="getLegalStatusSeverity()"
                     ></p-tag>
                     <p-tag
                       *ngIf="caseItem?.settledStatus === 2"
-                      value="Legally Settled"
+                      [value]="'caseDetail.legallySettledTag' | translate"
                       severity="success"
                     ></p-tag>
                   </div>
                 </div>
                 <div>
-                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                    >Matter type</label
-                  >
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                    'caseDetail.matterType' | translate
+                  }}</label>
                   <select [(ngModel)]="matterType" class="w-full">
                     <option *ngFor="let mt of matterTypeOptions" [ngValue]="mt">
-                      {{ matterTypeLabels[mt] }}
+                      {{ 'cases.matterType.' + mt | translate }}
                     </option>
                   </select>
                 </div>
                 <div>
-                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                    >Status</label
-                  >
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                    'caseDetail.status' | translate
+                  }}</label>
                   <select [(ngModel)]="status" class="w-full">
-                    <option value="open">Open</option>
-                    <option value="pending">Pending</option>
-                    <option value="closed">Closed</option>
-                    <option value="on-hold">On Hold</option>
+                    <option value="open">{{ 'cases.caseStatus.open' | translate }}</option>
+                    <option value="pending">{{ 'cases.caseStatus.pending' | translate }}</option>
+                    <option value="closed">{{ 'cases.caseStatus.closed' | translate }}</option>
+                    <option value="on-hold">{{ 'cases.caseStatus.onHold' | translate }}</option>
                   </select>
                 </div>
                 <div>
-                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                    >Company Lawyer</label
-                  >
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                    'caseDetail.companyLawyer' | translate
+                  }}</label>
                   <select [(ngModel)]="companyLawyerId" class="w-full">
-                    <option value="">Unassigned</option>
+                    <option value="">{{ 'common.unassigned' | translate }}</option>
                     <option *ngFor="let l of lawyers" [value]="l.id">
                       {{ l.lawyerNumber }} - {{ l.name }}
                     </option>
                   </select>
                   <p class="text-xs text-[rgb(var(--text-muted))] mt-1" *ngIf="companyLawyerId">
-                    Assigned: {{ getCompanyLawyerDisplay() }}
+                    {{ 'common.assignedPrefix' | translate }}: {{ getCompanyLawyerDisplay() }}
                   </p>
                 </div>
                 <div>
-                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                    >Case ID</label
-                  >
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                    'caseDetail.caseId' | translate
+                  }}</label>
                   <input
                     type="text"
-                    [value]="caseItem?.id || 'Will be generated'"
+                    [value]="caseItem?.id || ('common.willBeGenerated' | translate)"
                     readonly
                     class="w-full bg-[rgb(var(--surface-muted))] cursor-not-allowed text-xs"
                   />
+                </div>
+                <div class="md:col-span-2 pt-4 border-t border-[rgb(var(--border-light))]">
+                  <h4 class="text-sm font-bold text-[rgb(var(--text))] mb-4">
+                    {{ 'portalWorkbook.sectionTitle' | translate }}
+                  </h4>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                        'portalWorkbook.fields.userNumber' | translate
+                      }}</label>
+                      <input type="text" [(ngModel)]="portalFields.userNumber" class="w-full" />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                        'portalWorkbook.fields.externalId' | translate
+                      }}</label>
+                      <input type="text" [(ngModel)]="portalFields.externalId" class="w-full" />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                        'portalWorkbook.fields.plaintiff' | translate
+                      }}</label>
+                      <input type="text" [(ngModel)]="portalFields.plaintiff" class="w-full" />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                        'portalWorkbook.fields.defendant' | translate
+                      }}</label>
+                      <input type="text" [(ngModel)]="portalFields.defendant" class="w-full" />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                        'portalWorkbook.fields.claimType' | translate
+                      }}</label>
+                      <input type="text" [(ngModel)]="portalFields.claimType" class="w-full" />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                        'portalWorkbook.fields.claimValue' | translate
+                      }}</label>
+                      <input type="text" [(ngModel)]="portalFields.claimValue" class="w-full" />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                        'portalWorkbook.fields.compensationType' | translate
+                      }}</label>
+                      <input
+                        type="text"
+                        [(ngModel)]="portalFields.compensationType"
+                        class="w-full"
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                        'portalWorkbook.fields.claimStatus' | translate
+                      }}</label>
+                      <input type="text" [(ngModel)]="portalFields.claimStatus" class="w-full" />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                        'portalWorkbook.fields.requiredAction' | translate
+                      }}</label>
+                      <input type="text" [(ngModel)]="portalFields.requiredAction" class="w-full" />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                        'portalWorkbook.fields.decisionType' | translate
+                      }}</label>
+                      <input type="text" [(ngModel)]="portalFields.decisionType" class="w-full" />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                        'portalWorkbook.fields.subrogationFiledOn' | translate
+                      }}</label>
+                      <input
+                        type="text"
+                        [(ngModel)]="portalFields.subrogationFiledOn"
+                        class="w-full"
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                        'portalWorkbook.fields.subrogationExpectedEnd' | translate
+                      }}</label>
+                      <input
+                        type="text"
+                        [(ngModel)]="portalFields.subrogationExpectedEnd"
+                        class="w-full"
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                        'portalWorkbook.fields.courtSubject' | translate
+                      }}</label>
+                      <input type="text" [(ngModel)]="portalFields.courtSubject" class="w-full" />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                        'portalWorkbook.fields.courtName' | translate
+                      }}</label>
+                      <input type="text" [(ngModel)]="portalFields.courtName" class="w-full" />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                        'portalWorkbook.fields.courtCity' | translate
+                      }}</label>
+                      <input type="text" [(ngModel)]="portalFields.courtCity" class="w-full" />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                        'portalWorkbook.fields.nextHearingDate' | translate
+                      }}</label>
+                      <input
+                        type="text"
+                        [(ngModel)]="portalFields.nextHearingDate"
+                        class="w-full"
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                        'portalWorkbook.fields.nextHearingTime' | translate
+                      }}</label>
+                      <input
+                        type="text"
+                        [(ngModel)]="portalFields.nextHearingTime"
+                        class="w-full"
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                        'portalWorkbook.fields.doublePaymentAmount' | translate
+                      }}</label>
+                      <p-inputNumber
+                        [(ngModel)]="portalFields.doublePaymentAmount"
+                        [min]="0"
+                        [minFractionDigits]="2"
+                        [maxFractionDigits]="2"
+                        styleClass="w-full"
+                        inputStyleClass="w-full"
+                      ></p-inputNumber>
+                    </div>
+                    <div class="md:col-span-2">
+                      <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                        'portalWorkbook.fields.remarks' | translate
+                      }}</label>
+                      <textarea
+                        [(ngModel)]="portalFields.remarks"
+                        rows="3"
+                        class="w-full rounded-input border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 py-2 text-sm"
+                      ></textarea>
+                    </div>
+                  </div>
                 </div>
                 <div class="md:col-span-2">
                   <label
                     for="case-title"
                     class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                    >Title <span class="text-danger">*</span></label
+                    >{{ 'caseDetail.titleRequired' | translate }}
+                    <span class="text-danger">*</span></label
                   >
                   <input
                     id="case-title"
@@ -240,7 +401,7 @@ type LastSavedData = {
                     class="w-full"
                     [class.border-danger]="titleError"
                     [class.bg-[rgb(var(--tint-danger-bg))]]="titleError"
-                    placeholder="Enter case title"
+                    [placeholder]="'caseDetail.titlePlaceholder' | translate"
                     aria-required="true"
                     [attr.aria-invalid]="!!titleError"
                     [attr.aria-describedby]="titleError ? 'title-error' : null"
@@ -258,7 +419,8 @@ type LastSavedData = {
                   <label
                     for="case-client"
                     class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                    >Client <span class="text-danger">*</span></label
+                    >{{ 'caseDetail.clientRequired' | translate }}
+                    <span class="text-danger">*</span></label
                   >
                   <input
                     id="case-client"
@@ -267,7 +429,7 @@ type LastSavedData = {
                     class="w-full"
                     [class.border-danger]="clientError"
                     [class.bg-[rgb(var(--tint-danger-bg))]]="clientError"
-                    placeholder="Enter client name"
+                    [placeholder]="'caseDetail.clientPlaceholder' | translate"
                     aria-required="true"
                     [attr.aria-invalid]="!!clientError"
                     [attr.aria-describedby]="clientError ? 'client-error' : null"
@@ -282,31 +444,31 @@ type LastSavedData = {
                   </p>
                 </div>
                 <div>
-                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                    >Claimant</label
-                  >
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                    'caseDetail.claimant' | translate
+                  }}</label>
                   <input
                     type="text"
                     [(ngModel)]="claimant"
                     class="w-full"
-                    placeholder="Enter claimant name"
+                    [placeholder]="'caseDetail.claimantPlaceholder' | translate"
                   />
                 </div>
                 <div>
-                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                    >Beneficiary</label
-                  >
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                    'caseDetail.beneficiary' | translate
+                  }}</label>
                   <input
                     type="text"
                     [(ngModel)]="beneficiary"
                     class="w-full"
-                    placeholder="Enter beneficiary name"
+                    [placeholder]="'caseDetail.beneficiaryPlaceholder' | translate"
                   />
                 </div>
                 <div>
-                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                    >Initial Hearing Date</label
-                  >
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                    'caseDetail.initialHearingDate' | translate
+                  }}</label>
                   <p-calendar
                     [(ngModel)]="initialHearingDate"
                     dateFormat="dd/mm/yy"
@@ -316,20 +478,20 @@ type LastSavedData = {
                 </div>
                 <ng-container *ngIf="matterType === 'CommercialContract'">
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Contract Reference</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'caseDetail.contractReference' | translate
+                    }}</label>
                     <input
                       type="text"
                       [(ngModel)]="contractReference"
                       class="w-full"
-                      placeholder="e.g., CTR-2026-004"
+                      [placeholder]="'caseDetail.contractRefPlaceholder' | translate"
                     />
                   </div>
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Disputed Amount (SAR)</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'caseDetail.disputedAmountSar' | translate
+                    }}</label>
                     <input
                       type="number"
                       [(ngModel)]="disputedAmount"
@@ -342,21 +504,21 @@ type LastSavedData = {
 
                 <ng-container *ngIf="matterType === 'LaborEmployment'">
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Employer Name</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'caseDetail.employerName' | translate
+                    }}</label>
                     <input type="text" [(ngModel)]="employerName" class="w-full" />
                   </div>
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Employee Name</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'caseDetail.employeeName' | translate
+                    }}</label>
                     <input type="text" [(ngModel)]="employeeName" class="w-full" />
                   </div>
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Employment Start Date</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'caseDetail.employmentStartDate' | translate
+                    }}</label>
                     <p-calendar
                       [(ngModel)]="employmentStartDate"
                       dateFormat="dd/mm/yy"
@@ -368,41 +530,41 @@ type LastSavedData = {
 
                 <ng-container *ngIf="matterType === 'RealEstate'">
                   <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Property Address</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'caseDetail.propertyAddress' | translate
+                    }}</label>
                     <input type="text" [(ngModel)]="propertyAddress" class="w-full" />
                   </div>
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Property Type</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'caseDetail.propertyType' | translate
+                    }}</label>
                     <input
                       type="text"
                       [(ngModel)]="propertyType"
                       class="w-full"
-                      placeholder="Residential / Commercial"
+                      [placeholder]="'caseDetail.propertyTypePlaceholder' | translate"
                     />
                   </div>
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Title Deed Number</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'caseDetail.titleDeedNumber' | translate
+                    }}</label>
                     <input type="text" [(ngModel)]="titleDeedNumber" class="w-full" />
                   </div>
                 </ng-container>
 
                 <ng-container *ngIf="matterType === 'CriminalDefense'">
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Offense Type</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'caseDetail.offenseType' | translate
+                    }}</label>
                     <input type="text" [(ngModel)]="offenseType" class="w-full" />
                   </div>
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Incident Date</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'caseDetail.incidentDate' | translate
+                    }}</label>
                     <p-calendar
                       [(ngModel)]="incidentDate"
                       dateFormat="dd/mm/yy"
@@ -411,40 +573,44 @@ type LastSavedData = {
                     ></p-calendar>
                   </div>
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Police Report Number</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'caseDetail.policeReportNumber' | translate
+                    }}</label>
                     <input type="text" [(ngModel)]="policeReportNumber" class="w-full" />
                   </div>
                 </ng-container>
 
                 <div *ngIf="matterType === 'GeneralCivil'" class="md:col-span-2">
-                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                    >Case Summary</label
-                  >
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                    'caseDetail.caseSummary' | translate
+                  }}</label>
                   <textarea
                     [(ngModel)]="caseSummary"
                     rows="3"
                     class="w-full"
-                    placeholder="Brief summary of the civil case"
+                    [placeholder]="'caseDetail.caseSummaryPlaceholder' | translate"
                   ></textarea>
                 </div>
 
                 <ng-container *ngIf="matterType === 'MotorInsurance'">
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Damage Type</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'caseDetail.damageType' | translate
+                    }}</label>
                     <select [(ngModel)]="damageType" class="w-full">
-                      <option value="">Select damage type</option>
-                      <option value="Fatal">Fatal</option>
-                      <option value="Disability">Disability</option>
+                      <option value="">{{ 'caseDetail.selectDamageType' | translate }}</option>
+                      <option value="Fatal">
+                        {{ 'motorLiability.damageType.fatal' | translate }}
+                      </option>
+                      <option value="Disability">
+                        {{ 'motorLiability.damageType.disability' | translate }}
+                      </option>
                     </select>
                   </div>
                   <div *ngIf="damageType === 'Disability'">
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Moral Percent (%)</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'caseDetail.moralPercent' | translate
+                    }}</label>
                     <input
                       type="number"
                       [(ngModel)]="disabilityMetrics.moralPercent"
@@ -455,9 +621,9 @@ type LastSavedData = {
                     />
                   </div>
                   <div *ngIf="damageType === 'Disability'">
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Physical Percent (%)</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'caseDetail.physicalPercent' | translate
+                    }}</label>
                     <input
                       type="number"
                       [(ngModel)]="disabilityMetrics.physicalPercent"
@@ -495,57 +661,65 @@ type LastSavedData = {
                     d="M9 5l7 7-7 7"
                   />
                 </svg>
-                Claimant Demographics
+                {{ 'caseDetail.demographicsToggle' | translate }}
               </button>
               <div *ngIf="showDemographics" class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                    >Nationality</label
-                  >
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                    'caseDetail.nationality' | translate
+                  }}</label>
                   <input
                     type="text"
                     [(ngModel)]="demographics.nationality"
                     class="w-full"
-                    placeholder="Enter nationality"
+                    [placeholder]="'caseDetail.nationalityPlaceholder' | translate"
                   />
                 </div>
                 <div>
-                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                    >Sex</label
-                  >
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                    'caseDetail.sex' | translate
+                  }}</label>
                   <select [(ngModel)]="demographics.sex" class="w-full">
-                    <option value="">Select</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
+                    <option value="">{{ 'common.select' | translate }}</option>
+                    <option value="Male">{{ 'motorLiability.gender.male' | translate }}</option>
+                    <option value="Female">{{ 'motorLiability.gender.female' | translate }}</option>
                   </select>
                 </div>
                 <div>
-                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                    >Marital Status</label
-                  >
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                    'caseDetail.maritalStatus' | translate
+                  }}</label>
                   <select [(ngModel)]="demographics.maritalStatus" class="w-full">
-                    <option value="">Select</option>
-                    <option value="Single">Single</option>
-                    <option value="Married">Married</option>
-                    <option value="Divorced">Divorced</option>
-                    <option value="Widowed">Widowed</option>
+                    <option value="">{{ 'common.select' | translate }}</option>
+                    <option value="Single">
+                      {{ 'motorLiability.maritalStatus.single' | translate }}
+                    </option>
+                    <option value="Married">
+                      {{ 'motorLiability.maritalStatus.married' | translate }}
+                    </option>
+                    <option value="Divorced">
+                      {{ 'motorLiability.maritalStatus.divorced' | translate }}
+                    </option>
+                    <option value="Widowed">
+                      {{ 'motorLiability.maritalStatus.widowed' | translate }}
+                    </option>
                   </select>
                 </div>
                 <div>
-                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                    >Profession</label
-                  >
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                    'caseDetail.profession' | translate
+                  }}</label>
                   <input
                     type="text"
                     [(ngModel)]="demographics.profession"
                     class="w-full"
-                    placeholder="Enter profession"
+                    [placeholder]="'caseDetail.professionPlaceholder' | translate"
                   />
                 </div>
                 <div>
-                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                    >Age</label
-                  >
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                    'caseDetail.age' | translate
+                  }}</label>
                   <input
                     type="number"
                     [(ngModel)]="demographics.age"
@@ -556,9 +730,9 @@ type LastSavedData = {
                   />
                 </div>
                 <div>
-                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                    >Dependents</label
-                  >
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                    'caseDetail.dependents' | translate
+                  }}</label>
                   <input
                     type="number"
                     [(ngModel)]="demographics.dependents"
@@ -573,31 +747,54 @@ type LastSavedData = {
         </p-tabPanel>
 
         <!-- Tasks & Deadlines Tab -->
-        <p-tabPanel header="Tasks & Deadlines">
+        <p-tabPanel [header]="'caseDetail.tabs.tasksDeadlines' | translate">
           <div class="p-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <!-- Tasks Section -->
               <div>
-                <h3 class="text-lg font-bold mb-4">Tasks</h3>
-                <input
-                  type="search"
-                  class="w-full mb-3"
-                  [(ngModel)]="taskTabSearch"
-                  placeholder="Filter tasks..."
-                />
+                <h3 class="text-lg font-bold mb-4">{{ 'caseDetail.tasksTitle' | translate }}</h3>
+                <div class="relative mb-3">
+                  <input
+                    type="text"
+                    inputmode="search"
+                    autocomplete="off"
+                    class="w-full py-2.5 pe-4 rounded-input border border-[rgb(var(--border))] bg-[rgb(var(--surface))] text-[rgb(var(--text))] search-input-with-icon"
+                    [(ngModel)]="taskTabSearch"
+                    [placeholder]="'caseDetail.filterTasks' | translate"
+                  />
+                  <span class="search-input-icon" aria-hidden="true">
+                    <svg
+                      class="w-5 h-5 shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                  </span>
+                </div>
                 <div class="mb-6">
                   <div class="flex gap-2">
-                    <input class="flex-1" [(ngModel)]="taskTitle" placeholder="Enter new task" />
+                    <input
+                      class="flex-1"
+                      [(ngModel)]="taskTitle"
+                      [placeholder]="'caseDetail.newTaskPlaceholder' | translate"
+                    />
                     <p-button
                       severity="primary"
                       (click)="addTask()"
                       class="whitespace-nowrap"
                       [disabled]="addingTask"
                     >
-                      <span *ngIf="!addingTask">Add</span>
+                      <span *ngIf="!addingTask">{{ 'caseDetail.add' | translate }}</span>
                       <span *ngIf="addingTask" class="flex items-center gap-2">
                         <app-loading-spinner size="small" [show]="true"></app-loading-spinner>
-                        Adding...
+                        {{ 'common.adding' | translate }}
                       </span>
                     </p-button>
                   </div>
@@ -624,7 +821,7 @@ type LastSavedData = {
                       class="text-sm text-danger hover:opacity-90 font-medium px-2"
                       (click)="removeTask(t.id)"
                     >
-                      Remove
+                      {{ 'common.remove' | translate }}
                     </button>
                   </li>
                   <li
@@ -645,34 +842,55 @@ type LastSavedData = {
                           d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
                         />
                       </svg>
-                      <p>No tasks yet</p>
-                      <p class="text-xs opacity-75">Add your first task above</p>
+                      <p>{{ 'caseDetail.noTasksYet' | translate }}</p>
+                      <p class="text-xs opacity-75">{{ 'caseDetail.addFirstTask' | translate }}</p>
                     </div>
                   </li>
                   <li
                     *ngIf="(caseItem?.tasks?.length ?? 0) > 0 && filteredTasks().length === 0"
                     class="text-sm text-[rgb(var(--text-muted))] text-center py-6"
                   >
-                    No tasks match your filter.
+                    {{ 'caseDetail.noTasksMatchFilter' | translate }}
                   </li>
                 </ul>
               </div>
               <!-- Deadlines Section -->
               <div>
-                <h3 class="text-lg font-bold mb-4">Deadlines</h3>
-                <input
-                  type="search"
-                  class="w-full mb-3"
-                  [(ngModel)]="deadlineTabSearch"
-                  placeholder="Filter deadlines..."
-                />
+                <h3 class="text-lg font-bold mb-4">
+                  {{ 'caseDetail.deadlinesTitle' | translate }}
+                </h3>
+                <div class="relative mb-3">
+                  <input
+                    type="text"
+                    inputmode="search"
+                    autocomplete="off"
+                    class="w-full py-2.5 pe-4 rounded-input border border-[rgb(var(--border))] bg-[rgb(var(--surface))] text-[rgb(var(--text))] search-input-with-icon"
+                    [(ngModel)]="deadlineTabSearch"
+                    [placeholder]="'caseDetail.filterDeadlines' | translate"
+                  />
+                  <span class="search-input-icon" aria-hidden="true">
+                    <svg
+                      class="w-5 h-5 shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                  </span>
+                </div>
                 <div class="mb-6">
                   <div class="space-y-2">
                     <div>
                       <input
                         class="w-full"
                         [(ngModel)]="deadlineTitle"
-                        placeholder="Deadline title"
+                        [placeholder]="'caseDetail.deadlineTitlePlaceholder' | translate"
                         [class.border-danger]="deadlineTitleError"
                         [class.bg-[rgb(var(--tint-danger-bg))]]="deadlineTitleError"
                       />
@@ -695,10 +913,10 @@ type LastSavedData = {
                           class="whitespace-nowrap"
                           [disabled]="addingDeadline"
                         >
-                          <span *ngIf="!addingDeadline">Add</span>
+                          <span *ngIf="!addingDeadline">{{ 'caseDetail.add' | translate }}</span>
                           <span *ngIf="addingDeadline" class="flex items-center gap-2">
                             <app-loading-spinner size="small" [show]="true"></app-loading-spinner>
-                            Adding...
+                            {{ 'common.adding' | translate }}
                           </span>
                         </p-button>
                       </div>
@@ -744,7 +962,11 @@ type LastSavedData = {
                           "
                           *ngIf="(d.date | deadlineStatus) !== 'normal'"
                         >
-                          {{ (d.date | deadlineStatus) === 'overdue' ? 'Overdue' : 'Upcoming' }}
+                          {{
+                            (d.date | deadlineStatus) === 'overdue'
+                              ? ('common.overdue' | translate)
+                              : ('common.upcoming' | translate)
+                          }}
                         </span>
                         <span class="text-xs text-[rgb(var(--text-muted))]">
                           ({{ d.date | relativeDate }})
@@ -755,7 +977,7 @@ type LastSavedData = {
                       class="text-sm text-danger hover:opacity-90 font-medium px-2"
                       (click)="removeDeadline(d.id)"
                     >
-                      Remove
+                      {{ 'common.remove' | translate }}
                     </button>
                   </li>
                   <li
@@ -776,8 +998,10 @@ type LastSavedData = {
                           d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                         />
                       </svg>
-                      <p>No deadlines yet</p>
-                      <p class="text-xs opacity-75">Add your first deadline above</p>
+                      <p>{{ 'caseDetail.noDeadlinesYet' | translate }}</p>
+                      <p class="text-xs opacity-75">
+                        {{ 'caseDetail.addFirstDeadline' | translate }}
+                      </p>
                     </div>
                   </li>
                   <li
@@ -786,7 +1010,7 @@ type LastSavedData = {
                     "
                     class="text-sm text-[rgb(var(--text-muted))] text-center py-6"
                   >
-                    No deadlines match your filter.
+                    {{ 'caseDetail.noDeadlinesMatchFilter' | translate }}
                   </li>
                 </ul>
               </div>
@@ -795,21 +1019,42 @@ type LastSavedData = {
         </p-tabPanel>
 
         <!-- Developments Tab -->
-        <p-tabPanel header="Developments">
+        <p-tabPanel [header]="'caseDetail.tabs.developments' | translate">
           <div class="p-4 flex flex-col gap-8">
             <div>
-              <h3 class="text-lg font-bold mb-4">Developments</h3>
-              <input
-                type="search"
-                class="w-full mb-3 max-w-xl"
-                [(ngModel)]="developmentTabSearch"
-                placeholder="Filter developments..."
-              />
+              <h3 class="text-lg font-bold mb-4">
+                {{ 'caseDetail.developmentsTitle' | translate }}
+              </h3>
+              <div class="relative mb-3 max-w-xl">
+                <input
+                  type="text"
+                  inputmode="search"
+                  autocomplete="off"
+                  class="w-full py-2.5 pe-4 rounded-input border border-[rgb(var(--border))] bg-[rgb(var(--surface))] text-[rgb(var(--text))] search-input-with-icon"
+                  [(ngModel)]="developmentTabSearch"
+                  [placeholder]="'caseDetail.filterDevelopments' | translate"
+                />
+                <span class="search-input-icon" aria-hidden="true">
+                  <svg
+                    class="w-5 h-5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </span>
+              </div>
               <div>
                 <textarea
                   class="w-full"
                   [(ngModel)]="developmentNote"
-                  placeholder="Enter development note..."
+                  [placeholder]="'caseDetail.developmentNotePlaceholder' | translate"
                   rows="3"
                 ></textarea>
                 <div class="flex justify-end mt-4">
@@ -818,10 +1063,12 @@ type LastSavedData = {
                     (click)="addDevelopment()"
                     [disabled]="addingDevelopment"
                   >
-                    <span *ngIf="!addingDevelopment">Add Development</span>
+                    <span *ngIf="!addingDevelopment">{{
+                      'actions.addDevelopment' | translate
+                    }}</span>
                     <span *ngIf="addingDevelopment" class="flex items-center gap-2">
                       <app-loading-spinner size="small" [show]="true"></app-loading-spinner>
-                      Adding...
+                      {{ 'common.adding' | translate }}
                     </span>
                   </p-button>
                 </div>
@@ -855,8 +1102,10 @@ type LastSavedData = {
                       d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  <p>No developments yet</p>
-                  <p class="text-xs opacity-75">Add your first development above</p>
+                  <p>{{ 'caseDetail.noDevelopmentsYet' | translate }}</p>
+                  <p class="text-xs opacity-75">
+                    {{ 'caseDetail.addFirstDevelopment' | translate }}
+                  </p>
                 </div>
               </li>
               <li
@@ -865,33 +1114,50 @@ type LastSavedData = {
                 "
                 class="text-sm text-[rgb(var(--text-muted))] text-center py-6"
               >
-                No developments match your filter.
+                {{ 'caseDetail.noDevelopmentsMatchFilter' | translate }}
               </li>
             </ul>
           </div>
         </p-tabPanel>
 
         <!-- Court Rulings Tab -->
-        <p-tabPanel header="Court Rulings">
+        <p-tabPanel [header]="'caseDetail.tabs.courtRulings' | translate">
           <div class="p-4 flex flex-col gap-8">
-            <h3 class="text-lg font-bold mb-0">Court Rulings</h3>
-            <input
-              type="search"
-              class="w-full max-w-xl"
-              [(ngModel)]="rulingTabSearch"
-              placeholder="Filter rulings by case no, court, adversary..."
-            />
+            <h3 class="text-lg font-bold mb-0">{{ 'caseDetail.courtRulingsTitle' | translate }}</h3>
+            <div class="relative max-w-xl">
+              <input
+                type="text"
+                inputmode="search"
+                autocomplete="off"
+                class="w-full py-2.5 pe-4 rounded-input border border-[rgb(var(--border))] bg-[rgb(var(--surface))] text-[rgb(var(--text))] search-input-with-icon"
+                [(ngModel)]="rulingTabSearch"
+                [placeholder]="'caseDetail.filterRulings' | translate"
+              />
+              <span class="search-input-icon" aria-hidden="true">
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </span>
+            </div>
 
             <!-- Ruling Form -->
             <div
               class="border border-[rgb(var(--border))] rounded-xl p-6 bg-[rgb(var(--surface-muted))] flex flex-col gap-8"
             >
               <div>
-                <h4 class="font-bold mb-4 text-[rgb(var(--text))]">Main Info</h4>
+                <h4 class="font-bold mb-4 text-[rgb(var(--text))]">
+                  {{ 'cases.rulings.sections.mainInfo' | translate }}
+                </h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Case No <span class="text-danger">*</span></label
+                      >{{ 'cases.rulings.fields.caseNo' | translate }}
+                      <span class="text-danger">*</span></label
                     >
                     <input
                       type="text"
@@ -899,24 +1165,29 @@ type LastSavedData = {
                       class="w-full"
                       [class.border-danger]="rulingCaseNoError"
                       [class.bg-[rgb(var(--tint-danger-bg))]]="rulingCaseNoError"
-                      placeholder="Enter case number"
+                      [placeholder]="'caseDetail.enterCaseNumber' | translate"
                     />
                     <p *ngIf="rulingCaseNoError" class="text-danger text-xs mt-1">
                       {{ rulingCaseNoError }}
                     </p>
                   </div>
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Case Type</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'cases.rulings.fields.caseType' | translate
+                    }}</label>
                     <select [(ngModel)]="newRuling.caseType" class="w-full">
-                      <option value="Plaintiff">Plaintiff</option>
-                      <option value="Defendant">Defendant</option>
+                      <option value="Plaintiff">
+                        {{ 'cases.rulings.caseType.plaintiff' | translate }}
+                      </option>
+                      <option value="Defendant">
+                        {{ 'cases.rulings.caseType.defendant' | translate }}
+                      </option>
                     </select>
                   </div>
                   <div>
                     <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Court Type <span class="text-danger">*</span></label
+                      >{{ 'cases.rulings.fields.courtType' | translate }}
+                      <span class="text-danger">*</span></label
                     >
                     <select
                       [(ngModel)]="selectedCourtTypeId"
@@ -925,7 +1196,7 @@ type LastSavedData = {
                       [class.bg-[rgb(var(--tint-danger-bg))]]="rulingCourtTypeError"
                       (ngModelChange)="onCourtTypeChange()"
                     >
-                      <option value="">Select court type</option>
+                      <option value="">{{ 'caseDetail.selectCourtType' | translate }}</option>
                       <option *ngFor="let ct of courts" [value]="ct.id">{{ ct.name }}</option>
                     </select>
                     <p *ngIf="rulingCourtTypeError" class="text-danger text-xs mt-1">
@@ -933,31 +1204,31 @@ type LastSavedData = {
                     </p>
                   </div>
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Court Level</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'cases.rulings.fields.courtLevel' | translate
+                    }}</label>
                     <select [(ngModel)]="newRuling.courtLevel" class="w-full">
-                      <option value="">Select level</option>
+                      <option value="">{{ 'caseDetail.selectLevel' | translate }}</option>
                       <option *ngFor="let lvl of availableLevels" [value]="lvl">
-                        {{ levelLabel(lvl) }}
+                        {{ 'courts.level.' + lvl | translate }}
                       </option>
                     </select>
                   </div>
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Court City</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'cases.rulings.fields.courtCity' | translate
+                    }}</label>
                     <input
                       type="text"
                       [(ngModel)]="newRuling.courtCity"
                       class="w-full"
-                      placeholder="Enter court city"
+                      [placeholder]="'caseDetail.enterCourtCity' | translate"
                     />
                   </div>
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Filing Date</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'cases.rulings.fields.filingDate' | translate
+                    }}</label>
                     <p-calendar
                       [(ngModel)]="newRuling.filingDate"
                       dateFormat="dd/mm/yy"
@@ -970,63 +1241,69 @@ type LastSavedData = {
                     </p>
                   </div>
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Filing No</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'cases.rulings.fields.filingNo' | translate
+                    }}</label>
                     <input
                       type="text"
                       [(ngModel)]="newRuling.filingNo"
                       class="w-full"
-                      placeholder="Enter filing number"
+                      [placeholder]="'caseDetail.enterFilingNumber' | translate"
                     />
                   </div>
                   <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Case Details</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'cases.rulings.fields.caseDetails' | translate
+                    }}</label>
                     <textarea
                       [(ngModel)]="newRuling.caseDetails"
                       rows="3"
                       class="w-full"
-                      placeholder="Enter case details"
+                      [placeholder]="'caseDetail.enterCaseDetails' | translate"
                     ></textarea>
                   </div>
                 </div>
               </div>
 
               <div class="border-t border-[rgb(var(--border))] pt-6">
-                <h4 class="font-bold mb-4 text-[rgb(var(--text))]">Stage Info</h4>
+                <h4 class="font-bold mb-4 text-[rgb(var(--text))]">
+                  {{ 'cases.rulings.sections.stageInfo' | translate }}
+                </h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Stage</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'cases.rulings.fields.stage' | translate
+                    }}</label>
                     <select [(ngModel)]="newRuling.stage" class="w-full">
-                      <option value="primary">Primary</option>
-                      <option value="appeal">Appeal</option>
-                      <option value="cassation">Cassation</option>
-                      <option value="execution">Execution</option>
+                      <option value="primary">{{ 'cases.stage.primary' | translate }}</option>
+                      <option value="appeal">{{ 'cases.stage.appeal' | translate }}</option>
+                      <option value="cassation">{{ 'cases.stage.cassation' | translate }}</option>
+                      <option value="execution">{{ 'cases.stage.execution' | translate }}</option>
                     </select>
                   </div>
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Stage No</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'cases.rulings.fields.stageNo' | translate
+                    }}</label>
                     <input type="number" [(ngModel)]="newRuling.stageNo" min="1" class="w-full" />
                   </div>
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Ruling in favor of</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'cases.rulings.fields.rulingInFavorOf' | translate
+                    }}</label>
                     <select [(ngModel)]="newRuling.rulingInFavorOf" class="w-full">
-                      <option value="Company">Company</option>
-                      <option value="Adversary">Adversary</option>
+                      <option value="Company">
+                        {{ 'cases.rulings.rulingInFavorOf.company' | translate }}
+                      </option>
+                      <option value="Adversary">
+                        {{ 'cases.rulings.rulingInFavorOf.adversary' | translate }}
+                      </option>
                     </select>
                   </div>
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Ruling Date</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'cases.rulings.fields.rulingDate' | translate
+                    }}</label>
                     <p-calendar
                       [(ngModel)]="newRuling.rulingDate"
                       dateFormat="dd/mm/yy"
@@ -1039,9 +1316,9 @@ type LastSavedData = {
                     </p>
                   </div>
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Court Fees</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'cases.rulings.fields.courtFees' | translate
+                    }}</label>
                     <p-inputNumber
                       mode="currency"
                       currency="AED"
@@ -1054,9 +1331,9 @@ type LastSavedData = {
                     ></p-inputNumber>
                   </div>
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Legal Expenses</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'cases.rulings.fields.legalExpenses' | translate
+                    }}</label>
                     <p-inputNumber
                       mode="currency"
                       currency="AED"
@@ -1069,9 +1346,9 @@ type LastSavedData = {
                     ></p-inputNumber>
                   </div>
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Translation Court Fees</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'cases.rulings.fields.translationCourtFees' | translate
+                    }}</label>
                     <p-inputNumber
                       mode="currency"
                       currency="AED"
@@ -1084,9 +1361,9 @@ type LastSavedData = {
                     ></p-inputNumber>
                   </div>
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Court Fees in Cash</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'cases.rulings.fields.courtFeesInCash' | translate
+                    }}</label>
                     <p-inputNumber
                       mode="currency"
                       currency="AED"
@@ -1099,9 +1376,9 @@ type LastSavedData = {
                     ></p-inputNumber>
                   </div>
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Expert Fees</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'cases.rulings.fields.expertFees' | translate
+                    }}</label>
                     <p-inputNumber
                       mode="currency"
                       currency="AED"
@@ -1114,9 +1391,9 @@ type LastSavedData = {
                     ></p-inputNumber>
                   </div>
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Advocacy Fees</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'cases.rulings.fields.advocacyFees' | translate
+                    }}</label>
                     <p-inputNumber
                       mode="currency"
                       currency="AED"
@@ -1129,9 +1406,9 @@ type LastSavedData = {
                     ></p-inputNumber>
                   </div>
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Other Expenses</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'cases.rulings.fields.otherExpenses' | translate
+                    }}</label>
                     <p-inputNumber
                       mode="currency"
                       currency="AED"
@@ -1147,23 +1424,25 @@ type LastSavedData = {
               </div>
 
               <div class="border-t border-[rgb(var(--border))] pt-6">
-                <h4 class="font-bold mb-4 text-[rgb(var(--text))]">Adversary Info</h4>
+                <h4 class="font-bold mb-4 text-[rgb(var(--text))]">
+                  {{ 'cases.rulings.sections.adversaryInfo' | translate }}
+                </h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Adversary Name</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'cases.rulings.fields.adversaryName' | translate
+                    }}</label>
                     <input
                       type="text"
                       [(ngModel)]="newRuling.adversaryName"
                       class="w-full"
-                      placeholder="Enter adversary name"
+                      [placeholder]="'caseDetail.enterAdversaryName' | translate"
                     />
                   </div>
                   <div>
-                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                      >Indemnity by Court Amount</label
-                    >
+                    <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                      'cases.rulings.fields.indemnityByCourtAmount' | translate
+                    }}</label>
                     <p-inputNumber
                       mode="currency"
                       currency="AED"
@@ -1181,22 +1460,24 @@ type LastSavedData = {
               <!-- Total Ruled Out Display -->
               <div class="p-4 rounded-lg border border-info bg-info-muted">
                 <div class="flex items-center justify-between gap-3">
-                  <span class="text-sm font-semibold text-[rgb(var(--text))]">Total Ruled Out</span>
+                  <span class="text-sm font-semibold text-[rgb(var(--text))]">{{
+                    'caseDetail.totalRuledOut' | translate
+                  }}</span>
                   <span class="text-xl font-bold text-[rgb(var(--primary))] tabular-nums"
-                    >{{ getTotalRuledOut() | number }} SAR</span
+                    >{{ getTotalRuledOut() | number }} {{ 'common.sar' | translate }}</span
                   >
                 </div>
                 <p class="text-xs text-info-fg mt-1.5 leading-relaxed">
-                  Auto-calculated sum of all fees and indemnity
+                  {{ 'caseDetail.totalRuledOutHint' | translate }}
                 </p>
               </div>
 
               <div class="flex justify-end pt-4 border-t border-[rgb(var(--border))]">
                 <p-button severity="primary" (click)="addRuling()" [disabled]="addingRuling">
-                  <span *ngIf="!addingRuling">Add Court Ruling</span>
+                  <span *ngIf="!addingRuling">{{ 'caseDetail.addCourtRuling' | translate }}</span>
                   <span *ngIf="addingRuling" class="flex items-center gap-2">
                     <app-loading-spinner size="small" [show]="true"></app-loading-spinner>
-                    Adding...
+                    {{ 'common.adding' | translate }}
                   </span>
                 </p-button>
               </div>
@@ -1204,7 +1485,9 @@ type LastSavedData = {
 
             <!-- Existing Rulings List -->
             <div>
-              <h4 class="font-bold mb-4 text-[rgb(var(--text))]">Existing Rulings</h4>
+              <h4 class="font-bold mb-4 text-[rgb(var(--text))]">
+                {{ 'caseDetail.existingRulings' | translate }}
+              </h4>
               <ul class="space-y-4">
                 <li
                   *ngFor="let r of filteredRulings()"
@@ -1215,9 +1498,10 @@ type LastSavedData = {
                   >
                     <div>
                       <span class="font-bold text-[rgb(var(--text))]"
-                        >{{ r.stage | titlecase }} - Stage No: {{ r.stageNo }}</span
+                        >{{ 'cases.stage.' + r.stage | translate }} —
+                        {{ 'caseDetail.stageNoShort' | translate }}: {{ r.stageNo }}</span
                       >
-                      <span class="text-sm text-[rgb(var(--text-muted))] ml-3">{{
+                      <span class="text-sm text-[rgb(var(--text-muted))] ms-3">{{
                         r.rulingDate | date: 'short'
                       }}</span>
                     </div>
@@ -1226,21 +1510,21 @@ type LastSavedData = {
                         (click)="startEditRuling(r)"
                         class="text-sm text-[rgb(var(--primary))] hover:text-[rgb(var(--primary-dark))] font-medium px-2"
                       >
-                        Edit
+                        {{ 'caseDetail.editRuling' | translate }}
                       </button>
                       <button
                         (click)="deleteRuling(r.id)"
                         class="text-sm text-danger hover:opacity-90 font-medium px-2"
                       >
-                        Delete
+                        {{ 'caseDetail.deleteRuling' | translate }}
                       </button>
                     </div>
                     <div class="flex items-center gap-2" *ngIf="editingRulingId === r.id">
                       <p-button [outlined]="true" (click)="cancelEditRuling()" class="text-sm">
-                        Cancel
+                        {{ 'caseDetail.cancelEdit' | translate }}
                       </p-button>
                       <p-button severity="primary" (click)="saveEditRuling(r.id)" class="text-sm">
-                        Save
+                        {{ 'actions.save' | translate }}
                       </p-button>
                     </div>
                   </div>
@@ -1249,52 +1533,77 @@ type LastSavedData = {
                     class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm"
                   >
                     <div>
-                      <strong class="text-[rgb(var(--text))]">Case No:</strong>
+                      <strong class="text-[rgb(var(--text))]">{{
+                        'caseDetail.summaryCaseNo' | translate
+                      }}</strong>
                       <span class="text-[rgb(var(--text-muted))]">{{ r.caseNo }}</span>
                     </div>
                     <div>
-                      <strong class="text-[rgb(var(--text))]">Case Type:</strong>
-                      <span class="text-[rgb(var(--text-muted))]">{{ r.caseType }}</span>
+                      <strong class="text-[rgb(var(--text))]">{{
+                        'caseDetail.summaryCaseType' | translate
+                      }}</strong>
+                      <span class="text-[rgb(var(--text-muted))]">{{
+                        r.caseType === 'Plaintiff'
+                          ? ('cases.rulings.caseType.plaintiff' | translate)
+                          : ('cases.rulings.caseType.defendant' | translate)
+                      }}</span>
                     </div>
                     <div>
-                      <strong class="text-[rgb(var(--text))]">Ruling in favor of:</strong>
-                      <span class="text-[rgb(var(--text-muted))]">{{ r.rulingInFavorOf }}</span>
+                      <strong class="text-[rgb(var(--text))]">{{
+                        'caseDetail.rulingSummaryFavor' | translate
+                      }}</strong>
+                      <span class="text-[rgb(var(--text-muted))]">{{
+                        r.rulingInFavorOf === 'Company'
+                          ? ('cases.rulings.rulingInFavorOf.company' | translate)
+                          : ('cases.rulings.rulingInFavorOf.adversary' | translate)
+                      }}</span>
                     </div>
                     <div>
-                      <strong class="text-[rgb(var(--text))]">Adversary Name:</strong>
+                      <strong class="text-[rgb(var(--text))]">{{
+                        'caseDetail.summaryAdversaryName' | translate
+                      }}</strong>
                       <span class="text-[rgb(var(--text-muted))]">{{
                         r.adversaryName || '-'
                       }}</span>
                     </div>
                     <div class="md:col-span-2">
-                      <strong class="text-[rgb(var(--text))]">Indemnity by Court Amount:</strong>
+                      <strong class="text-[rgb(var(--text))]">{{
+                        'caseDetail.rulingSummaryIndemnity' | translate
+                      }}</strong>
                       <span class="text-[rgb(var(--primary))] font-semibold"
-                        >{{ r.indemnityByCourtAmount | number }} SAR</span
+                        >{{ r.indemnityByCourtAmount | number }}
+                        {{ 'common.sar' | translate }}</span
                       >
                     </div>
                     <div class="md:col-span-2 pt-2 border-t border-[rgb(var(--border-light))]">
                       <div class="text-xs text-[rgb(var(--text-muted))] space-y-1">
                         <div>
-                          Court Fees:
-                          <span class="font-medium">{{ r.courtFees | number }} SAR</span>
+                          {{ 'cases.rulings.fields.courtFees' | translate }}:
+                          <span class="font-medium"
+                            >{{ r.courtFees | number }} {{ 'common.sar' | translate }}</span
+                          >
                         </div>
                         <div>
-                          Legal Expenses:
-                          <span class="font-medium">{{ r.legalExpenses | number }} SAR</span>
+                          {{ 'cases.rulings.fields.legalExpenses' | translate }}:
+                          <span class="font-medium"
+                            >{{ r.legalExpenses | number }} {{ 'common.sar' | translate }}</span
+                          >
                         </div>
                         <div>
-                          Expert Fees:
-                          <span class="font-medium">{{ r.expertFees | number }} SAR</span>
+                          {{ 'cases.rulings.fields.expertFees' | translate }}:
+                          <span class="font-medium"
+                            >{{ r.expertFees | number }} {{ 'common.sar' | translate }}</span
+                          >
                         </div>
                       </div>
                     </div>
                     <div class="md:col-span-2 mt-2 p-3 rounded-lg border border-info bg-info-muted">
                       <div class="flex items-center justify-between gap-3">
-                        <span class="text-sm font-semibold text-[rgb(var(--text))]"
-                          >Total Ruled Out</span
-                        >
+                        <span class="text-sm font-semibold text-[rgb(var(--text))]">{{
+                          'caseDetail.totalRuledOut' | translate
+                        }}</span>
                         <span class="text-lg font-bold text-[rgb(var(--primary))] tabular-nums"
-                          >{{ getRulingTotal(r) | number }} SAR</span
+                          >{{ getRulingTotal(r) | number }} {{ 'common.sar' | translate }}</span
                         >
                       </div>
                     </div>
@@ -1303,40 +1612,44 @@ type LastSavedData = {
                   <div *ngIf="editingRulingId === r.id" class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                          >Case No</label
-                        >
+                        <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                          'cases.rulings.fields.caseNo' | translate
+                        }}</label>
                         <input
                           type="text"
                           [(ngModel)]="editingRuling.caseNo"
                           class="w-full"
-                          placeholder="Enter case number"
+                          [placeholder]="'caseDetail.enterCaseNumber' | translate"
                         />
                       </div>
                       <div>
-                        <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                          >Case Type</label
-                        >
+                        <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                          'cases.rulings.fields.caseType' | translate
+                        }}</label>
                         <select [(ngModel)]="editingRuling.caseType" class="w-full">
-                          <option value="Plaintiff">Plaintiff</option>
-                          <option value="Defendant">Defendant</option>
+                          <option value="Plaintiff">
+                            {{ 'cases.rulings.caseType.plaintiff' | translate }}
+                          </option>
+                          <option value="Defendant">
+                            {{ 'cases.rulings.caseType.defendant' | translate }}
+                          </option>
                         </select>
                       </div>
                       <div>
-                        <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                          >Court Type</label
-                        >
+                        <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                          'cases.rulings.fields.courtType' | translate
+                        }}</label>
                         <input
                           type="text"
                           [(ngModel)]="editingRuling.courtType"
                           class="w-full"
-                          placeholder="Enter court type"
+                          [placeholder]="'caseDetail.selectCourtType' | translate"
                         />
                       </div>
                       <div>
-                        <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                          >Ruling Date</label
-                        >
+                        <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                          'cases.rulings.fields.rulingDate' | translate
+                        }}</label>
                         <p-calendar
                           [(ngModel)]="editingRuling.rulingDate"
                           dateFormat="dd/mm/yy"
@@ -1345,36 +1658,40 @@ type LastSavedData = {
                         ></p-calendar>
                       </div>
                       <div>
-                        <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                          >Ruling in favor of</label
-                        >
+                        <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                          'cases.rulings.fields.rulingInFavorOf' | translate
+                        }}</label>
                         <select [(ngModel)]="editingRuling.rulingInFavorOf" class="w-full">
-                          <option value="Company">Company</option>
-                          <option value="Adversary">Adversary</option>
+                          <option value="Company">
+                            {{ 'cases.rulings.rulingInFavorOf.company' | translate }}
+                          </option>
+                          <option value="Adversary">
+                            {{ 'cases.rulings.rulingInFavorOf.adversary' | translate }}
+                          </option>
                         </select>
                       </div>
                       <div>
-                        <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                          >Adversary Name</label
-                        >
+                        <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                          'cases.rulings.fields.adversaryName' | translate
+                        }}</label>
                         <input
                           type="text"
                           [(ngModel)]="editingRuling.adversaryName"
                           class="w-full"
-                          placeholder="Enter adversary name"
+                          [placeholder]="'caseDetail.enterAdversaryName' | translate"
                         />
                       </div>
                       <div>
-                        <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2"
-                          >Indemnity by Court Amount</label
-                        >
+                        <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                          'cases.rulings.fields.indemnityByCourtAmount' | translate
+                        }}</label>
                         <input
                           type="number"
                           [(ngModel)]="editingRuling.indemnityByCourtAmount"
                           min="0"
                           step="0.01"
                           class="w-full"
-                          placeholder="0.00"
+                          [placeholder]="'caseDetail.amountPlaceholder' | translate"
                         />
                       </div>
                     </div>
@@ -1399,8 +1716,10 @@ type LastSavedData = {
                       />
                     </svg>
                     <div>
-                      <p class="font-medium mb-1">No rulings yet</p>
-                      <p class="text-xs opacity-75">Add your first court ruling above</p>
+                      <p class="font-medium mb-1">{{ 'caseDetail.noRulingsYet' | translate }}</p>
+                      <p class="text-xs opacity-75">
+                        {{ 'caseDetail.addFirstRuling' | translate }}
+                      </p>
                     </div>
                   </div>
                 </li>
@@ -1408,7 +1727,7 @@ type LastSavedData = {
                   *ngIf="(caseItem?.rulings?.length ?? 0) > 0 && filteredRulings().length === 0"
                   class="text-sm text-[rgb(var(--text-muted))] text-center py-8 bg-[rgb(var(--surface-muted))] rounded-lg"
                 >
-                  No rulings match your filter.
+                  {{ 'caseDetail.noRulingsMatchFilter' | translate }}
                 </li>
               </ul>
             </div>
@@ -1416,23 +1735,23 @@ type LastSavedData = {
         </p-tabPanel>
 
         <!-- Business Settlement Tab -->
-        <p-tabPanel header="Business Settlement">
+        <p-tabPanel [header]="'caseDetail.tabs.businessSettlement' | translate">
           <div class="p-4 flex flex-col gap-8">
             <div class="flex items-center justify-between">
-              <h3 class="text-lg font-bold">Business Settlement</h3>
+              <h3 class="text-lg font-bold">{{ 'settlement.detailTitle' | translate }}</h3>
               <p-button
                 severity="primary"
                 [size]="'small'"
                 (click)="createSettlement()"
                 *ngIf="!settlement"
-                label="Create Settlement"
+                [label]="'actions.createSettlement' | translate"
               ></p-button>
               <a
                 *ngIf="settlement"
                 class="text-[rgb(var(--primary))] hover:underline text-sm font-medium"
                 [routerLink]="['/settlements', settlement.id]"
               >
-                View Settlement
+                {{ 'actions.viewSettlement' | translate }}
               </a>
             </div>
             <div
@@ -1440,34 +1759,52 @@ type LastSavedData = {
               class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm"
             >
               <div class="p-3 bg-[rgb(var(--surface-muted))] rounded">
-                <div class="text-[rgb(var(--text-muted))]">Amount of Amicable Agreement</div>
+                <div class="text-[rgb(var(--text-muted))]">
+                  {{ 'settlement.fields.amountOfAmicableAgreement' | translate }}
+                </div>
                 <div class="text-lg font-semibold">
-                  {{ settlement.amountOfAmicableAgreement | number }} SAR
+                  {{ settlement.amountOfAmicableAgreement | number }} {{ 'common.sar' | translate }}
                 </div>
               </div>
               <div class="p-3 bg-[rgb(var(--surface-muted))] rounded">
-                <div class="text-[rgb(var(--text-muted))]">Department Amount</div>
-                <div class="font-semibold">{{ settlement.departmentAmount | number }} SAR</div>
+                <div class="text-[rgb(var(--text-muted))]">
+                  {{ 'settlement.fields.departmentAmount' | translate }}
+                </div>
+                <div class="font-semibold">
+                  {{ settlement.departmentAmount | number }} {{ 'common.sar' | translate }}
+                </div>
               </div>
               <div class="p-3 bg-[rgb(var(--surface-muted))] rounded">
-                <div class="text-[rgb(var(--text-muted))]">Legal Department Amount</div>
-                <div class="font-semibold">{{ settlement.legalDepartmentAmount | number }} SAR</div>
+                <div class="text-[rgb(var(--text-muted))]">
+                  {{ 'settlement.fields.legalDepartmentAmount' | translate }}
+                </div>
+                <div class="font-semibold">
+                  {{ settlement.legalDepartmentAmount | number }} {{ 'common.sar' | translate }}
+                </div>
               </div>
               <div class="p-3 bg-[rgb(var(--surface-muted))] rounded">
-                <div class="text-[rgb(var(--text-muted))]">Management Amount</div>
-                <div class="font-semibold">{{ settlement.managementAmount | number }} SAR</div>
+                <div class="text-[rgb(var(--text-muted))]">
+                  {{ 'settlement.fields.managementAmount' | translate }}
+                </div>
+                <div class="font-semibold">
+                  {{ settlement.managementAmount | number }} {{ 'common.sar' | translate }}
+                </div>
               </div>
               <div class="p-3 bg-[rgb(var(--surface-muted))] rounded">
-                <div class="text-[rgb(var(--text-muted))]">Adversary Amount</div>
-                <div class="font-semibold">{{ settlement.adversaryAmount | number }} SAR</div>
+                <div class="text-[rgb(var(--text-muted))]">
+                  {{ 'settlement.fields.adversaryAmount' | translate }}
+                </div>
+                <div class="font-semibold">
+                  {{ settlement.adversaryAmount | number }} {{ 'common.sar' | translate }}
+                </div>
               </div>
               <div class="text-xs text-[rgb(var(--text-muted))]">
-                Updated at: {{ settlement.updatedAt | date: 'short' }}
+                {{ 'common.updatedAt' | translate }}: {{ settlement.updatedAt | date: 'short' }}
               </div>
             </div>
             <ng-template #noSettlement>
               <p class="text-[rgb(var(--text-muted))] text-sm">
-                No settlement linked to this case.
+                {{ 'caseDetail.noSettlementLinked' | translate }}
               </p>
             </ng-template>
           </div>
@@ -1491,14 +1828,14 @@ type LastSavedData = {
                 d="M5 13l4 4L19 7"
               />
             </svg>
-            All changes saved
+            {{ 'common.allChangesSaved' | translate }}
           </span>
           <span
             *ngIf="caseItem && autoSaveStatus === 'saving'"
             class="flex items-center gap-1.5 text-warning"
           >
             <app-loading-spinner size="small" [show]="true"></app-loading-spinner>
-            Saving...
+            {{ 'common.saving' | translate }}
           </span>
           <span
             *ngIf="caseItem && autoSaveStatus === 'unsaved'"
@@ -1512,7 +1849,7 @@ type LastSavedData = {
                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
               />
             </svg>
-            Unsaved changes
+            {{ 'common.unsavedChanges' | translate }}
           </span>
         </div>
         <div class="flex gap-3">
@@ -1520,20 +1857,22 @@ type LastSavedData = {
             [outlined]="true"
             (click)="goBack()"
             [disabled]="saving"
-            aria-label="Cancel and go back"
+            [attr.aria-label]="'caseDetail.cancelGoBackAria' | translate"
           >
-            Cancel
+            {{ 'actions.cancel' | translate }}
           </p-button>
           <p-button
             severity="primary"
             (click)="save()"
             [disabled]="!isFormValid() || saving"
-            aria-label="Save case"
+            [attr.aria-label]="'caseDetail.saveCaseAria' | translate"
           >
-            <span *ngIf="!saving">{{ caseItem ? 'Save Changes' : 'Create Case' }}</span>
+            <span *ngIf="!saving">{{
+              caseItem ? ('actions.saveChanges' | translate) : ('cases.list.newCase' | translate)
+            }}</span>
             <span *ngIf="saving" class="flex items-center gap-2">
               <app-loading-spinner size="small" [show]="true"></app-loading-spinner>
-              Saving...
+              {{ 'common.saving' | translate }}
             </span>
           </p-button>
         </div>
@@ -1547,6 +1886,7 @@ export class CaseDetailComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly cases = inject(CasesService);
   private readonly toast = inject(ToastService);
+  private readonly translate = inject(TranslateService);
   private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly exportService = inject(ExportService);
   private readonly caseTracking = inject(CaseTrackingService);
@@ -1613,7 +1953,11 @@ export class CaseDetailComponent implements OnInit {
   protected deadlineTabSearch = '';
   protected developmentTabSearch = '';
   protected rulingTabSearch = '';
-  protected breadcrumbItems: Array<{ label: string; route?: string | any[] }> = [];
+  protected breadcrumbItems: Array<{
+    label?: string;
+    labelKey?: string;
+    route?: string | any[];
+  }> = [];
   protected autoSaveStatus: 'saved' | 'saving' | 'unsaved' = 'saved';
   protected lawyers: Lawyer[] = [];
   protected companyLawyerId = '';
@@ -1621,7 +1965,6 @@ export class CaseDetailComponent implements OnInit {
   protected selectedCourtTypeId = '';
   protected availableLevels: CourtLevel[] = [];
   protected readonly matterTypeOptions = CASE_MATTER_TYPES;
-  protected readonly matterTypeLabels = CASE_MATTER_TYPE_LABELS;
   protected matterType: CaseMatterType = 'GeneralCivil';
   private lastSavedData: LastSavedData = {
     title: '',
@@ -1632,7 +1975,9 @@ export class CaseDetailComponent implements OnInit {
     beneficiary: '',
     initialHearingDate: '',
     matterType: 'GeneralCivil',
+    portalJson: '{}',
   };
+  protected portalFields: PortalWorkbookFields = {};
   protected newRuling = {
     stage: 'primary' as Exclude<CaseStage, 'settled'>,
     caseNo: '',
@@ -1697,8 +2042,30 @@ export class CaseDetailComponent implements OnInit {
         this.incidentDate = this.parseStoredDate(this.caseItem.incidentDate);
         this.policeReportNumber = this.caseItem.policeReportNumber || '';
         this.caseSummary = this.caseItem.caseSummary || '';
+        const pw = this.caseItem.portalWorkbook;
+        this.portalFields = {
+          userNumber: pw?.userNumber ?? '',
+          externalId: pw?.externalId ?? '',
+          plaintiff: pw?.plaintiff ?? '',
+          defendant: pw?.defendant ?? '',
+          claimType: pw?.claimType ?? '',
+          claimValue: pw?.claimValue ?? '',
+          compensationType: pw?.compensationType ?? '',
+          claimStatus: pw?.claimStatus ?? '',
+          requiredAction: pw?.requiredAction ?? '',
+          remarks: pw?.remarks ?? '',
+          subrogationFiledOn: pw?.subrogationFiledOn ?? '',
+          subrogationExpectedEnd: pw?.subrogationExpectedEnd ?? '',
+          courtSubject: pw?.courtSubject ?? '',
+          courtName: pw?.courtName ?? '',
+          courtCity: pw?.courtCity ?? '',
+          nextHearingDate: pw?.nextHearingDate ?? '',
+          nextHearingTime: pw?.nextHearingTime ?? '',
+          decisionType: pw?.decisionType ?? '',
+          doublePaymentAmount: pw?.doublePaymentAmount,
+        };
         this.breadcrumbItems = [
-          { label: 'Cases', route: '/legal/cases' },
+          { labelKey: 'cases.title', route: '/legal/cases' },
           { label: this.caseItem.title },
         ];
         this.lastSavedData = {
@@ -1710,6 +2077,7 @@ export class CaseDetailComponent implements OnInit {
           beneficiary: this.caseItem.beneficiary || '',
           initialHearingDate: this.caseItem.initialHearingDate || '',
           matterType: this.matterType,
+          portalJson: this.portalFingerprint(),
         };
         // Set the current case in tracking service
         if (this.caseItem.unifiedCaseId) {
@@ -1735,7 +2103,10 @@ export class CaseDetailComponent implements OnInit {
         }
       }
     } else {
-      this.breadcrumbItems = [{ label: 'Cases', route: '/legal/cases' }, { label: 'New Case' }];
+      this.breadcrumbItems = [
+        { labelKey: 'cases.title', route: '/legal/cases' },
+        { labelKey: 'common.newCase' },
+      ];
     }
   }
 
@@ -1766,6 +2137,7 @@ export class CaseDetailComponent implements OnInit {
         beneficiary: this.caseItem.beneficiary || '',
         initialHearingDate: this.caseItem.initialHearingDate || '',
         matterType: this.caseItem.matterType ?? 'GeneralCivil',
+        portalJson: this.portalFingerprint(),
       };
       this.matterType = this.caseItem.matterType ?? 'GeneralCivil';
     }
@@ -1788,7 +2160,8 @@ export class CaseDetailComponent implements OnInit {
       this.beneficiary.trim() !== this.lastSavedData.beneficiary ||
       this.formatDateForStorage(this.initialHearingDate) !==
         this.lastSavedData.initialHearingDate ||
-      this.matterType !== this.lastSavedData.matterType;
+      this.matterType !== this.lastSavedData.matterType ||
+      this.portalFingerprint() !== this.lastSavedData.portalJson;
     if (!hasChanges) {
       this.autoSaveStatus = 'saved';
       return;
@@ -1813,6 +2186,7 @@ export class CaseDetailComponent implements OnInit {
         beneficiary: this.beneficiary.trim() || undefined,
         initialHearingDate: this.formatDateForStorage(this.initialHearingDate),
         matterType: this.matterType,
+        portalWorkbook: this.packPortalWorkbook(),
       });
       this.caseItem = this.cases.getById(this.caseItem.id);
       if (this.caseItem) {
@@ -1825,6 +2199,7 @@ export class CaseDetailComponent implements OnInit {
           beneficiary: this.caseItem.beneficiary || '',
           initialHearingDate: this.caseItem.initialHearingDate || '',
           matterType: this.caseItem.matterType ?? 'GeneralCivil',
+          portalJson: this.portalFingerprint(),
         };
       }
       this.autoSaveStatus = 'saved';
@@ -1848,18 +2223,18 @@ export class CaseDetailComponent implements OnInit {
     this.clientError = '';
 
     if (!this.title.trim()) {
-      this.titleError = 'Title is required';
+      this.titleError = this.translate.instant('validation.titleRequired');
     }
 
     if (!this.client.trim()) {
-      this.clientError = 'Client is required';
+      this.clientError = this.translate.instant('validation.clientRequired');
     }
   }
 
   async save(): Promise<void> {
     this.validateForm();
     if (this.titleError || this.clientError) {
-      this.toast.error('Please fix the errors before saving');
+      this.toast.error(this.translate.instant('toasts.case.fixErrorsBeforeSave'));
       return;
     }
 
@@ -1885,7 +2260,7 @@ export class CaseDetailComponent implements OnInit {
             status: (this.status as any) === 'on-hold' ? 'pending' : (this.status as any),
           });
         }
-        this.toast.success('Case created successfully');
+        this.toast.success(this.translate.instant('toasts.case.created'));
         // Navigate to the new case detail page
         this.router.navigate(['/legal/case', newCase.id]);
         this.caseItem = this.cases.getById(newCase.id);
@@ -1909,7 +2284,7 @@ export class CaseDetailComponent implements OnInit {
           matterType: this.matterType,
           ...this.getMatterSpecificMeta(),
         });
-        this.toast.success('Case updated successfully');
+        this.toast.success(this.translate.instant('toasts.case.updated'));
         this.caseItem = this.cases.getById(this.caseItem.id);
         if (this.caseItem) {
           this.lastSavedData = {
@@ -1921,37 +2296,28 @@ export class CaseDetailComponent implements OnInit {
             beneficiary: this.caseItem.beneficiary || '',
             initialHearingDate: this.caseItem.initialHearingDate || '',
             matterType: this.caseItem.matterType ?? 'GeneralCivil',
+            portalJson: this.portalFingerprint(),
           };
           this.matterType = this.caseItem.matterType ?? 'GeneralCivil';
         }
         this.autoSaveStatus = 'saved';
       }
     } catch (error) {
-      this.toast.error('Failed to save case');
+      this.toast.error(this.translate.instant('toasts.case.saveFailed'));
       console.error('Error saving case:', error);
     } finally {
       this.saving = false;
     }
   }
 
-  getLegalStatusValue(): number {
-    return this.caseItem?.legalStatus ?? 1; // Default to 1 (To Legal Department)
+  legalStatusTranslationSegment(): string {
+    const status = this.getLegalStatusValue();
+    if (status === 0 || status === 1 || status === 3 || status === 4) return String(status);
+    return 'unknown';
   }
 
-  getLegalStatusLabel(): string {
-    const status = this.getLegalStatusValue();
-    switch (status) {
-      case 0:
-        return 'Normal';
-      case 1:
-        return 'To Legal Department';
-      case 3:
-        return 'In Execution';
-      case 4:
-        return 'Settled';
-      default:
-        return 'Unknown';
-    }
+  getLegalStatusValue(): number {
+    return this.caseItem?.legalStatus ?? 1; // Default to 1 (To Legal Department)
   }
 
   getLegalStatusSeverity():
@@ -2060,6 +2426,10 @@ export class CaseDetailComponent implements OnInit {
   }
 
   private getMatterSpecificMeta(): Partial<CaseItem> {
+    const withPortal = (meta: Partial<CaseItem>): Partial<CaseItem> => ({
+      ...meta,
+      portalWorkbook: this.packPortalWorkbook(),
+    });
     const clearNonMotor = {
       claimantDemographics: undefined,
       damageType: undefined,
@@ -2085,7 +2455,7 @@ export class CaseDetailComponent implements OnInit {
 
     switch (this.matterType) {
       case 'MotorInsurance':
-        return {
+        return withPortal({
           ...clearCommercial,
           ...clearLabor,
           ...clearRealEstate,
@@ -2094,9 +2464,9 @@ export class CaseDetailComponent implements OnInit {
           claimantDemographics: this.demographics,
           damageType: this.damageType || undefined,
           disabilityMetrics: this.damageType === 'Disability' ? this.disabilityMetrics : undefined,
-        };
+        });
       case 'CommercialContract':
-        return {
+        return withPortal({
           ...clearNonMotor,
           ...clearLabor,
           ...clearRealEstate,
@@ -2104,9 +2474,9 @@ export class CaseDetailComponent implements OnInit {
           ...clearGeneral,
           contractReference: this.contractReference.trim() || undefined,
           disputedAmount: this.disputedAmount ?? undefined,
-        };
+        });
       case 'LaborEmployment':
-        return {
+        return withPortal({
           ...clearNonMotor,
           ...clearCommercial,
           ...clearRealEstate,
@@ -2115,9 +2485,9 @@ export class CaseDetailComponent implements OnInit {
           employerName: this.employerName.trim() || undefined,
           employeeName: this.employeeName.trim() || undefined,
           employmentStartDate: this.formatDateForStorage(this.employmentStartDate),
-        };
+        });
       case 'RealEstate':
-        return {
+        return withPortal({
           ...clearNonMotor,
           ...clearCommercial,
           ...clearLabor,
@@ -2126,9 +2496,9 @@ export class CaseDetailComponent implements OnInit {
           propertyAddress: this.propertyAddress.trim() || undefined,
           propertyType: this.propertyType.trim() || undefined,
           titleDeedNumber: this.titleDeedNumber.trim() || undefined,
-        };
+        });
       case 'CriminalDefense':
-        return {
+        return withPortal({
           ...clearNonMotor,
           ...clearCommercial,
           ...clearLabor,
@@ -2137,18 +2507,53 @@ export class CaseDetailComponent implements OnInit {
           offenseType: this.offenseType.trim() || undefined,
           incidentDate: this.formatDateForStorage(this.incidentDate),
           policeReportNumber: this.policeReportNumber.trim() || undefined,
-        };
+        });
       case 'GeneralCivil':
       default:
-        return {
+        return withPortal({
           ...clearNonMotor,
           ...clearCommercial,
           ...clearLabor,
           ...clearRealEstate,
           ...clearCriminal,
           caseSummary: this.caseSummary.trim() || undefined,
-        };
+        });
     }
+  }
+
+  private packPortalWorkbook(): PortalWorkbookFields | undefined {
+    const p = this.portalFields;
+    const out: PortalWorkbookFields = {};
+    const setStr = (key: keyof PortalWorkbookFields, v: unknown) => {
+      if (typeof v === 'string' && v.trim())
+        (out as Record<string, string>)[key as string] = v.trim();
+    };
+    setStr('userNumber', p.userNumber);
+    setStr('externalId', p.externalId);
+    setStr('plaintiff', p.plaintiff);
+    setStr('defendant', p.defendant);
+    setStr('claimType', p.claimType);
+    setStr('claimValue', p.claimValue);
+    setStr('compensationType', p.compensationType);
+    setStr('claimStatus', p.claimStatus);
+    setStr('requiredAction', p.requiredAction);
+    setStr('remarks', p.remarks);
+    setStr('subrogationFiledOn', p.subrogationFiledOn);
+    setStr('subrogationExpectedEnd', p.subrogationExpectedEnd);
+    setStr('courtSubject', p.courtSubject);
+    setStr('courtName', p.courtName);
+    setStr('courtCity', p.courtCity);
+    setStr('nextHearingDate', p.nextHearingDate);
+    setStr('nextHearingTime', p.nextHearingTime);
+    setStr('decisionType', p.decisionType);
+    if (typeof p.doublePaymentAmount === 'number' && Number.isFinite(p.doublePaymentAmount)) {
+      out.doublePaymentAmount = p.doublePaymentAmount;
+    }
+    return Object.keys(out).length ? out : undefined;
+  }
+
+  private portalFingerprint(): string {
+    return JSON.stringify(this.packPortalWorkbook() ?? {});
   }
 
   levelLabel(level: CourtLevel): string {
@@ -2206,7 +2611,7 @@ export class CaseDetailComponent implements OnInit {
       amountOfAmicableAgreement: 0,
       linkedCaseId: this.caseItem.id,
     });
-    this.toast.success('Settlement created');
+    this.toast.success(this.translate.instant('toasts.case.settlementCreated'));
     this.router.navigate(['/settlements', created.id]);
   }
 
@@ -2215,9 +2620,10 @@ export class CaseDetailComponent implements OnInit {
     try {
       this.cases.advanceStage(this.caseItem.id);
       this.caseItem = this.cases.getById(this.caseItem.id);
-      this.toast.success('Case stage advanced');
+      this.toast.success(this.translate.instant('toasts.case.stageAdvanced'));
     } catch (error: any) {
-      const errorMessage = error?.message || 'Failed to advance case stage';
+      const errorMessage =
+        error?.message || this.translate.instant('toasts.case.advanceStageFailed');
       this.toast.error(errorMessage);
       console.error('Error advancing stage:', error);
     }
@@ -2229,9 +2635,9 @@ export class CaseDetailComponent implements OnInit {
       const currentStage = this.caseItem.stage || 'primary';
       this.cases.settleCase(this.caseItem.id, currentStage as CaseStage);
       this.caseItem = this.cases.getById(this.caseItem.id);
-      this.toast.success('Case settled successfully');
+      this.toast.success(this.translate.instant('toasts.case.settled'));
     } catch (error) {
-      this.toast.error('Failed to settle case');
+      this.toast.error(this.translate.instant('toasts.case.settleFailed'));
       console.error('Error settling case:', error);
     }
   }
@@ -2242,21 +2648,21 @@ export class CaseDetailComponent implements OnInit {
       // Execute case moves to execution stage and creates execution case record
       this.cases.executeCase(this.caseItem.id);
       this.caseItem = this.cases.getById(this.caseItem.id);
-      this.toast.success('Case moved to execution stage');
+      this.toast.success(this.translate.instant('toasts.case.movedExecution'));
     } catch (error) {
-      this.toast.error('Failed to execute case');
+      this.toast.error(this.translate.instant('toasts.case.executeFailed'));
       console.error('Error executing case:', error);
     }
   }
 
   async addTask(): Promise<void> {
     if (!this.caseItem) {
-      this.toast.warning('Please save the case first before adding tasks');
+      this.toast.warning(this.translate.instant('toasts.case.saveBeforeTasks'));
       return;
     }
     const t = this.taskTitle.trim();
     if (!t) {
-      this.toast.warning('Task title is required');
+      this.toast.warning(this.translate.instant('toasts.case.taskTitleRequired'));
       return;
     }
     this.addingTask = true;
@@ -2264,9 +2670,9 @@ export class CaseDetailComponent implements OnInit {
       this.cases.addTask(this.caseItem.id, t);
       this.caseItem = this.cases.getById(this.caseItem.id);
       this.taskTitle = '';
-      this.toast.success('Task added successfully');
+      this.toast.success(this.translate.instant('toasts.case.taskAdded'));
     } catch (error) {
-      this.toast.error('Failed to add task');
+      this.toast.error(this.translate.instant('toasts.case.taskAddFailed'));
       console.error('Error adding task:', error);
     } finally {
       this.addingTask = false;
@@ -2283,19 +2689,21 @@ export class CaseDetailComponent implements OnInit {
     if (!this.caseItem) return;
     const task = this.caseItem.tasks.find((t) => t.id === taskId);
     const confirmed = await this.confirmDialog.confirm({
-      title: 'Remove Task',
-      message: `Are you sure you want to remove the task "${task?.title || 'this task'}"?`,
-      confirmText: 'Remove',
-      cancelText: 'Cancel',
+      title: this.translate.instant('confirm.removeTaskTitle'),
+      message: this.translate.instant('confirm.removeTaskMessage', {
+        name: task?.title || this.translate.instant('confirm.thisTask'),
+      }),
+      confirmText: this.translate.instant('common.remove'),
+      cancelText: this.translate.instant('actions.cancel'),
       type: 'danger',
     });
     if (!confirmed) return;
     try {
       this.cases.removeTask(this.caseItem.id, taskId);
       this.caseItem = this.cases.getById(this.caseItem.id);
-      this.toast.success('Task removed');
+      this.toast.success(this.translate.instant('toasts.case.taskRemoved'));
     } catch (error) {
-      this.toast.error('Failed to remove task');
+      this.toast.error(this.translate.instant('toasts.case.taskRemoveFailed'));
       console.error('Error removing task:', error);
     }
   }
@@ -2305,37 +2713,37 @@ export class CaseDetailComponent implements OnInit {
     this.deadlineDateError = '';
 
     if (!this.deadlineTitle.trim()) {
-      this.deadlineTitleError = 'Deadline title is required';
+      this.deadlineTitleError = this.translate.instant('validation.deadlineTitleRequired');
     }
 
     if (!this.deadlineDate) {
-      this.deadlineDateError = 'Deadline date is required';
+      this.deadlineDateError = this.translate.instant('validation.deadlineDateRequired');
     } else {
       const deadlineDate = this.deadlineDate;
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       if (deadlineDate < today) {
-        this.deadlineDateError = 'Deadline date must be in the future';
+        this.deadlineDateError = this.translate.instant('validation.deadlineFuture');
       }
     }
   }
 
   async addDeadline(): Promise<void> {
     if (!this.caseItem) {
-      this.toast.warning('Please save the case first before adding deadlines');
+      this.toast.warning(this.translate.instant('toasts.case.saveBeforeDeadlines'));
       return;
     }
     this.validateDeadline();
     if (this.deadlineTitleError || this.deadlineDateError) {
-      this.toast.error('Please fix the errors before adding deadline');
+      this.toast.error(this.translate.instant('toasts.case.fixErrorsDeadline'));
       return;
     }
     this.addingDeadline = true;
     try {
       const deadlineDate = this.formatDateForStorage(this.deadlineDate);
       if (!deadlineDate) {
-        this.deadlineDateError = 'Deadline date is required';
-        this.toast.error('Please fix the errors before adding deadline');
+        this.deadlineDateError = this.translate.instant('validation.deadlineDateRequired');
+        this.toast.error(this.translate.instant('toasts.case.fixErrorsDeadline'));
         return;
       }
       this.cases.addDeadline(this.caseItem.id, this.deadlineTitle.trim(), deadlineDate);
@@ -2344,9 +2752,9 @@ export class CaseDetailComponent implements OnInit {
       this.deadlineDate = null;
       this.deadlineTitleError = '';
       this.deadlineDateError = '';
-      this.toast.success('Deadline added successfully');
+      this.toast.success(this.translate.instant('toasts.case.deadlineAdded'));
     } catch (error) {
-      this.toast.error('Failed to add deadline');
+      this.toast.error(this.translate.instant('toasts.case.deadlineAddFailed'));
       console.error('Error adding deadline:', error);
     } finally {
       this.addingDeadline = false;
@@ -2357,19 +2765,21 @@ export class CaseDetailComponent implements OnInit {
     if (!this.caseItem) return;
     const deadline = this.caseItem.deadlines.find((d) => d.id === deadlineId);
     const confirmed = await this.confirmDialog.confirm({
-      title: 'Remove Deadline',
-      message: `Are you sure you want to remove the deadline "${deadline?.title || 'this deadline'}"?`,
-      confirmText: 'Remove',
-      cancelText: 'Cancel',
+      title: this.translate.instant('confirm.removeDeadlineTitle'),
+      message: this.translate.instant('confirm.removeDeadlineMessage', {
+        name: deadline?.title || this.translate.instant('confirm.thisDeadline'),
+      }),
+      confirmText: this.translate.instant('common.remove'),
+      cancelText: this.translate.instant('actions.cancel'),
       type: 'danger',
     });
     if (!confirmed) return;
     try {
       this.cases.removeDeadline(this.caseItem.id, deadlineId);
       this.caseItem = this.cases.getById(this.caseItem.id);
-      this.toast.success('Deadline removed');
+      this.toast.success(this.translate.instant('toasts.case.deadlineRemoved'));
     } catch (error) {
-      this.toast.error('Failed to remove deadline');
+      this.toast.error(this.translate.instant('toasts.case.deadlineRemoveFailed'));
       console.error('Error removing deadline:', error);
     }
   }
@@ -2394,31 +2804,31 @@ export class CaseDetailComponent implements OnInit {
     }
 
     if (!this.newRuling.caseNo.trim()) {
-      this.rulingCaseNoError = 'Case number is required';
+      this.rulingCaseNoError = this.translate.instant('validation.caseNoRequired');
     }
 
     if (!this.newRuling.courtType.trim()) {
-      this.rulingCourtTypeError = 'Court type is required';
+      this.rulingCourtTypeError = this.translate.instant('validation.courtTypeRequired');
     }
 
     if (this.newRuling.filingDate) {
       const filingDate = new Date(this.newRuling.filingDate);
       if (isNaN(filingDate.getTime())) {
-        this.rulingFilingDateError = 'Invalid filing date';
+        this.rulingFilingDateError = this.translate.instant('validation.invalidFilingDate');
       }
     }
 
     if (this.newRuling.rulingDate) {
       const rulingDate = new Date(this.newRuling.rulingDate);
       if (isNaN(rulingDate.getTime())) {
-        this.rulingRulingDateError = 'Invalid ruling date';
+        this.rulingRulingDateError = this.translate.instant('validation.invalidRulingDate');
       }
     }
   }
 
   async addRuling(): Promise<void> {
     if (!this.caseItem) {
-      this.toast.warning('Please save the case first before adding rulings');
+      this.toast.warning(this.translate.instant('toasts.case.saveBeforeRulings'));
       return;
     }
     this.validateRuling();
@@ -2428,7 +2838,7 @@ export class CaseDetailComponent implements OnInit {
       this.rulingFilingDateError ||
       this.rulingRulingDateError
     ) {
-      this.toast.error('Please fix the errors before adding ruling');
+      this.toast.error(this.translate.instant('toasts.case.fixErrorsRuling'));
       return;
     }
 
@@ -2437,9 +2847,13 @@ export class CaseDetailComponent implements OnInit {
       const filingDate = this.formatDateForStorage(this.newRuling.filingDate);
       const rulingDate = this.formatDateForStorage(this.newRuling.rulingDate);
       if (!filingDate || !rulingDate) {
-        this.rulingFilingDateError = filingDate ? '' : 'Invalid filing date';
-        this.rulingRulingDateError = rulingDate ? '' : 'Invalid ruling date';
-        this.toast.error('Please fix the errors before adding ruling');
+        this.rulingFilingDateError = filingDate
+          ? ''
+          : this.translate.instant('validation.invalidFilingDate');
+        this.rulingRulingDateError = rulingDate
+          ? ''
+          : this.translate.instant('validation.invalidRulingDate');
+        this.toast.error(this.translate.instant('toasts.case.fixErrorsRuling'));
         return;
       }
       this.cases.addRuling(this.caseItem.id, {
@@ -2467,7 +2881,7 @@ export class CaseDetailComponent implements OnInit {
       });
 
       this.caseItem = this.cases.getById(this.caseItem.id);
-      this.toast.success('Court ruling added successfully');
+      this.toast.success(this.translate.instant('toasts.case.rulingAdded'));
       // Reset form
       this.newRuling = {
         stage: 'primary' as Exclude<CaseStage, 'settled'>,
@@ -2498,7 +2912,7 @@ export class CaseDetailComponent implements OnInit {
       this.rulingFilingDateError = '';
       this.rulingRulingDateError = '';
     } catch (error) {
-      this.toast.error('Failed to add court ruling');
+      this.toast.error(this.translate.instant('toasts.case.rulingAddFailed'));
       console.error('Error adding ruling:', error);
     } finally {
       this.addingRuling = false;
@@ -2535,9 +2949,9 @@ export class CaseDetailComponent implements OnInit {
       this.caseItem = this.cases.getById(this.caseItem.id);
       this.editingRulingId = null;
       this.editingRuling = {};
-      this.toast.success('Court ruling updated successfully');
+      this.toast.success(this.translate.instant('toasts.case.rulingUpdated'));
     } catch (error) {
-      this.toast.error('Failed to update court ruling');
+      this.toast.error(this.translate.instant('toasts.case.rulingUpdateFailed'));
       console.error('Error updating ruling:', error);
     }
   }
@@ -2546,31 +2960,33 @@ export class CaseDetailComponent implements OnInit {
     if (!this.caseItem) return;
     const ruling = this.caseItem.rulings?.find((r) => r.id === rulingId);
     const confirmed = await this.confirmDialog.confirm({
-      title: 'Delete Court Ruling',
-      message: `Are you sure you want to delete the ruling for case "${ruling?.caseNo || 'this ruling'}"? This action cannot be undone.`,
-      confirmText: 'Delete',
-      cancelText: 'Cancel',
+      title: this.translate.instant('confirm.deleteRulingTitle'),
+      message: this.translate.instant('confirm.deleteRulingMessage', {
+        caseNo: ruling?.caseNo || this.translate.instant('confirm.thisRuling'),
+      }),
+      confirmText: this.translate.instant('actions.delete'),
+      cancelText: this.translate.instant('actions.cancel'),
       type: 'danger',
     });
     if (!confirmed) return;
     try {
       this.cases.deleteRuling(this.caseItem.id, rulingId);
       this.caseItem = this.cases.getById(this.caseItem.id);
-      this.toast.success('Court ruling deleted successfully');
+      this.toast.success(this.translate.instant('toasts.case.rulingDeleted'));
     } catch (error) {
-      this.toast.error('Failed to delete court ruling');
+      this.toast.error(this.translate.instant('toasts.case.rulingDeleteFailed'));
       console.error('Error deleting ruling:', error);
     }
   }
 
   async addDevelopment(): Promise<void> {
     if (!this.caseItem) {
-      this.toast.warning('Please save the case first before adding developments');
+      this.toast.warning(this.translate.instant('toasts.case.saveBeforeDevelopments'));
       return;
     }
     const note = this.developmentNote.trim();
     if (!note) {
-      this.toast.warning('Development note is required');
+      this.toast.warning(this.translate.instant('toasts.case.developmentRequired'));
       return;
     }
     this.addingDevelopment = true;
@@ -2578,9 +2994,9 @@ export class CaseDetailComponent implements OnInit {
       this.cases.addDevelopment(this.caseItem.id, note);
       this.caseItem = this.cases.getById(this.caseItem.id);
       this.developmentNote = '';
-      this.toast.success('Development added successfully');
+      this.toast.success(this.translate.instant('toasts.case.developmentAdded'));
     } catch (error) {
-      this.toast.error('Failed to add development');
+      this.toast.error(this.translate.instant('toasts.case.developmentAddFailed'));
       console.error('Error adding development:', error);
     } finally {
       this.addingDevelopment = false;
@@ -2591,9 +3007,9 @@ export class CaseDetailComponent implements OnInit {
     if (!this.caseItem) return;
     try {
       this.exportService.exportCaseDetailsToCSV(this.caseItem);
-      this.toast.success('Case exported successfully');
+      this.toast.success(this.translate.instant('toasts.case.exported'));
     } catch (error) {
-      this.toast.error('Failed to export case');
+      this.toast.error(this.translate.instant('toasts.case.exportFailed'));
       console.error('Error exporting case:', error);
     }
   }

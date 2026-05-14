@@ -17,7 +17,7 @@ import { Lawyer, LawyersService } from '../../shared/services/lawyers.service';
         (click)="cancel()"
         class="mb-4 flex items-center text-[rgb(var(--text-muted))] hover:text-[rgb(var(--text))] transition"
       >
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-5 h-5 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -25,32 +25,48 @@ import { Lawyer, LawyersService } from '../../shared/services/lawyers.service';
             d="M15 19l-7-7 7-7"
           />
         </svg>
-        Back to Lawyers
+        {{ 'lawyers.detail.backToList' | translate }}
       </button>
-      <h2 class="text-2xl font-bold">{{ lawyer.id ? 'Edit Lawyer' : 'New Lawyer' }}</h2>
+      <h2 class="text-2xl font-bold">
+        {{
+          lawyer.id
+            ? ('lawyers.detail.editTitle' | translate)
+            : ('lawyers.detail.newTitle' | translate)
+        }}
+      </h2>
     </div>
 
     <div class="flex flex-col gap-8">
       <p-card>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Name</label>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
+              'lawyers.detail.name' | translate
+            }}</label>
             <input type="text" [(ngModel)]="lawyer.name" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Phone</label>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
+              'lawyers.detail.phone' | translate
+            }}</label>
             <input type="text" [(ngModel)]="lawyer.phone" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Email</label>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
+              'lawyers.detail.email' | translate
+            }}</label>
             <input type="email" [(ngModel)]="lawyer.email" class="w-full" />
           </div>
           <div class="md:col-span-2">
-            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Address</label>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
+              'lawyers.detail.address' | translate
+            }}</label>
             <textarea [(ngModel)]="lawyer.address" rows="2" class="w-full"></textarea>
           </div>
           <div class="md:col-span-2" *ngIf="lawyer.id">
-            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">Lawyer Number</label>
+            <label class="block text-sm text-[rgb(var(--text-muted))] mb-1">{{
+              'lawyers.detail.lawyerNumber' | translate
+            }}</label>
             <input
               type="text"
               [value]="lawyer.lawyerNumber"
@@ -62,8 +78,16 @@ import { Lawyer, LawyersService } from '../../shared/services/lawyers.service';
       </p-card>
 
       <div class="flex gap-2">
-        <p-button severity="primary" (click)="save()" label="Save"></p-button>
-        <p-button [outlined]="true" (click)="cancel()" label="Cancel"></p-button>
+        <p-button
+          severity="primary"
+          (click)="save()"
+          [label]="'actions.save' | translate"
+        ></p-button>
+        <p-button
+          [outlined]="true"
+          (click)="cancel()"
+          [label]="'actions.cancel' | translate"
+        ></p-button>
       </div>
     </div>
   `,
