@@ -123,6 +123,30 @@ export class ArbitrationsService {
         createdAt: toIso(-60),
         updatedAt: toIso(-5),
       },
+      {
+        id: 'arb-3',
+        caseNumber: '2026203',
+        appealability: 'قابل للطعن',
+        fillingDate: toIso(-20),
+        caseDescription: 'نزاع رسوم وكالة تأمين لحزمة أسطول تجاري.',
+        arbitrationRoom: 'قاعة ج — ٠٢',
+        arbitrationFees: 44000,
+        maximumPeriod: '٦ أشهر',
+        companyRepresentative: {
+          lawyerName: 'نورة الشهري',
+          position: 'مستشار تأمين',
+          address: 'الدمام، الكورنيش',
+        },
+        oppositionRepresentative: {
+          lawyerName: 'محامٍ خارجي — خالد المنصور',
+          position: 'ممثل الوسيط',
+          address: 'الرياض، الملز',
+        },
+        hearings: [{ id: generateId(), date: toIso(9), remarks: 'تحديد نطاق التحكيم' }],
+        unifiedCaseId: 'uc-arb-203',
+        createdAt: toIso(-20),
+        updatedAt: toIso(-1),
+      },
     ];
 
     this.storage.set(STORAGE_KEY, arbitrations);

@@ -10,6 +10,16 @@ const protectedChildRoutes: Routes = [
       import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
   },
   {
+    path: 'legal/analytics',
+    loadComponent: () =>
+      import('./features/analytics/analytics.component').then((m) => m.AnalyticsComponent),
+  },
+  {
+    path: 'legal/documents',
+    loadComponent: () =>
+      import('./features/documents/documents-list.component').then((m) => m.DocumentsListComponent),
+  },
+  {
     path: 'legal/cases',
     loadComponent: () =>
       import('./features/cases/cases-list.component').then((m) => m.CasesListComponent),

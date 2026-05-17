@@ -25,6 +25,8 @@
     "arbitrations": "التحكيم",
     "execution": "طلبات التنفيذ",
     "settlements": "تسويات ودية",
+    "analytics": "التحليلات",
+    "documents": "المستندات",
     "settings": "الإعدادات",
     "sectionMatters": "المواد",
     "sectionDirectory": "الدليل",
@@ -91,7 +93,93 @@
     "size": "الحجم",
     "added": "تاريخ الإضافة",
     "empty": "لا توجد مستندات",
-    "notFound": "المستند غير موجود"
+    "notFound": "المستند غير موجود",
+    "globalSubtitle": "جميع مرفقات القضايا",
+    "searchPlaceholder": "بحث بالاسم أو القضية أو النوع…",
+    "case": "القضية",
+    "uploadedBy": "رفع بواسطة",
+    "uploadHint": "PDF وصور وWord وExcel حتى 10 ميجابايت لكل ملف",
+    "uploadSuccess": "تم رفع الملف",
+    "uploadFailed": "فشل الرفع",
+    "errorTooLarge": "الملف يتجاوز حد 10 ميجابايت",
+    "errorMime": "نوع الملف غير مسموح",
+    "deleteConfirm": "حذف هذا المرفق؟",
+    "deleted": "تم حذف المرفق",
+    "previewUnavailable": "المعاينة غير متاحة لهذا النوع"
+  },
+  "analytics": {
+    "title": "التحليلات",
+    "subtitle": "رؤى المحفظة من القضايا والأقساط والتنفيذ والتسويات",
+    "empty": "لا توجد بيانات لهذا المخطط",
+    "unknown": "غير محدد",
+    "side": {
+      "Plaintiff": "مدعي (جهتنا)",
+      "Defendant": "مدعى عليه (جهتنا)",
+      "unknown": "غير محدد"
+    },
+    "premiums": {
+      "in": "أقساط واردة (مدعي)",
+      "out": "أقساط صادرة (مدعى عليه)",
+      "count": "العدد",
+      "value": "القيمة (ر.س)"
+    },
+    "ruling": {
+      "Company": "الشركة",
+      "Adversary": "الخصم"
+    },
+    "execution": {
+      "ruled": "محكوم به",
+      "paid": "مدفوع"
+    },
+    "arbitrations": {
+      "count": "التحكيم",
+      "fees": "الرسوم (ر.س)"
+    },
+    "exposure": {
+      "title": "التعرض المالي",
+      "ruled": "محكوم به في التنفيذ",
+      "paid": "مدفوع في التنفيذ",
+      "gap": "فجوة التحصيل",
+      "settlements": "تسويات ودية"
+    },
+    "charts": {
+      "companySide": {
+        "title": "القضايا حسب جهتنا",
+        "desc": "وضع المدعي مقابل المدعى عليه"
+      },
+      "premiumsInOut": {
+        "title": "أقساط واردة / صادرة",
+        "desc": "الشركة كمدعي أو مدعى عليه"
+      },
+      "matterType": {
+        "title": "القضايا حسب نوع المادة",
+        "desc": "مزيج المحفظة"
+      },
+      "stage": {
+        "title": "القضايا حسب المرحلة",
+        "desc": "مسار التقاضي"
+      },
+      "rulingOutcome": {
+        "title": "نتائج الأحكام",
+        "desc": "الشركة مقابل الخصم"
+      },
+      "execution": {
+        "title": "التنفيذ: محكوم به ومدفوع",
+        "desc": "مبالغ التنفيذ المعلقة"
+      },
+      "settlements": {
+        "title": "التسويات الودية",
+        "desc": "إجمالي قيمة التسوية"
+      },
+      "openedTrend": {
+        "title": "قضايا مفتوحة (12 شهرًا)",
+        "desc": "قضايا جديدة عبر الزمن"
+      },
+      "arbitrations": {
+        "title": "ملخص التحكيم",
+        "desc": "العدد والرسوم"
+      }
+    }
   },
   "activity": {
     "title": "النشاط الأخير",
@@ -255,6 +343,10 @@
       "pending": "قيد الانتظار",
       "closed": "مغلقة",
       "onHold": "معلّقة"
+    },
+    "caseType": {
+      "Plaintiff": "مدعي",
+      "Defendant": "مدعى عليه"
     }
   },
   "arbitrations": {
@@ -503,6 +595,7 @@
     "settledThisMonth": "مسوّاة هذا الشهر",
     "upcomingDeadlines": "مواعيد نهائية قادمة",
     "activeArbitrations": "تحكيم نشط",
+    "viewAnalytics": "عرض التحليلات الكاملة",
     "recentCases": "قضايا حديثة",
     "upcomingDeadlinesTitle": "مواعيد نهائية قادمة",
     "pendingActions": "إجراءات معلّقة",
@@ -545,7 +638,8 @@
       "tasksDeadlines": "المهام والمواعيد",
       "developments": "التطورات",
       "courtRulings": "أحكام المحكمة",
-      "businessSettlement": "تسوية ودية"
+      "businessSettlement": "تسوية ودية",
+      "documents": "المستندات"
     },
     "header": {
       "nextCourt": "المحكمة التالية",
@@ -558,6 +652,9 @@
     "matterType": "نوع المادة",
     "status": "الحالة",
     "companyLawyer": "محامي الشركة",
+    "companySide": "جهتنا",
+    "companySideUnset": "غير محدد",
+    "companySideRulingHint": "جهة آخر حكم",
     "caseId": "معرّف القضية",
     "legallySettledTag": "مسوّاة قانونيًا",
     "titleRequired": "العنوان",

@@ -3,6 +3,7 @@ import { BusinessSettlementService } from './business-settlement.service';
 import { CaseNumberService } from './case-number.service';
 import { CaseTrackingService } from './case-tracking.service';
 import { ExecutionCasesService } from './execution-cases.service';
+import { resolveCompanySideFromRulings } from '../utils/case-side.util';
 import { MockStorageService } from './mock-storage.service';
 
 export type CaseStage = 'primary' | 'appeal' | 'cassation' | 'execution' | 'settled';
@@ -172,6 +173,8 @@ export interface CaseItem {
   policeReportNumber?: string;
   caseSummary?: string;
   portalWorkbook?: PortalWorkbookFields;
+  /** Company's procedural side (Plaintiff / Defendant). */
+  companySide?: CaseType;
 }
 
 const STORAGE_KEY = 'cases';
@@ -250,12 +253,29 @@ export class CasesService {
   }
 
   list(): CaseItem[] {
-    const cases = this.storage.get<CaseItem[]>(STORAGE_KEY, []);
+    let cases = this.storage.get<CaseItem[]>(STORAGE_KEY, []);
     if (cases.length === 0) {
       this.seedData();
       return this.storage.get<CaseItem[]>(STORAGE_KEY, []);
     }
+    const migrated = this.migrateCompanySide(cases);
+    if (migrated.changed) {
+      this.storage.set(STORAGE_KEY, migrated.cases);
+      cases = migrated.cases;
+    }
     return cases;
+  }
+
+  private migrateCompanySide(cases: CaseItem[]): { cases: CaseItem[]; changed: boolean } {
+    let changed = false;
+    const next = cases.map((c) => {
+      if (c.companySide) return c;
+      const fromRuling = resolveCompanySideFromRulings(c.rulings);
+      if (!fromRuling) return c;
+      changed = true;
+      return { ...c, companySide: fromRuling };
+    });
+    return { cases: next, changed };
   }
 
   private seedData(): void {
@@ -273,12 +293,15 @@ export class CasesService {
         client: 'شركة نور لللوجستيات',
         claimant: 'شركة نور لللوجستيات',
         status: 'open',
-        stage: 'primary',
+        stage: 'execution',
         caseNumber: '2026101',
         baseCaseNumber: '2026101',
-        legalStatus: 1,
+        legalStatus: 3,
         unifiedCaseId: 'uc-1001',
+        companyLawyerId: 'lawyer-1',
+        companyLawyerName: 'رنا العنزي',
         matterType: 'MotorInsurance',
+        companySide: 'Plaintiff',
         tags: ['مركبات', 'تأمين'],
         damageType: 'Disability',
         disabilityMetrics: { moralPercent: 12, physicalPercent: 28 },
@@ -291,12 +314,42 @@ export class CasesService {
           dependents: 4,
         },
         deadlines: [{ id: generateId(), title: 'تقديم تقرير إعادة تمثيل الحادث', date: isoDay(8) }],
-        tasks: [{ id: generateId(), title: 'جمع تسجيلات كاميرات المرور', done: false }],
-        developments: [
-          { id: generateId(), date: isoDate(-12), note: 'تم تقديم حزمة المطالبة ابتدائيًا.' },
+        tasks: [
+          { id: generateId(), title: 'جمع تسجيلات كاميرات المرور', done: false },
+          { id: generateId(), title: 'متابعة ملف التنفيذ', done: false },
         ],
-        rulings: [],
-        createdAt: isoDate(-25),
+        developments: [
+          { id: generateId(), date: isoDate(-45), note: 'صدور حكم ابتدائي لصالح الشركة.' },
+          { id: generateId(), date: isoDate(-12), note: 'تحويل الملف إلى إدارة التنفيذ.' },
+        ],
+        rulings: [
+          {
+            id: generateId(),
+            stage: 'primary',
+            caseNo: '2026101',
+            caseType: 'Plaintiff',
+            courtType: 'Traffic',
+            courtLevel: 'Primary',
+            courtCity: 'الرياض',
+            caseDetails: 'مطالبة بتعويض أضرار تصادم مركبات أسطول.',
+            filingDate: isoDay(-200),
+            filingNo: 'F-2026-101',
+            stageNo: 1,
+            rulingInFavorOf: 'Company',
+            rulingDate: isoDay(-45),
+            courtFees: 5000,
+            legalExpenses: 18000,
+            translationCourtFees: 0,
+            courtFeesInCash: 800,
+            expertFees: 12000,
+            advocacyFees: 15000,
+            otherExpenses: 3000,
+            adversaryName: 'مؤسسة النقل السريع',
+            indemnityByCourtAmount: 122000,
+            date: isoDate(-45),
+          },
+        ],
+        createdAt: isoDate(-240),
         updatedAt: isoDate(-2),
       },
       {
@@ -310,7 +363,10 @@ export class CasesService {
         baseCaseNumber: '2026102',
         legalStatus: 1,
         unifiedCaseId: 'uc-1002',
+        companyLawyerId: 'lawyer-2',
+        companyLawyerName: 'زياد البيشي',
         matterType: 'CommercialContract',
+        companySide: 'Plaintiff',
         tags: ['تجاري', 'عقد'],
         contractReference: 'CTR-2026-014',
         disputedAmount: 420000,
@@ -346,8 +402,271 @@ export class CasesService {
             date: isoDate(-40),
           },
         ],
-        createdAt: isoDate(-70),
+        createdAt: isoDate(-200),
         updatedAt: isoDate(-3),
+      },
+      {
+        id: 'case-3',
+        title: 'مطالبة مستحقات عمالية — مستودعات الدمام',
+        client: 'مجموعة الشرق للتخزين',
+        claimant: 'عاملون سابقون (١٢)',
+        status: 'open',
+        stage: 'primary',
+        caseNumber: '2026103',
+        baseCaseNumber: '2026103',
+        legalStatus: 1,
+        unifiedCaseId: 'uc-1003',
+        companyLawyerId: 'lawyer-3',
+        companyLawyerName: 'نورة الشهري',
+        matterType: 'LaborEmployment',
+        companySide: 'Defendant',
+        employerName: 'مجموعة الشرق للتخزين',
+        employeeName: 'متعدد',
+        disputedAmount: 186000,
+        tags: ['عمالي', 'مستحقات'],
+        deadlines: [{ id: generateId(), title: 'جلسة المرافعة الأولى', date: isoDay(21) }],
+        tasks: [{ id: generateId(), title: 'تجميع سجلات الرواتب', done: true }],
+        developments: [
+          { id: generateId(), date: isoDate(-20), note: 'تقديم مذكرة دفاع حول نظام العمل.' },
+        ],
+        rulings: [],
+        createdAt: isoDate(-320),
+        updatedAt: isoDate(-8),
+      },
+      {
+        id: 'case-4',
+        title: 'نزاع ملكية عقارية — مجمع سكني',
+        client: 'شركة الأفق العقارية',
+        status: 'open',
+        stage: 'cassation',
+        caseNumber: '202610401',
+        baseCaseNumber: '2026104',
+        legalStatus: 1,
+        unifiedCaseId: 'uc-1004',
+        companyLawyerId: 'lawyer-1',
+        companyLawyerName: 'رنا العنزي',
+        matterType: 'RealEstate',
+        companySide: 'Defendant',
+        propertyAddress: 'حي الياسمين، الرياض',
+        propertyType: 'مجمع سكني',
+        titleDeedNumber: 'TD-441902',
+        tags: ['عقاري', 'ملكية'],
+        deadlines: [{ id: generateId(), title: 'مهلة الاعتراض على الحكم', date: isoDay(30) }],
+        tasks: [{ id: generateId(), title: 'إعداد مذكرة النقض', done: false }],
+        developments: [
+          { id: generateId(), date: isoDate(-55), note: 'حكم استئناف يؤيد موقف الشركة.' },
+        ],
+        rulings: [
+          {
+            id: generateId(),
+            stage: 'primary',
+            caseNo: '2026104',
+            caseType: 'Defendant',
+            courtType: 'Real Estate',
+            courtLevel: 'Primary',
+            courtCity: 'الرياض',
+            caseDetails: 'دعوى إثبات ملكية قطعة أرض ضمن المشروع.',
+            filingDate: isoDay(-180),
+            filingNo: 'F-2026-304',
+            stageNo: 1,
+            rulingInFavorOf: 'Adversary',
+            rulingDate: isoDay(-120),
+            courtFees: 12000,
+            legalExpenses: 35000,
+            translationCourtFees: 0,
+            courtFeesInCash: 2000,
+            expertFees: 22000,
+            advocacyFees: 28000,
+            otherExpenses: 8000,
+            adversaryName: 'مستثمرون أفراد — جمعية الملاك',
+            indemnityByCourtAmount: 0,
+            date: isoDate(-120),
+          },
+          {
+            id: generateId(),
+            stage: 'appeal',
+            caseNo: '202610401',
+            caseType: 'Defendant',
+            courtType: 'Real Estate',
+            courtLevel: 'Appeal',
+            courtCity: 'الرياض',
+            caseDetails: 'استئناف الحكم الابتدائي.',
+            filingDate: isoDay(-90),
+            filingNo: 'F-2026-304-A',
+            stageNo: 2,
+            rulingInFavorOf: 'Company',
+            rulingDate: isoDay(-55),
+            courtFees: 6000,
+            legalExpenses: 19000,
+            translationCourtFees: 0,
+            courtFeesInCash: 900,
+            expertFees: 8000,
+            advocacyFees: 16000,
+            otherExpenses: 4000,
+            adversaryName: 'مستثمرون أفراد — جمعية الملاك',
+            indemnityByCourtAmount: 0,
+            date: isoDate(-55),
+          },
+        ],
+        createdAt: isoDate(-280),
+        updatedAt: isoDate(-6),
+      },
+      {
+        id: 'case-5',
+        title: 'دفاع جنائي — مخالفات منشأة صناعية',
+        client: 'مصانع الخليج للبلاستيك',
+        status: 'open',
+        stage: 'primary',
+        caseNumber: '2026105',
+        baseCaseNumber: '2026105',
+        legalStatus: 1,
+        unifiedCaseId: 'uc-1005',
+        companyLawyerId: 'lawyer-2',
+        companyLawyerName: 'زياد البيشي',
+        matterType: 'CriminalDefense',
+        companySide: 'Defendant',
+        offenseType: 'مخالفة بيئية',
+        incidentDate: isoDay(-80),
+        policeReportNumber: 'PR-2026-8891',
+        tags: ['جنائي', 'بيئة'],
+        deadlines: [{ id: generateId(), title: 'جلسة تحقيق', date: isoDay(5) }],
+        tasks: [{ id: generateId(), title: 'مراجعة تقرير الهيئة', done: false }],
+        developments: [
+          { id: generateId(), date: isoDate(-15), note: 'طلب تخفيف العقوبة الإدارية.' },
+        ],
+        rulings: [],
+        createdAt: isoDate(-75),
+        updatedAt: isoDate(-4),
+      },
+      {
+        id: 'case-6',
+        title: 'تسوية مدنية — تعويض توريد مواد',
+        client: 'شركة الإمداد المتكامل',
+        status: 'closed',
+        stage: 'settled',
+        caseNumber: '2026106',
+        baseCaseNumber: '2026106',
+        legalStatus: 4,
+        settledStatus: 2,
+        unifiedCaseId: 'uc-1006',
+        companyLawyerId: 'lawyer-3',
+        companyLawyerName: 'نورة الشهري',
+        matterType: 'GeneralCivil',
+        companySide: 'Plaintiff',
+        tags: ['مدني', 'تسوية'],
+        caseSummary: 'تمت التسوية الودية بعد وساطة إدارة الشؤون القانونية.',
+        developments: [
+          { id: generateId(), date: isoDate(-8), note: 'اعتماد اتفاق التسوية من الإدارة العليا.' },
+        ],
+        rulings: [
+          {
+            id: generateId(),
+            stage: 'primary',
+            caseNo: '2026106',
+            caseType: 'Plaintiff',
+            courtType: 'Civil',
+            courtLevel: 'Primary',
+            courtCity: 'جدة',
+            caseDetails: 'مطالبة بتعويض تأخر توريد.',
+            filingDate: isoDay(-400),
+            filingNo: 'F-2025-906',
+            stageNo: 1,
+            rulingInFavorOf: 'Company',
+            rulingDate: isoDay(-30),
+            courtFees: 4000,
+            legalExpenses: 11000,
+            translationCourtFees: 0,
+            courtFeesInCash: 500,
+            expertFees: 0,
+            advocacyFees: 9000,
+            otherExpenses: 2000,
+            adversaryName: 'مورد الخليج للحديد',
+            indemnityByCourtAmount: 45000,
+            date: isoDate(-30),
+          },
+        ],
+        deadlines: [],
+        tasks: [],
+        createdAt: isoDate(-360),
+        updatedAt: isoDate(-4),
+      },
+      {
+        id: 'case-7',
+        title: 'حادث مروري — مسؤولية طرف ثالث',
+        client: 'التأمين التعاوني (فرع الشركة)',
+        status: 'pending',
+        stage: 'appeal',
+        caseNumber: '202610701',
+        baseCaseNumber: '2026107',
+        legalStatus: 1,
+        unifiedCaseId: 'uc-1007',
+        companyLawyerId: 'lawyer-1',
+        companyLawyerName: 'رنا العنزي',
+        matterType: 'MotorInsurance',
+        companySide: 'Defendant',
+        tags: ['مركبات', 'مسؤولية'],
+        damageType: 'Fatal',
+        developments: [
+          { id: generateId(), date: isoDate(-25), note: 'استئناف الحكم على مبلغ التعويض.' },
+        ],
+        rulings: [
+          {
+            id: generateId(),
+            stage: 'primary',
+            caseNo: '2026107',
+            caseType: 'Defendant',
+            courtType: 'Traffic',
+            courtLevel: 'Primary',
+            courtCity: 'مكة',
+            caseDetails: 'دعوى تعويض من ورثة ضحية حادث.',
+            filingDate: isoDay(-110),
+            filingNo: 'F-2026-107',
+            stageNo: 1,
+            rulingInFavorOf: 'Adversary',
+            rulingDate: isoDay(-60),
+            courtFees: 7000,
+            legalExpenses: 24000,
+            translationCourtFees: 1500,
+            courtFeesInCash: 1000,
+            expertFees: 18000,
+            advocacyFees: 20000,
+            otherExpenses: 6000,
+            adversaryName: 'ورثة المتوفى',
+            indemnityByCourtAmount: 210000,
+            date: isoDate(-60),
+          },
+        ],
+        deadlines: [{ id: generateId(), title: 'تقديم مذكرة الاستئناف', date: isoDay(10) }],
+        tasks: [{ id: generateId(), title: 'مراجعة تقرير الخبير', done: false }],
+        createdAt: isoDate(-120),
+        updatedAt: isoDate(-5),
+      },
+      {
+        id: 'case-8',
+        title: 'عقد توريد أجهزة طبية',
+        client: 'مستشفى الرعاية الحديثة',
+        claimant: 'مستشفى الرعاية الحديثة',
+        status: 'open',
+        stage: 'primary',
+        caseNumber: '2026108',
+        baseCaseNumber: '2026108',
+        legalStatus: 1,
+        unifiedCaseId: 'uc-1008',
+        companyLawyerId: 'lawyer-2',
+        companyLawyerName: 'زياد البيشي',
+        matterType: 'CommercialContract',
+        companySide: 'Plaintiff',
+        contractReference: 'MED-2026-88',
+        disputedAmount: 890000,
+        tags: ['تجاري', 'توريد'],
+        deadlines: [{ id: generateId(), title: 'تبادل المستندات', date: isoDay(18) }],
+        tasks: [{ id: generateId(), title: 'إعداد لائحة الدعوى', done: true }],
+        developments: [
+          { id: generateId(), date: isoDate(-3), note: 'قيد الدعوى لدى المحكمة التجارية.' },
+        ],
+        rulings: [],
+        createdAt: isoDate(-18),
+        updatedAt: isoDate(-1),
       },
     ];
 
@@ -439,6 +758,7 @@ export class CasesService {
         | 'policeReportNumber'
         | 'caseSummary'
         | 'portalWorkbook'
+        | 'companySide'
       >
     >,
   ): void {

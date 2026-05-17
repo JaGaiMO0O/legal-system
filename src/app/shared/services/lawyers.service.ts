@@ -111,7 +111,7 @@ export class LawyersService {
     const now = Date.now();
     const lawyers: Lawyer[] = [
       {
-        id: this.generateId(),
+        id: 'lawyer-1',
         lawyerNumber: 'LAW-001',
         name: 'رنا العنزي',
         phone: '+966501210001',
@@ -121,7 +121,7 @@ export class LawyersService {
         updatedAt: new Date(now - 4 * 24 * 60 * 60 * 1000).toISOString(),
       },
       {
-        id: this.generateId(),
+        id: 'lawyer-2',
         lawyerNumber: 'LAW-002',
         name: 'زياد البيشي',
         phone: '+966501210002',
@@ -129,6 +129,16 @@ export class LawyersService {
         address: 'جدة، طريق الأمير محمد بن عبدالعزيز، جناح ٢٣',
         createdAt: new Date(now - 110 * 24 * 60 * 60 * 1000).toISOString(),
         updatedAt: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'lawyer-3',
+        lawyerNumber: 'LAW-003',
+        name: 'نورة الشهري',
+        phone: '+966501210003',
+        email: 'noura.shehri@legal-portal.local',
+        address: 'الدمام، الكورنيش، برج ٧',
+        createdAt: new Date(now - 90 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(now - 1 * 24 * 60 * 60 * 1000).toISOString(),
       },
     ];
 

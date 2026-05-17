@@ -25,6 +25,8 @@
     "arbitrations": "Arbitrations",
     "execution": "Execution Cases",
     "settlements": "Business Settlements",
+    "analytics": "Analytics",
+    "documents": "Documents",
     "settings": "Settings",
     "sectionMatters": "Matters",
     "sectionDirectory": "Directory",
@@ -91,7 +93,93 @@
     "size": "Size",
     "added": "Added",
     "empty": "No documents yet",
-    "notFound": "Document not found"
+    "notFound": "Document not found",
+    "globalSubtitle": "All case attachments across matters",
+    "searchPlaceholder": "Search by file name, case, or type…",
+    "case": "Case",
+    "uploadedBy": "Uploaded by",
+    "uploadHint": "PDF, images, Word, and Excel up to 10 MB per file",
+    "uploadSuccess": "File uploaded",
+    "uploadFailed": "Upload failed",
+    "errorTooLarge": "File exceeds 10 MB limit",
+    "errorMime": "File type not allowed",
+    "deleteConfirm": "Delete this attachment?",
+    "deleted": "Attachment deleted",
+    "previewUnavailable": "Preview not available for this file type"
+  },
+  "analytics": {
+    "title": "Analytics",
+    "subtitle": "Portfolio insights from cases, premiums, execution, and settlements",
+    "empty": "No data for this chart",
+    "unknown": "Unknown",
+    "side": {
+      "Plaintiff": "Plaintiff (our side)",
+      "Defendant": "Defendant (our side)",
+      "unknown": "Not set"
+    },
+    "premiums": {
+      "in": "Premiums in (claimant)",
+      "out": "Premiums out (respondent)",
+      "count": "Count",
+      "value": "Value (SAR)"
+    },
+    "ruling": {
+      "Company": "Company",
+      "Adversary": "Adversary"
+    },
+    "execution": {
+      "ruled": "Ruled",
+      "paid": "Paid"
+    },
+    "arbitrations": {
+      "count": "Arbitrations",
+      "fees": "Fees (SAR)"
+    },
+    "exposure": {
+      "title": "Financial exposure",
+      "ruled": "Execution ruled",
+      "paid": "Execution paid",
+      "gap": "Recovery gap",
+      "settlements": "Amicable settlements"
+    },
+    "charts": {
+      "companySide": {
+        "title": "Cases by our side",
+        "desc": "Plaintiff vs defendant posture"
+      },
+      "premiumsInOut": {
+        "title": "Premium installments in / out",
+        "desc": "Company as claimant vs respondent"
+      },
+      "matterType": {
+        "title": "Cases by matter type",
+        "desc": "Portfolio mix"
+      },
+      "stage": {
+        "title": "Cases by stage",
+        "desc": "Litigation pipeline"
+      },
+      "rulingOutcome": {
+        "title": "Ruling outcomes",
+        "desc": "Company vs adversary across rulings"
+      },
+      "execution": {
+        "title": "Execution: ruled vs paid",
+        "desc": "Outstanding enforcement amounts"
+      },
+      "settlements": {
+        "title": "Amicable settlements",
+        "desc": "Total settlement value"
+      },
+      "openedTrend": {
+        "title": "Cases opened (12 months)",
+        "desc": "New matters over time"
+      },
+      "arbitrations": {
+        "title": "Arbitrations summary",
+        "desc": "Active count and fees"
+      }
+    }
   },
   "activity": {
     "title": "Recent activity",
@@ -255,6 +343,10 @@
       "pending": "Pending",
       "closed": "Closed",
       "onHold": "On hold"
+    },
+    "caseType": {
+      "Plaintiff": "Plaintiff",
+      "Defendant": "Defendant"
     }
   },
   "arbitrations": {
@@ -503,6 +595,7 @@
     "settledThisMonth": "Settled This Month",
     "upcomingDeadlines": "Upcoming Deadlines",
     "activeArbitrations": "Active Arbitrations",
+    "viewAnalytics": "View full analytics",
     "recentCases": "Recent Cases",
     "upcomingDeadlinesTitle": "Upcoming Deadlines",
     "pendingActions": "Pending Actions",
@@ -545,7 +638,8 @@
       "tasksDeadlines": "Tasks & Deadlines",
       "developments": "Developments",
       "courtRulings": "Court Rulings",
-      "businessSettlement": "Business settlement"
+      "businessSettlement": "Business settlement",
+      "documents": "Documents"
     },
     "header": {
       "nextCourt": "Next Court",
@@ -558,6 +652,9 @@
     "matterType": "Matter type",
     "status": "Status",
     "companyLawyer": "Company lawyer",
+    "companySide": "Our side",
+    "companySideUnset": "Not set",
+    "companySideRulingHint": "Latest ruling side",
     "caseId": "Case ID",
     "legallySettledTag": "Legally settled",
     "titleRequired": "Title",

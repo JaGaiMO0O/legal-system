@@ -628,3 +628,51 @@ textarea.p-inputtextarea {
 .p-paginator {
   direction: inherit;
 }
+
+/* Analytics / dashboard chart cards — equal row height, fixed plot area via app-legal-chart-host */
+.legal-chart-card-grid,
+.legal-dashboard-chart-row {
+  align-items: stretch;
+}
+
+.legal-chart-card-grid .p-card,
+.legal-dashboard-chart-row .p-card {
+  height: 100%;
+  min-height: 20rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.legal-chart-card-grid .p-card-body,
+.legal-chart-card-grid .p-card-content,
+.legal-dashboard-chart-row .p-card-body,
+.legal-dashboard-chart-row .p-card-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.legal-chart-card-inner {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.legal-chart-card-desc {
+  min-height: 2.75rem;
+  margin-bottom: 1rem;
+}
+
+.legal-chart-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 240px;
+  width: 100%;
+}
+
+.legal-dashboard-chart-row .legal-chart-empty {
+  height: 200px;
+}

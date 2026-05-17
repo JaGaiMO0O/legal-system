@@ -43,6 +43,8 @@ export class MainLayoutComponent {
         items: [
           { path: '/legal/dashboard', labelKey: 'nav.dashboard', icon: 'pi pi-home', exact: true },
           { path: '/legal/cases', labelKey: 'nav.cases', icon: 'pi pi-file', exact: false },
+          { path: '/legal/analytics', labelKey: 'nav.analytics', icon: 'pi pi-chart-bar' },
+          { path: '/legal/documents', labelKey: 'nav.documents', icon: 'pi pi-folder-open' },
           { path: '/arbitrations', labelKey: 'nav.arbitrations', icon: 'pi pi-users' },
           { path: '/execution', labelKey: 'nav.execution', icon: 'pi pi-list' },
           { path: '/settlements', labelKey: 'nav.settlements', icon: 'pi pi-wallet' },

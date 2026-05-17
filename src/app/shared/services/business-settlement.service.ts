@@ -64,6 +64,28 @@ export class BusinessSettlementService {
         createdAt: toIso(-13),
         updatedAt: toIso(-2),
       },
+      {
+        id: 'settle-3',
+        departmentAmount: 42000,
+        legalDepartmentAmount: 28000,
+        managementAmount: 18000,
+        adversaryAmount: 112000,
+        amountOfAmicableAgreement: 156000,
+        linkedCaseId: 'case-6',
+        createdAt: toIso(-9),
+        updatedAt: toIso(-4),
+      },
+      {
+        id: 'settle-4',
+        departmentAmount: 15000,
+        legalDepartmentAmount: 12000,
+        managementAmount: 8000,
+        adversaryAmount: 32000,
+        amountOfAmicableAgreement: 48000,
+        linkedCaseId: 'case-4',
+        createdAt: toIso(-50),
+        updatedAt: toIso(-12),
+      },
     ];
 
     this.storage.set(STORAGE_KEY, settlements);

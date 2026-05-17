@@ -2,12 +2,18 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { Chart, registerables } from 'chart.js';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
+import { LegalChartHostComponent } from '../../shared/components/legal-chart-host/legal-chart-host.component';
+import { baseChartOptions } from '../../shared/config/chart-options';
 import { RelativeDatePipe } from '../../shared/pipes/relative-date.pipe';
+import { AnalyticsAggregationService } from '../../shared/services/analytics-aggregation.service';
 import { ArbitrationsService } from '../../shared/services/arbitrations.service';
 import { CaseItem, CasesService } from '../../shared/services/cases.service';
+
+Chart.register(...registerables);
 
 @Component({
   standalone: true,
@@ -18,6 +24,7 @@ import { CaseItem, CasesService } from '../../shared/services/cases.service';
     ButtonModule,
     CardModule,
     TagModule,
+    LegalChartHostComponent,
     RelativeDatePipe,
     TranslateModule,
   ],
@@ -202,6 +209,44 @@ import { CaseItem, CasesService } from '../../shared/services/cases.service';
       </p-card>
     </div>
 
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 legal-dashboard-chart-row">
+      <p-card styleClass="h-full">
+        <div class="legal-chart-card-inner">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-[rgb(var(--text))]">
+              {{ 'analytics.charts.companySide.title' | translate }}
+            </h3>
+            <a
+              routerLink="/legal/analytics"
+              class="text-sm text-[rgb(var(--primary))] hover:underline shrink-0"
+              >{{ 'dashboard.viewAnalytics' | translate }}</a
+            >
+          </div>
+          <app-legal-chart-host
+            *ngIf="sideChartData"
+            type="doughnut"
+            [data]="sideChartData"
+            [options]="doughnutChartOptions"
+            size="sm"
+          />
+        </div>
+      </p-card>
+      <p-card styleClass="h-full">
+        <div class="legal-chart-card-inner">
+          <h3 class="text-lg font-semibold text-[rgb(var(--text))] mb-4">
+            {{ 'analytics.charts.premiumsInOut.title' | translate }}
+          </h3>
+          <app-legal-chart-host
+            *ngIf="premiumsChartData"
+            type="bar"
+            [data]="premiumsChartData"
+            [options]="barChartOptions"
+            size="sm"
+          />
+        </div>
+      </p-card>
+    </div>
+
     <!-- Recent Activity -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
       <!-- Recent Cases -->
@@ -363,7 +408,19 @@ import { CaseItem, CasesService } from '../../shared/services/cases.service';
 export class DashboardComponent implements OnInit {
   private readonly casesService = inject(CasesService);
   private readonly arbitrationsService = inject(ArbitrationsService);
+  private readonly analytics = inject(AnalyticsAggregationService);
   private readonly translate = inject(TranslateService);
+
+  protected doughnutChartOptions = baseChartOptions('doughnut', { compact: true });
+  protected barChartOptions = baseChartOptions('bar', { compact: true });
+  protected sideChartData: {
+    labels: string[];
+    datasets: { data: number[]; backgroundColor: string[] }[];
+  } | null = null;
+  protected premiumsChartData: {
+    labels: string[];
+    datasets: { label: string; data: number[]; backgroundColor: string[] }[];
+  } | null = null;
   protected stats = {
     totalActiveCases: 0,
     casesPendingRuling: 0,
@@ -391,9 +448,34 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.calculateStats();
+    this.loadChartWidgets();
     this.loadRecentCases();
     this.loadUpcomingDeadlines();
     this.loadPendingActions();
+  }
+
+  private loadChartWidgets(): void {
+    const side = this.analytics.casesByCompanySide();
+    this.sideChartData = {
+      labels: side.labels.map((l) => this.translate.instant(`analytics.side.${l}`)),
+      datasets: [
+        {
+          data: side.datasets[0]?.data ?? [],
+          backgroundColor: (side.datasets[0]?.backgroundColor as string[]) ?? [],
+        },
+      ],
+    };
+    const prem = this.analytics.premiumsByInOut();
+    this.premiumsChartData = {
+      labels: prem.labels.map((l) => this.translate.instant(`analytics.premiums.${l}`)),
+      datasets: prem.datasets.map((ds, i) => ({
+        label: this.translate.instant(
+          i === 0 ? 'analytics.premiums.count' : 'analytics.premiums.value',
+        ),
+        data: ds.data,
+        backgroundColor: (ds.backgroundColor as string[]) ?? [],
+      })),
+    };
   }
 
   private calculateStats(): void {

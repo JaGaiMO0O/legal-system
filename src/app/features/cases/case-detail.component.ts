@@ -43,12 +43,15 @@ import { CourtLevel, CourtsService, CourtType } from '../../shared/services/cour
 import { ExportService } from '../../shared/services/export.service';
 import { Lawyer, LawyersService } from '../../shared/services/lawyers.service';
 import { ToastService } from '../../shared/services/toast.service';
+import { CaseDocumentsPanelComponent } from '../../shared/components/case-documents-panel/case-documents-panel.component';
+import { resolveCompanySideFromRulings } from '../../shared/utils/case-side.util';
 
 type LastSavedData = {
   title: string;
   client: string;
   status: string;
   companyLawyerId: string;
+  companySide: string;
   claimant: string;
   beneficiary: string;
   initialHearingDate: string;
@@ -75,6 +78,7 @@ type LastSavedData = {
     DeadlineStatusPipe,
     BreadcrumbComponent,
     CaseWorkflowComponent,
+    CaseDocumentsPanelComponent,
   ],
   template: `
     <app-breadcrumb [items]="breadcrumbItems"></app-breadcrumb>
@@ -151,7 +155,7 @@ type LastSavedData = {
       </p-card>
 
       <!-- Tabbed Content -->
-      <p-tabView>
+      <p-tabView [(activeIndex)]="activeTabIndex">
         <!-- Overview Tab -->
         <p-tabPanel [header]="'caseDetail.tabs.overview' | translate">
           <div class="p-4 flex flex-col gap-8">
@@ -209,6 +213,23 @@ type LastSavedData = {
                     <option value="closed">{{ 'cases.caseStatus.closed' | translate }}</option>
                     <option value="on-hold">{{ 'cases.caseStatus.onHold' | translate }}</option>
                   </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
+                    'caseDetail.companySide' | translate
+                  }}</label>
+                  <select [(ngModel)]="companySide" class="w-full">
+                    <option value="">{{ 'caseDetail.companySideUnset' | translate }}</option>
+                    <option value="Plaintiff">{{ 'cases.caseType.Plaintiff' | translate }}</option>
+                    <option value="Defendant">{{ 'cases.caseType.Defendant' | translate }}</option>
+                  </select>
+                  <p
+                    class="text-xs text-[rgb(var(--text-muted))] mt-1"
+                    *ngIf="rulingSideHint && rulingSideHint !== companySide"
+                  >
+                    {{ 'caseDetail.companySideRulingHint' | translate }}:
+                    {{ 'cases.caseType.' + rulingSideHint | translate }}
+                  </p>
                 </div>
                 <div>
                   <label class="block text-sm font-semibold text-[rgb(var(--text))] mb-2">{{
@@ -1809,6 +1830,10 @@ type LastSavedData = {
             </ng-template>
           </div>
         </p-tabPanel>
+
+        <p-tabPanel [header]="'documents.title' | translate">
+          <app-case-documents-panel *ngIf="caseItem" [caseId]="caseItem.id" />
+        </p-tabPanel>
       </p-tabView>
 
       <!-- Save/Cancel Actions - Always visible at bottom -->
@@ -1961,6 +1986,8 @@ export class CaseDetailComponent implements OnInit {
   protected autoSaveStatus: 'saved' | 'saving' | 'unsaved' = 'saved';
   protected lawyers: Lawyer[] = [];
   protected companyLawyerId = '';
+  protected companySide: CaseType | '' = '';
+  protected activeTabIndex = 0;
   protected courts: CourtType[] = [];
   protected selectedCourtTypeId = '';
   protected availableLevels: CourtLevel[] = [];
@@ -1971,6 +1998,7 @@ export class CaseDetailComponent implements OnInit {
     client: '',
     status: '',
     companyLawyerId: '',
+    companySide: '',
     claimant: '',
     beneficiary: '',
     initialHearingDate: '',
@@ -2013,6 +2041,7 @@ export class CaseDetailComponent implements OnInit {
         this.client = this.caseItem.client;
         this.status = this.caseItem.status;
         this.companyLawyerId = this.caseItem.companyLawyerId || '';
+        this.companySide = this.caseItem.companySide ?? '';
         this.claimant = this.caseItem.claimant || '';
         this.beneficiary = this.caseItem.beneficiary || '';
         this.initialHearingDate = this.parseStoredDate(this.caseItem.initialHearingDate);
@@ -2073,12 +2102,16 @@ export class CaseDetailComponent implements OnInit {
           client: this.caseItem.client,
           status: this.caseItem.status,
           companyLawyerId: this.caseItem.companyLawyerId || '',
+          companySide: this.caseItem.companySide ?? '',
           claimant: this.caseItem.claimant || '',
           beneficiary: this.caseItem.beneficiary || '',
           initialHearingDate: this.caseItem.initialHearingDate || '',
           matterType: this.matterType,
           portalJson: this.portalFingerprint(),
         };
+        if (this.route.snapshot.queryParamMap.get('tab') === 'documents') {
+          this.activeTabIndex = 5;
+        }
         // Set the current case in tracking service
         if (this.caseItem.unifiedCaseId) {
           this.caseTracking.setCurrentCase(this.caseItem.unifiedCaseId);
@@ -2133,6 +2166,7 @@ export class CaseDetailComponent implements OnInit {
         client: this.caseItem.client,
         status: this.caseItem.status,
         companyLawyerId: this.caseItem.companyLawyerId || '',
+        companySide: this.caseItem.companySide ?? '',
         claimant: this.caseItem.claimant || '',
         beneficiary: this.caseItem.beneficiary || '',
         initialHearingDate: this.caseItem.initialHearingDate || '',
@@ -2156,6 +2190,7 @@ export class CaseDetailComponent implements OnInit {
       this.client.trim() !== this.lastSavedData.client ||
       this.status !== this.lastSavedData.status ||
       this.companyLawyerId !== this.lastSavedData.companyLawyerId ||
+      this.companySide !== this.lastSavedData.companySide ||
       this.claimant.trim() !== this.lastSavedData.claimant ||
       this.beneficiary.trim() !== this.lastSavedData.beneficiary ||
       this.formatDateForStorage(this.initialHearingDate) !==
@@ -2182,6 +2217,7 @@ export class CaseDetailComponent implements OnInit {
         status: (this.status as any) === 'on-hold' ? 'pending' : (this.status as any),
         companyLawyerId: this.companyLawyerId || undefined,
         companyLawyerName: lawyer?.name,
+        companySide: this.companySide || undefined,
         claimant: this.claimant.trim() || undefined,
         beneficiary: this.beneficiary.trim() || undefined,
         initialHearingDate: this.formatDateForStorage(this.initialHearingDate),
@@ -2195,6 +2231,7 @@ export class CaseDetailComponent implements OnInit {
           client: this.caseItem.client,
           status: this.caseItem.status,
           companyLawyerId: this.caseItem.companyLawyerId || '',
+          companySide: this.caseItem.companySide ?? '',
           claimant: this.caseItem.claimant || '',
           beneficiary: this.caseItem.beneficiary || '',
           initialHearingDate: this.caseItem.initialHearingDate || '',
@@ -2278,6 +2315,7 @@ export class CaseDetailComponent implements OnInit {
           status: (this.status as any) === 'on-hold' ? 'pending' : (this.status as any),
           companyLawyerId: this.companyLawyerId || undefined,
           companyLawyerName: lawyer?.name,
+          companySide: this.companySide || undefined,
           claimant: this.claimant.trim() || undefined,
           beneficiary: this.beneficiary.trim() || undefined,
           initialHearingDate: this.formatDateForStorage(this.initialHearingDate),
@@ -2292,6 +2330,7 @@ export class CaseDetailComponent implements OnInit {
             client: this.caseItem.client,
             status: this.caseItem.status,
             companyLawyerId: this.caseItem.companyLawyerId || '',
+            companySide: this.caseItem.companySide ?? '',
             claimant: this.caseItem.claimant || '',
             beneficiary: this.caseItem.beneficiary || '',
             initialHearingDate: this.caseItem.initialHearingDate || '',
@@ -2308,6 +2347,11 @@ export class CaseDetailComponent implements OnInit {
     } finally {
       this.saving = false;
     }
+  }
+
+  get rulingSideHint(): CaseType | undefined {
+    if (!this.caseItem?.rulings?.length) return undefined;
+    return resolveCompanySideFromRulings(this.caseItem.rulings);
   }
 
   legalStatusTranslationSegment(): string {
